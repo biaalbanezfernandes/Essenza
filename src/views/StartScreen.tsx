@@ -33,7 +33,7 @@ export const StartScreen: React.FC = () => {
       maxWidth: '1200px',
       margin: '0 auto',
       width: '100%'
-    }} className="animate-fade-in">
+    }} className="animate-fade-in" role="main" aria-label="Tela inicial do simulador Essenza">
       
       {/* Title Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -137,42 +137,48 @@ export const StartScreen: React.FC = () => {
           <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)' }}>Ficha Cadastral do Gestor</h3>
           <p style={{ marginBottom: '2rem', fontSize: '0.9rem' }}>Insira seus dados executivos para abrir sua sala de controle e receber o certificado ao término.</p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} aria-label="Formulário de cadastro do gestor">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label htmlFor="player-name" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <User size={16} /> Nome Completo
               </label>
               <input
+                id="player-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Beatriz Fernandes"
                 className="input-control"
                 required
+                aria-required="true"
+                autoComplete="name"
               />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label htmlFor="player-email" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Mail size={16} /> E-mail Profissional
               </label>
               <input
+                id="player-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nome@exemplo.com"
                 className="input-control"
                 required
+                aria-required="true"
+                autoComplete="email"
               />
             </div>
 
             {error && (
-              <div style={{ color: 'var(--accent-danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+              <div role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
                 {error}
               </div>
             )}
 
-            <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', padding: '1rem' }}>
+            <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', padding: '1rem' }} aria-label="Iniciar simulador Essenza">
               <Cpu size={20} /> Iniciar Simulador Essenza
             </button>
           </form>

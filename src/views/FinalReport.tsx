@@ -48,7 +48,7 @@ export const FinalReport: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
+    <div style={{ padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }} className="animate-fade-in" role="main" aria-label="Relatório Executivo Final">
       <style>{`
         @media print {
           body {
@@ -221,16 +221,22 @@ export const FinalReport: React.FC = () => {
             </p>
 
             {sendingState === 'idle' && (
-              <form onSubmit={handleSendEmail} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <form onSubmit={handleSendEmail} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} aria-label="Formulário de envio de certificado">
+                <label htmlFor="certificate-email" className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
+                  E-mail para envio do certificado
+                </label>
                 <input
+                  id="certificate-email"
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="Seu e-mail"
                   className="input-control"
                   required
+                  aria-required="true"
+                  autoComplete="email"
                 />
-                <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>
+                <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }} aria-label="Enviar certificado por e-mail">
                   <Send size={18} /> Enviar por E-mail
                 </button>
               </form>
@@ -398,11 +404,11 @@ export const FinalReport: React.FC = () => {
 
       {/* Print and Reset Buttons */}
       <div className="no-print" style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem' }}>
-        <button onClick={handlePrint} className="btn-secondary" style={{ padding: '1rem 2.5rem' }}>
+        <button onClick={handlePrint} className="btn-secondary" style={{ padding: '1rem 2.5rem' }} aria-label="Imprimir certificado">
           <Download size={18} /> Imprimir Certificado
         </button>
 
-        <button onClick={resetGame} className="btn-primary" style={{ padding: '1rem 2.5rem' }}>
+        <button onClick={resetGame} className="btn-primary" style={{ padding: '1rem 2.5rem' }} aria-label="Jogar novamente">
           <RefreshCw size={18} /> Jogar Novamente
         </button>
       </div>

@@ -26,7 +26,7 @@ export const RoundResults: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
+    <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in" role="main" aria-label={`Resultados da Rodada ${currentRound}`}>
       
       {/* Title Header */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
