@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { GameState, PlayerDecision, RoundResult, GameEvent } from '../data/types';
 import { products } from '../data/products';
 import { events } from '../data/events';
 import { executeRound } from '../engine/marketEngine';
 import { generateSsisFeedback, generateCouncilFeedback } from '../engine/ssisEngine';
+import { initGameRng, getGameRng } from '../engine/rng';
 
 interface GameContextType {
   state: GameState;
@@ -56,32 +57,62 @@ const defaultState: GameState = {
   pendingDecision: defaultDecision,
 };
 
+const DEBOUNCE_MS = 300;
+
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GameState>(defaultState);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
-  // Load game from localStorage if it exists (great feature for recovery)
+  // Load game from localStorage if it exists
   useEffect(() => {
     const saved = localStorage.getItem('essenza_game_state');
     if (saved) {
       try {
-        setState(JSON.parse(saved));
+        const parsed = JSON.parse(saved) as GameState;
+        setState(parsed);
+        // Re-seed RNG based on player name + first round event for reproducibility
+        const seed = `${parsed.playerName}-${parsed.currentRound}`;
+        initGameRng(seed);
       } catch (e) {
         console.error("Error reading saved state", e);
       }
     }
   }, []);
 
-  const saveState = (newState: GameState) => {
+  // Debounced localStorage persistence
+  const saveState = useCallback((newState: GameState) => {
     setState(newState);
-    localStorage.setItem('essenza_game_state', JSON.stringify(newState));
-  };
+    stateRef.current = newState;
 
-  const startGame = (name: string, email: string) => {
-    // Sorteia evento da rodada 1
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      localStorage.setItem('essenza_game_state', JSON.stringify(newState));
+    }, DEBOUNCE_MS);
+  }, []);
+
+  // Flush pending localStorage writes on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        localStorage.setItem('essenza_game_state', JSON.stringify(stateRef.current));
+      }
+    };
+  }, []);
+
+  const startGame = useCallback((name: string, email: string) => {
+    const seed = `${name}-${Date.now()}`;
+    initGameRng(seed);
+    const rng = getGameRng();
+
     const positiveEvents = events.filter(e => e.type === 'positive');
-    const firstEvent = positiveEvents[Math.floor(Math.random() * positiveEvents.length)]; // Começa com positivo para incentivar
+    const firstEvent = rng.pick(positiveEvents);
 
     const newState: GameState = {
       ...defaultState,
@@ -97,76 +128,78 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     saveState(newState);
-  };
+  }, [saveState]);
 
-  const updatePendingDecision = (updater: (prev: PlayerDecision) => PlayerDecision) => {
+  const updatePendingDecision = useCallback((updater: (prev: PlayerDecision) => PlayerDecision) => {
     setState((prev) => {
       const updated = {
         ...prev,
         pendingDecision: updater(prev.pendingDecision)
       };
-      // Keep it in sync
-      localStorage.setItem('essenza_game_state', JSON.stringify(updated));
+      // Debounced save
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        localStorage.setItem('essenza_game_state', JSON.stringify(updated));
+      }, DEBOUNCE_MS);
       return updated;
     });
-  };
+  }, []);
 
-  const submitRoundDecision = () => {
-    // Get competitor cash from last round or default
+  const submitRoundDecision = useCallback(() => {
+    const current = stateRef.current;
+
     let rivalACash = 500000;
     let rivalBCash = 500000;
-    if (state.history.length > 0) {
-      const lastRound = state.history[state.history.length - 1];
+    if (current.history.length > 0) {
+      const lastRound = current.history[current.history.length - 1];
       rivalACash = lastRound.rivalA.cash;
       rivalBCash = lastRound.rivalB.cash;
     }
 
-    // Execute simulation engine
     const baseResult = executeRound(
-      state.currentRound,
-      state.pendingDecision,
-      state.currentCash,
+      current.currentRound,
+      current.pendingDecision,
+      current.currentCash,
       {
-        reputation: state.reputation,
-        quality: state.quality,
-        innovation: state.innovation,
-        satisfaction: state.satisfaction,
-        efficiency: state.efficiency
+        reputation: current.reputation,
+        quality: current.quality,
+        innovation: current.innovation,
+        satisfaction: current.satisfaction,
+        efficiency: current.efficiency
       },
-      state.activeEvent,
+      current.activeEvent,
       rivalACash,
       rivalBCash
     );
 
-    // Generate S.S.I.S feedback
     const ssisFeedback = generateSsisFeedback(
-      state.currentRound,
-      state.pendingDecision,
+      current.currentRound,
+      current.pendingDecision,
       baseResult.playerMetrics,
-      state.activeEvent,
+      current.activeEvent,
       baseResult.rivalA,
       baseResult.rivalB
     );
 
-    // Generate council dialogue feedback
     const councilFeedback = generateCouncilFeedback(
-      state.pendingDecision,
+      current.pendingDecision,
       baseResult.playerMetrics,
-      state.activeEvent
+      current.activeEvent
     );
 
-    // Build the full round result
     const roundResult: RoundResult = {
       ...baseResult,
       ssisFeedback,
       councilFeedback
     };
 
-    const newHistory = [...state.history, roundResult];
+    const newHistory = [...current.history, roundResult];
     const metrics = baseResult.playerMetrics;
 
     const newState: GameState = {
-      ...state,
+      ...current,
       currentCash: metrics.cash,
       reputation: metrics.reputation,
       quality: metrics.quality,
@@ -178,43 +211,44 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       gameState: 'results'
     };
     saveState(newState);
-  };
+  }, [saveState]);
 
-  const nextRound = () => {
-    const nextR = state.currentRound + 1;
+  const nextRound = useCallback(() => {
+    const current = stateRef.current;
+    const rng = getGameRng();
+    const nextR = current.currentRound + 1;
+
     if (nextR > 3) {
       const newState: GameState = {
-        ...state,
+        ...current,
         gameState: 'final_report'
       };
       saveState(newState);
     } else {
-      // Sorteia próximo evento da rodada
-      // Garantir que na rodada 2 e 3 temos eventos condizentes (por exemplo, misturando negativos e positivos)
       let nextEvent: GameEvent;
       if (nextR === 2) {
-        // Round 2 is winter - let's make it cotton price crisis or summer heat anomalies or a mix
-        const candidates = events.filter(e => e.id !== state.activeEvent?.id);
-        nextEvent = candidates[Math.floor(Math.random() * candidates.length)];
+        const candidates = events.filter(e => e.id !== current.activeEvent?.id);
+        nextEvent = rng.pick(candidates);
       } else {
-        const candidates = events.filter(e => e.id !== state.activeEvent?.id && !state.history.some(h => h.event?.id === e.id));
-        nextEvent = candidates[Math.floor(Math.random() * candidates.length)];
+        const candidates = events.filter(
+          e => e.id !== current.activeEvent?.id && !current.history.some(h => h.event?.id === e.id)
+        );
+        nextEvent = rng.pick(candidates);
       }
 
-      // Reset decisions baseline for the next round
       const nextDecision: PlayerDecision = {
         investments: {
-          materials: Math.round(state.currentCash * 0.15),
-          production: Math.round(state.currentCash * 0.15),
-          marketing: Math.round(state.currentCash * 0.10),
-          logistics: Math.round(state.currentCash * 0.08),
+          materials: Math.round(current.currentCash * 0.15),
+          production: Math.round(current.currentCash * 0.15),
+          marketing: Math.round(current.currentCash * 0.10),
+          logistics: Math.round(current.currentCash * 0.08),
         },
-        prices: state.pendingDecision.prices, // Keep same prices
-        productionQty: state.pendingDecision.productionQty // Keep same quantities
+        prices: current.pendingDecision.prices,
+        productionQty: current.pendingDecision.productionQty
       };
 
       const newState: GameState = {
-        ...state,
+        ...current,
         currentRound: nextR,
         activeEvent: nextEvent,
         pendingDecision: nextDecision,
@@ -222,12 +256,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       saveState(newState);
     }
-  };
+  }, [saveState]);
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     localStorage.removeItem('essenza_game_state');
     setState(defaultState);
-  };
+  }, []);
 
   return (
     <GameContext.Provider value={{ state, startGame, updatePendingDecision, submitRoundDecision, nextRound, resetGame }}>
