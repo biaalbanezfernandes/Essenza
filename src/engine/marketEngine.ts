@@ -1,42 +1,57 @@
 import type { GameEvent, PlayerDecision, CompetitorState, ProductResult, RoundResult } from '../data/types';
 import { products } from '../data/products';
+import { SimulationConstants } from '../config/simulationConstants';
 
 // Helper to calculate baseline metrics based on investments
 export function calculateMetrics(
   investments: { materials: number; production: number; marketing: number; logistics: number },
   event: GameEvent | null
 ) {
-  const materials = investments.materials;
-  const production = investments.production;
-  const marketing = investments.marketing;
-  const logistics = investments.logistics;
+  const { materials, production, marketing, logistics } = investments;
+  const { metrics, metricBounds, eventCategories } = SimulationConstants;
 
-  // Baseline formulas (scaling logarithmically or linearly with caps)
-  let quality = 40 + Math.min(60, (materials * 0.4 + logistics * 0.6) / 1200);
-  let innovation = 35 + Math.min(65, (logistics * 0.7 + marketing * 0.3) / 1000);
-  let satisfaction = 45 + Math.min(55, (production * 0.8) / 1000);
-  let efficiency = 40 + Math.min(60, (production * 0.4 + logistics * 0.6) / 1100);
-  let reputation = 35 + Math.min(65, (marketing * 0.7 + quality * 0.3) / 1100);
+  // Baseline formulas using centralized constants
+  let quality = metrics.quality.base + Math.min(
+    metrics.quality.cap,
+    (materials * metrics.quality.materialsWeight + logistics * metrics.quality.logisticsWeight) / metrics.quality.divisor
+  );
+  let innovation = metrics.innovation.base + Math.min(
+    metrics.innovation.cap,
+    (logistics * metrics.innovation.logisticsWeight + marketing * metrics.innovation.marketingWeight) / metrics.innovation.divisor
+  );
+  let satisfaction = metrics.satisfaction.base + Math.min(
+    metrics.satisfaction.cap,
+    (production * metrics.satisfaction.productionWeight) / metrics.satisfaction.divisor
+  );
+  let efficiency = metrics.efficiency.base + Math.min(
+    metrics.efficiency.cap,
+    (production * metrics.efficiency.productionWeight + logistics * metrics.efficiency.logisticsWeight) / metrics.efficiency.divisor
+  );
+  let reputation = metrics.reputation.base + Math.min(
+    metrics.reputation.cap,
+    (marketing * metrics.reputation.marketingWeight + quality * metrics.reputation.qualityWeight) / metrics.reputation.divisor
+  );
 
   // Apply event multipliers
   if (event) {
-    if (event.category === 'marketing') {
-      reputation *= event.type === 'positive' ? event.multiplier : event.multiplier;
-    } else if (event.category === 'production') {
-      efficiency *= event.type === 'positive' ? event.multiplier : event.multiplier;
+    if (event.category === eventCategories.marketing) {
+      reputation *= event.multiplier; // both positive and negative use multiplier
+    } else if (event.category === eventCategories.production) {
+      efficiency *= event.multiplier;
       satisfaction *= event.type === 'positive' ? event.multiplier : 0.9;
-    } else if (event.category === 'logistics') {
-      efficiency *= event.type === 'positive' ? event.multiplier : event.multiplier;
-      innovation *= event.type === 'positive' ? event.multiplier : event.multiplier;
+    } else if (event.category === eventCategories.logistics) {
+      efficiency *= event.multiplier;
+      innovation *= event.multiplier;
     }
   }
 
-  // Bound metrics between 10 and 100
-  quality = Math.max(10, Math.min(100, quality));
-  innovation = Math.max(10, Math.min(100, innovation));
-  satisfaction = Math.max(10, Math.min(100, satisfaction));
-  efficiency = Math.max(10, Math.min(100, efficiency));
-  reputation = Math.max(10, Math.min(100, reputation));
+  // Bound metrics between min and max
+  const bound = (val: number) => Math.max(metricBounds.min, Math.min(metricBounds.max, val));
+  quality = bound(quality);
+  innovation = bound(innovation);
+  satisfaction = bound(satisfaction);
+  efficiency = bound(efficiency);
+  reputation = bound(reputation);
 
   return { quality, innovation, satisfaction, efficiency, reputation };
 }
@@ -56,15 +71,15 @@ export function generateCompetitorDecision(
   const prices: { [productId: string]: number } = {};
   const productionQty: { [productId: string]: number } = {};
 
+  const { competitors, demand } = SimulationConstants;
+
   if (competitorName === 'Rival A') {
-    // Rival A - Preço Baixo / Volume
-    // Investe pesado em produção e volume.
-    // Reage ao marketing do jogador.
-    const isPlayerHighMarketing = playerMarketing > 80000;
-    investments.marketing = isPlayerHighMarketing ? 80000 : 50000;
-    investments.materials = 120000 + round * 15000;
-    investments.production = 140000 + round * 20000;
-    investments.logistics = 40000;
+    const cfg = competitors.rivalA;
+    const isPlayerHighMarketing = playerMarketing > cfg.highMarketingThreshold;
+    investments.marketing = isPlayerHighMarketing ? cfg.highMarketingValue : cfg.baseMarketing;
+    investments.materials = cfg.materialsBase + round * cfg.materialsPerRound;
+    investments.production = cfg.productionBase + round * cfg.productionPerRound;
+    investments.logistics = cfg.logistics;
 
     // Ensure they don't exceed cash
     const totalInv = investments.marketing + investments.materials + investments.production + investments.logistics;
@@ -78,22 +93,24 @@ export function generateCompetitorDecision(
 
     // Pricing is lower than default
     products.forEach((p) => {
-      prices[p.id] = Math.round(p.defaultPrice * 0.85 * 10) / 10;
+      prices[p.id] = Math.round(p.defaultPrice * cfg.priceMultiplier * 10) / 10;
       // High volume
-      let baseQty = 2500;
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 4000; // Winter in round 2
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 4500; // Summer in round 3
+      let baseQty = cfg.baseVolume;
+      if (p.seasonality === 'Inverno' && round === demand.seasonality.inverno.round) {
+        baseQty = cfg.baseVolume * cfg.winterVolumeMultiplier;
+      }
+      if (p.seasonality === 'Verão' && round === demand.seasonality.verao.round) {
+        baseQty = cfg.baseVolume * cfg.summerVolumeMultiplier;
+      }
       productionQty[p.id] = Math.floor(baseQty * (investments.production / 150000));
     });
   } else {
-    // Rival B - Marca Premium
-    // Investe em inovação e marketing.
-    // Dobra inovação se o jogador cresce em marketing.
-    const isPlayerHighMarketing = playerMarketing > 80000;
-    investments.marketing = 130000 + round * 15000;
-    investments.materials = 80000 + round * 10000;
-    investments.production = 70000;
-    investments.logistics = isPlayerHighMarketing ? 150000 : 90000;
+    const cfg = competitors.rivalB;
+    const isPlayerHighMarketing = playerMarketing > cfg.highMarketingThreshold;
+    investments.marketing = cfg.baseMarketing + round * cfg.marketingPerRound;
+    investments.materials = cfg.materialsBase + round * cfg.materialsPerRound;
+    investments.production = cfg.production;
+    investments.logistics = isPlayerHighMarketing ? cfg.highMarketingLogistics : cfg.normalLogistics;
 
     const totalInv = investments.marketing + investments.materials + investments.production + investments.logistics;
     if (totalInv > competitorCash) {
@@ -106,16 +123,138 @@ export function generateCompetitorDecision(
 
     // Pricing is premium
     products.forEach((p) => {
-      prices[p.id] = Math.round(p.defaultPrice * 1.3 * 10) / 10;
+      prices[p.id] = Math.round(p.defaultPrice * cfg.priceMultiplier * 10) / 10;
       // Lower volume
-      let baseQty = 1200;
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 2000;
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 2200;
+      let baseQty = cfg.baseVolume;
+      if (p.seasonality === 'Inverno' && round === demand.seasonality.inverno.round) {
+        baseQty = cfg.baseVolume * cfg.winterVolumeMultiplier;
+      }
+      if (p.seasonality === 'Verão' && round === demand.seasonality.verao.round) {
+        baseQty = cfg.baseVolume * cfg.summerVolumeMultiplier;
+      }
       productionQty[p.id] = Math.floor(baseQty * (investments.production / 70000));
     });
   }
 
   return { investments, prices, productionQty };
+}
+
+// Helper to get base demand for a product
+function getBaseDemand(productId: string): number {
+  return SimulationConstants.demand.baseDemand[productId as keyof typeof SimulationConstants.demand.baseDemand] ?? 5000;
+}
+
+// Helper to get seasonality multiplier
+function getSeasonalityMultiplier(productId: string, round: number): number {
+  const { seasonality } = SimulationConstants.demand;
+  const product = products.find(p => p.id === productId);
+  if (!product) return 1.0;
+
+  if (product.seasonality === 'Inverno') {
+    if (round === seasonality.inverno.round) return seasonality.inverno.multiplier;
+    return seasonality.inverno.offSeasonMultiplier;
+  }
+  if (product.seasonality === 'Verão') {
+    if (round === seasonality.verao.round) return seasonality.verao.multiplier;
+    return seasonality.verao.offSeasonMultiplier;
+  }
+  return seasonality.ano_todo.multiplier;
+}
+
+// Helper to get event demand multiplier
+function getEventDemandMultiplier(event: GameEvent | null, productId: string): number {
+  if (!event) return 1.0;
+  const { eventDemandMultiplier } = SimulationConstants.demand;
+
+  if (event.category === 'general') {
+    return event.multiplier;
+  }
+  if (event.id === 'frio_atipico_verao' && productId === 'vestido_linho') {
+    return event.multiplier;
+  }
+  if (event.id === 'boato_redes' && event.category === 'marketing') {
+    return eventDemandMultiplier.boato_redes.marketingReduction;
+  }
+  return 1.0;
+}
+
+// Helper to calculate desirability
+function calculateDesirability(
+  stats: { reputation: number; quality: number; innovation: number },
+  marketingInvestment: number,
+  priceRatio: number
+): number {
+  const { desirability } = SimulationConstants.demand;
+  const weightedStats = 
+    stats.reputation * desirability.reputationWeight +
+    stats.quality * desirability.qualityWeight +
+    stats.innovation * desirability.innovationWeight;
+  return (weightedStats * Math.log(marketingInvestment + desirability.marketingLogBase)) / 
+    Math.pow(priceRatio, desirability.priceElasticityExponent);
+}
+
+// Helper to calculate production requirements
+export function calculateProductionRequirements(
+  productionQty: { [productId: string]: number }
+): { materials: number; production: number } {
+  const { productionCostSplit } = SimulationConstants;
+  let materials = 0;
+  let production = 0;
+
+  products.forEach((product) => {
+    const qty = productionQty[product.id] || 0;
+    const cost = qty * product.productionCost;
+    materials += cost * productionCostSplit.materialsRatio;
+    production += cost * productionCostSplit.productionRatio;
+  });
+
+  return { materials, production };
+}
+
+// Helper to calculate bottleneck multiplier
+export function calculateBottleneckMultiplier(
+  investments: { materials: number; production: number },
+  required: { materials: number; production: number }
+): number {
+  const { bottleneckTolerance } = SimulationConstants.validation;
+  let multiplier = 1.0;
+
+  if (required.materials > 0 && investments.materials < required.materials) {
+    multiplier = Math.min(multiplier, investments.materials / required.materials);
+  }
+  if (required.production > 0 && investments.production < required.production) {
+    multiplier = Math.min(multiplier, investments.production / required.production);
+  }
+
+  return multiplier < bottleneckTolerance ? multiplier : 1.0;
+}
+
+// Helper to apply bottleneck to results
+export function applyBottleneck(
+  productResults: ProductResult[],
+  bottleneckMult: number,
+  prices: { [productId: string]: number }
+): { productResults: ProductResult[]; totalRevenue: number } {
+  if (bottleneckMult >= 1.0) {
+    const totalRevenue = productResults.reduce((acc, r) => acc + r.revenue, 0);
+    return { productResults, totalRevenue };
+  }
+
+  const updatedResults = productResults.map((res) => {
+    const newProduced = Math.floor(res.produced * bottleneckMult);
+    const newSold = Math.min(res.demanded, newProduced);
+    const newRevenue = newSold * prices[res.productId];
+    return {
+      ...res,
+      produced: newProduced,
+      sold: newSold,
+      revenue: newRevenue,
+      stockRemaining: newProduced - newSold,
+    };
+  });
+
+  const totalRevenue = updatedResults.reduce((acc, r) => acc + r.revenue, 0);
+  return { productResults: updatedResults, totalRevenue };
 }
 
 // Main execution engine for a round
@@ -155,59 +294,37 @@ export function executeRound(
 
   products.forEach((product) => {
     // Determine base market demand
-    let baseDemand = 0;
-    switch (product.id) {
-      case 'camiseta_basica': baseDemand = 16000; break;
-      case 'polo_essenza': baseDemand = 9000; break;
-      case 'moletom': baseDemand = 3000; break;
-      case 'calca_jeans': baseDemand = 6500; break;
-      case 'vestido_linho': baseDemand = 4000; break;
-      case 'kit_meia_cueca': baseDemand = 13000; break;
-      default: baseDemand = 5000;
-    }
+    const baseDemand = getBaseDemand(product.id);
 
-    // Sazonalidade: Inverno in Round 2, Verão in Round 3
-    let seasonalityMult = 1.0;
-    if (product.seasonality === 'Inverno' && round === 2) seasonalityMult = 2.2;
-    if (product.seasonality === 'Inverno' && round !== 2) seasonalityMult = 0.6;
-    if (product.seasonality === 'Verão' && round === 3) seasonalityMult = 2.4;
-    if (product.seasonality === 'Verão' && round !== 3) seasonalityMult = 0.5;
+    // Sazonalidade
+    const seasonalityMult = getSeasonalityMultiplier(product.id, round);
 
     // Apply global event multiplier to base demand
-    let eventDemandMult = 1.0;
-    if (event) {
-      if (event.category === 'general') {
-        eventDemandMult = event.multiplier;
-      } else if (event.id === 'frio_atípico_verao' && product.id === 'vestido_linho') {
-        eventDemandMult = event.multiplier;
-      } else if (event.id === 'boato_redes' && event.category === 'marketing') {
-        eventDemandMult = 0.85; // general reduction for affected
-      }
-    }
+    const eventDemandMult = getEventDemandMultiplier(event, product.id);
 
     const totalProductMarketDemand = baseDemand * seasonalityMult * eventDemandMult;
 
     // Calculate Desirability Scores
-    // Player
     const playerPriceRatio = playerDecision.prices[product.id] / product.defaultPrice;
-    const playerDesirability =
-      ((pStats.reputation * 0.35 + pStats.quality * 0.35 + pStats.innovation * 0.3) *
-        Math.log(playerDecision.investments.marketing + 1000)) /
-      Math.pow(playerPriceRatio, 2.2);
+    const playerDesirability = calculateDesirability(
+      pStats,
+      playerDecision.investments.marketing,
+      playerPriceRatio
+    );
 
-    // Rival A
     const rAPriceRatio = rivalADecision.prices[product.id] / product.defaultPrice;
-    const rADesirability =
-      ((rAStats.reputation * 0.35 + rAStats.quality * 0.35 + rAStats.innovation * 0.3) *
-        Math.log(rivalADecision.investments.marketing + 1000)) /
-      Math.pow(rAPriceRatio, 2.2);
+    const rADesirability = calculateDesirability(
+      rAStats,
+      rivalADecision.investments.marketing,
+      rAPriceRatio
+    );
 
-    // Rival B
     const rBPriceRatio = rivalBDecision.prices[product.id] / product.defaultPrice;
-    const rBDesirability =
-      ((rBStats.reputation * 0.35 + rBStats.quality * 0.35 + rBStats.innovation * 0.3) *
-        Math.log(rivalBDecision.investments.marketing + 1000)) /
-      Math.pow(rBPriceRatio, 2.2);
+    const rBDesirability = calculateDesirability(
+      rBStats,
+      rivalBDecision.investments.marketing,
+      rBPriceRatio
+    );
 
     const totalDesirability = playerDesirability + rADesirability + rBDesirability;
 
@@ -232,8 +349,8 @@ export function executeRound(
 
     // Event costs multiplier (materials price spike)
     let costMult = 1.0;
-    if (event && event.category === 'materials') {
-      costMult = event.multiplier; // ex: 1.30x for materials
+    if (event && event.category === SimulationConstants.eventCategories.materials) {
+      costMult = event.multiplier;
     }
 
     const playerProdCost = playerProd * product.productionCost * costMult;
@@ -273,54 +390,17 @@ export function executeRound(
     playerDecision.investments.marketing +
     playerDecision.investments.logistics;
 
-  // Let's establish that the cost of goods produced is covered by the raw materials & production investments.
-  // Wait, if the investments themselves ARE the expenses, then the player has already spent that money from cash.
-  // To avoid double-counting, the cash remaining is cash_previous - investments_made + revenue_earned.
-  // This is clean: cash spent = total investments made.
-  // Wait, what if the player schedules production but didn't invest enough in Materials or Production to cover it?
-  // Let's implement a penalty or validation:
-  // Let's calculate the required budget:
-  // Raw material cost: 50% of the production cost.
-  // Production labor cost: 50% of the production cost.
-  // If player's materials investment < 50% of production cost, they get a bottleneck (can only produce up to their material investment).
-  // If player's production investment < 50% of production cost, they get a bottleneck (can only produce up to their labor investment).
-  // Let's apply this bottleneck dynamically! It makes the simulation incredibly realistic and strategic.
-  let playerBottleneckMult = 1.0;
-  const playerRequiredMaterials = productResults.reduce((acc, curr) => {
-    const prod = products.find((p) => p.id === curr.productId);
-    return acc + curr.produced * (prod?.productionCost || 0) * 0.5;
-  }, 0);
-
-  const playerRequiredProduction = productResults.reduce((acc, curr) => {
-    const prod = products.find((p) => p.id === curr.productId);
-    return acc + curr.produced * (prod?.productionCost || 0) * 0.5;
-  }, 0);
-
-  if (playerDecision.investments.materials < playerRequiredMaterials && playerRequiredMaterials > 0) {
-    const materialsRatio = playerDecision.investments.materials / playerRequiredMaterials;
-    playerBottleneckMult = Math.min(playerBottleneckMult, materialsRatio);
-  }
-  if (playerDecision.investments.production < playerRequiredProduction && playerRequiredProduction > 0) {
-    const productionRatio = playerDecision.investments.production / playerRequiredProduction;
-    playerBottleneckMult = Math.min(playerBottleneckMult, productionRatio);
-  }
+  // Calculate production requirements and bottleneck
+  const required = calculateProductionRequirements(playerDecision.productionQty);
+  const bottleneckMult = calculateBottleneckMultiplier(playerDecision.investments, required);
 
   // Apply bottleneck if any
-  if (playerBottleneckMult < 0.99) {
-    playerTotalRevenue = 0;
-    productResults.forEach((res) => {
-      res.produced = Math.floor(res.produced * playerBottleneckMult);
-      res.sold = Math.min(res.demanded, res.produced);
-      res.revenue = res.sold * playerDecision.prices[res.productId];
-      res.stockRemaining = res.produced - res.sold;
-      playerTotalRevenue += res.revenue;
-    });
-  }
+  const { productResults: finalProductResults, totalRevenue: finalPlayerRevenue } = 
+    applyBottleneck(productResults, bottleneckMult, playerDecision.prices);
 
   // Calculate net profit for player in this round
-  // Revenue - Total Investments made
   const playerCosts = playerFixedInv;
-  const playerProfit = playerTotalRevenue - playerCosts;
+  const playerProfit = finalPlayerRevenue - playerCosts;
   const playerNewCash = playerCash + playerProfit;
 
   // Competitors
@@ -341,31 +421,38 @@ export function executeRound(
   const rBNewCash = rivalBCash + rBProfit;
 
   // 5. Calculate Market Shares
-  const totalMarketRevenue = playerTotalRevenue + rivalATotalRevenue + rivalBTotalRevenue;
-  const playerShare = totalMarketRevenue > 0 ? playerTotalRevenue / totalMarketRevenue : 0.33;
+  const totalMarketRevenue = finalPlayerRevenue + rivalATotalRevenue + rivalBTotalRevenue;
+  const playerShare = totalMarketRevenue > 0 ? finalPlayerRevenue / totalMarketRevenue : 0.33;
   const rAShare = totalMarketRevenue > 0 ? rivalATotalRevenue / totalMarketRevenue : 0.33;
   const rBShare = totalMarketRevenue > 0 ? rivalBTotalRevenue / totalMarketRevenue : 0.33;
 
   // 6. IGE (Índice Geral de Gestão): 0 - 100
-  // Lucro score, Reputação, Qualidade, Inovação, Satisfação, Market Share
-  const profitScore = Math.max(0, Math.min(100, (playerProfit + 50000) / 2500)); // scaling R$ -50k to R$ 200k
-  const shareScore = playerShare * 200; // 50% share is 100 points
+  const { profitScore, shareScoreMultiplier, igeWeights } = SimulationConstants.scoring;
+  const profitScoreValue = Math.max(0, Math.min(100, (playerProfit - profitScore.minProfit) / 
+    ((profitScore.maxProfit - profitScore.minProfit) / profitScore.maxScore)));
+  const shareScore = playerShare * shareScoreMultiplier;
   const ige = Math.round(
-    (profitScore * 0.25 +
-      pStats.reputation * 0.2 +
-      pStats.quality * 0.15 +
-      pStats.innovation * 0.15 +
-      pStats.satisfaction * 0.15 +
-      shareScore * 0.1)
+    profitScoreValue * igeWeights.profit +
+    pStats.reputation * igeWeights.reputation +
+    pStats.quality * igeWeights.quality +
+    pStats.innovation * igeWeights.innovation +
+    pStats.satisfaction * igeWeights.satisfaction +
+    shareScore * igeWeights.marketShare
   );
 
   // 7. Risk Index: 0 - 100
-  // Caixa, Satisfação, Qualidade, Estabilidade Operacional (evitar gargalo)
-  const cashRisk = playerNewCash < 50000 ? 80 : playerNewCash < 150000 ? 40 : 10;
-  const satisfRisk = (100 - pStats.satisfaction) * 0.8;
-  const qualRisk = (100 - pStats.quality) * 0.6;
-  const bottleneckRisk = playerBottleneckMult < 0.99 ? 75 : 10;
-  const riskIndex = Math.round(cashRisk * 0.3 + satisfRisk * 0.25 + qualRisk * 0.2 + bottleneckRisk * 0.25);
+  const { risk } = SimulationConstants.scoring;
+  const cashRisk = playerNewCash < risk.cash.criticalThreshold ? risk.cash.criticalScore :
+    playerNewCash < risk.cash.warningThreshold ? risk.cash.warningScore : risk.cash.safeScore;
+  const satisfRisk = (100 - pStats.satisfaction) * risk.satisfactionWeight;
+  const qualRisk = (100 - pStats.quality) * risk.qualityWeight;
+  const bottleneckRisk = bottleneckMult < 1.0 ? risk.bottleneckScore : risk.normalScore;
+  const riskIndex = Math.round(
+    cashRisk * risk.weights.cash +
+    satisfRisk * risk.weights.satisfaction +
+    qualRisk * risk.weights.quality +
+    bottleneckRisk * risk.weights.bottleneck
+  );
 
   const rivalAState: CompetitorState = {
     name: 'Rival A',
@@ -409,7 +496,7 @@ export function executeRound(
     playerDecision,
     playerMetrics: {
       cash: playerNewCash,
-      revenue: playerTotalRevenue,
+      revenue: finalPlayerRevenue,
       costs: playerCosts,
       profit: playerProfit,
       reputation: pStats.reputation,
@@ -420,9 +507,10 @@ export function executeRound(
       marketShare: playerShare,
       ige: Math.min(100, Math.max(0, ige)),
       riskIndex: Math.min(100, Math.max(0, riskIndex)),
-      productResults
+      productResults: finalProductResults
     },
     rivalA: rivalAState,
     rivalB: rivalBState
   };
 }
+
