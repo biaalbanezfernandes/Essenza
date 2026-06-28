@@ -16,7 +16,10 @@
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Vitest types */
+    "types": ["vitest/globals"]
   },
   "include": ["vite.config.ts"]
 }
