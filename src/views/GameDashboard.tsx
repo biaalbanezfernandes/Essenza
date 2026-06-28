@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { products } from '../data/products';
 import type { PlayerDecision } from '../data/types';
@@ -6,6 +6,13 @@ import {
   TrendingUp, Award, Zap, Heart, Settings, 
   DollarSign, AlertTriangle, HelpCircle, ArrowRight, Info
 } from 'lucide-react';
+import { 
+  calculateProductionRequirements, 
+  generateLiveSsisAdvice,
+  calculateTotalInvestments,
+  calculateRemainingCash,
+  isDecisionValid
+} from '../engine/validationEngine';
 
 export const GameDashboard: React.FC = () => {
   const { state, updatePendingDecision, submitRoundDecision } = useGame();
@@ -16,25 +23,13 @@ export const GameDashboard: React.FC = () => {
   // Local state to track validation errors
   const [cashError, setCashError] = useState('');
   
-  // Calculate total investment sum live
-  const totalInvestments = 
-    pendingDecision.investments.materials + 
-    pendingDecision.investments.production + 
-    pendingDecision.investments.marketing + 
-    pendingDecision.investments.logistics;
-
-  // Calculate live capacity requirements
-  const rawMaterialRequired = products.reduce((acc, p) => {
-    const qty = pendingDecision.productionQty[p.id] || 0;
-    return acc + (qty * p.productionCost * 0.5);
-  }, 0);
-
-  const laborRequired = products.reduce((acc, p) => {
-    const qty = pendingDecision.productionQty[p.id] || 0;
-    return acc + (qty * p.productionCost * 0.5);
-  }, 0);
-
-  const remainingCashLive = currentCash - totalInvestments;
+  // Calculate total investment sum live using validation engine
+  const totalInvestments = useMemo(() => calculateTotalInvestments(pendingDecision), [pendingDecision]);
+  
+  // Calculate live capacity requirements using validation engine
+  const requirements = useMemo(() => calculateProductionRequirements(pendingDecision.productionQty), [pendingDecision.productionQty]);
+  
+  const remainingCashLive = useMemo(() => calculateRemainingCash(currentCash, pendingDecision), [currentCash, pendingDecision]);
 
   // Validate cash limit
   useEffect(() => {
@@ -82,56 +77,10 @@ export const GameDashboard: React.FC = () => {
   };
 
   // Generate dynamic, context-aware pre-round advice from Scorpio AI S.S.I.S
-  const getLiveSsisAdvice = () => {
-    if (totalInvestments > currentCash) {
-      return {
-        type: 'danger',
-        message: 'Aviso crítico: Os investimentos ultrapassam seu saldo de caixa. Reduza os investimentos para processar a rodada.'
-      };
-    }
-    if (pendingDecision.investments.materials < rawMaterialRequired && rawMaterialRequired > 0) {
-      return {
-        type: 'warning',
-        message: `Gargalo operacional: Seu investimento em Matéria-Prima (R$ ${pendingDecision.investments.materials.toLocaleString('pt-BR')}) é insuficiente para produzir as peças configuradas (necessário R$ ${rawMaterialRequired.toLocaleString('pt-BR')}). A fábrica operará com menor capacidade.`
-      };
-    }
-    if (pendingDecision.investments.production < laborRequired && laborRequired > 0) {
-      return {
-        type: 'warning',
-        message: `Gargalo operacional: Seu investimento em Produção e Salários (R$ ${pendingDecision.investments.production.toLocaleString('pt-BR')}) é insuficiente para a escala produtiva desejada (necessário R$ ${laborRequired.toLocaleString('pt-BR')}).`
-      };
-    }
-    if (pendingDecision.investments.marketing < 30000) {
-      return {
-        type: 'info',
-        message: 'Recomendação de Marketing: Investimento em promoção muito modesto. Você pode perder quota de mercado para o Rival B (Premium).'
-      };
-    }
-    
-    // Check if pricing is abnormally high
-    let pricingHigh = false;
-    products.forEach(p => {
-      const price = pendingDecision.prices[p.id] || p.defaultPrice;
-      if (price > p.defaultPrice * 1.5) pricingHigh = true;
-    });
-
-    if (pricingHigh) {
-      return {
-        type: 'info',
-        message: 'Aviso Comercial: Alguns de seus preços estão bastante elevados. Certifique-se de sustentar essa margem com alto investimento em Marketing para construir valor de marca.'
-      };
-    }
-
-    return {
-      type: 'success',
-      message: 'Planejamento operacional equilibrado. O S.S.I.S. estima bom aproveitamento de mercado sob as diretrizes configuradas.'
-    };
-  };
-
-  const ssisAdvice = getLiveSsisAdvice();
+  const ssisAdvice = useMemo(() => generateLiveSsisAdvice(pendingDecision, currentCash), [pendingDecision, currentCash]);
 
   return (
-    <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
+    <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in" role="main" aria-label={`Sala de Planejamento Estratégico - Rodada ${currentRound}`}>
       
       {/* Upper Bar: Title & Cash Status */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -270,6 +219,10 @@ export const GameDashboard: React.FC = () => {
                   value={pendingDecision.investments.materials}
                   onChange={(e) => handleInvestmentChange('materials', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
+                  aria-label={`Investimento em Matéria-Prima: R$ ${pendingDecision.investments.materials.toLocaleString('pt-BR')}`}
+                  aria-valuemin={0}
+                  aria-valuemax={200000}
+                  aria-valuenow={pendingDecision.investments.materials}
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Compra tecidos e insumos têxteis base.</span>
               </div>
@@ -288,6 +241,10 @@ export const GameDashboard: React.FC = () => {
                   value={pendingDecision.investments.production}
                   onChange={(e) => handleInvestmentChange('production', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
+                  aria-label={`Investimento em Produção e Salários: R$ ${pendingDecision.investments.production.toLocaleString('pt-BR')}`}
+                  aria-valuemin={0}
+                  aria-valuemax={200000}
+                  aria-valuenow={pendingDecision.investments.production}
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Capacidade fabril, turnos e remuneração da equipe.</span>
               </div>
@@ -306,6 +263,10 @@ export const GameDashboard: React.FC = () => {
                   value={pendingDecision.investments.marketing}
                   onChange={(e) => handleInvestmentChange('marketing', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
+                  aria-label={`Investimento em Marketing Comercial: R$ ${pendingDecision.investments.marketing.toLocaleString('pt-BR')}`}
+                  aria-valuemin={0}
+                  aria-valuemax={200000}
+                  aria-valuenow={pendingDecision.investments.marketing}
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Anúncios digitais, editoriais de moda e captação de clientes.</span>
               </div>
@@ -324,6 +285,10 @@ export const GameDashboard: React.FC = () => {
                   value={pendingDecision.investments.logistics}
                   onChange={(e) => handleInvestmentChange('logistics', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
+                  aria-label={`Investimento em Logística e Inovação: R$ ${pendingDecision.investments.logistics.toLocaleString('pt-BR')}`}
+                  aria-valuemin={0}
+                  aria-valuemax={200000}
+                  aria-valuenow={pendingDecision.investments.logistics}
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Otimização logística de frete e inovação em fibras.</span>
               </div>
@@ -358,14 +323,14 @@ export const GameDashboard: React.FC = () => {
             <Settings style={{ color: 'var(--accent-gold)' }} /> Mix de Produtos e Lotes
           </h3>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }} aria-label="Tabela de produtos com preços e quantidades de produção">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Produto</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Custo Prod.</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Sazonalidade</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Preço Venda (R$)</th>
-                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Qtd. Produzir</th>
+                <th scope="col" style={{ padding: '0.75rem 0.5rem' }}>Produto</th>
+                <th scope="col" style={{ padding: '0.75rem 0.5rem' }}>Custo Prod.</th>
+                <th scope="col" style={{ padding: '0.75rem 0.5rem' }}>Sazonalidade</th>
+                <th scope="col" style={{ padding: '0.75rem 0.5rem' }}>Preço Venda (R$)</th>
+                <th scope="col" style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Qtd. Produzir</th>
               </tr>
             </thead>
             <tbody>
@@ -398,6 +363,7 @@ export const GameDashboard: React.FC = () => {
                           value={price}
                           step="1"
                           onChange={(e) => handlePriceChange(product.id, parseFloat(e.target.value))}
+                          aria-label={`Preço de venda de ${product.name}`}
                           style={{
                             width: '80px',
                             background: 'rgba(255,255,255,0.03)',
@@ -416,6 +382,7 @@ export const GameDashboard: React.FC = () => {
                         value={qty}
                         step="100"
                         onChange={(e) => handleProductionQtyChange(product.id, parseInt(e.target.value))}
+                        aria-label={`Quantidade a produzir de ${product.name}`}
                         style={{
                           width: '90px',
                           background: 'rgba(255,255,255,0.03)',
@@ -448,17 +415,17 @@ export const GameDashboard: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Uso de Matéria-Prima:</span>
                 <span style={{ 
-                  color: rawMaterialRequired > pendingDecision.investments.materials ? 'var(--accent-danger)' : 'var(--text-primary)',
+                  color: requirements.materials > pendingDecision.investments.materials ? 'var(--accent-danger)' : 'var(--text-primary)',
                   fontWeight: 600
                 }}>
-                  R$ {rawMaterialRequired.toLocaleString('pt-BR')} / R$ {pendingDecision.investments.materials.toLocaleString('pt-BR')}
+                  R$ {requirements.materials.toLocaleString('pt-BR')} / R$ {pendingDecision.investments.materials.toLocaleString('pt-BR')}
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ 
-                  width: `${Math.min(100, pendingDecision.investments.materials > 0 ? (rawMaterialRequired / pendingDecision.investments.materials) * 100 : 0)}%`,
+                  width: `${Math.min(100, pendingDecision.investments.materials > 0 ? (requirements.materials / pendingDecision.investments.materials) * 100 : 0)}%`,
                   height: '100%',
-                  background: rawMaterialRequired > pendingDecision.investments.materials ? 'var(--accent-danger)' : 'var(--accent-gold)'
+                  background: requirements.materials > pendingDecision.investments.materials ? 'var(--accent-danger)' : 'var(--accent-gold)'
                 }} />
               </div>
             </div>
@@ -468,17 +435,17 @@ export const GameDashboard: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Uso de Mão de Obra / Máquinas:</span>
                 <span style={{ 
-                  color: laborRequired > pendingDecision.investments.production ? 'var(--accent-danger)' : 'var(--text-primary)',
+                  color: requirements.labor > pendingDecision.investments.production ? 'var(--accent-danger)' : 'var(--text-primary)',
                   fontWeight: 600
                 }}>
-                  R$ {laborRequired.toLocaleString('pt-BR')} / R$ {pendingDecision.investments.production.toLocaleString('pt-BR')}
+                  R$ {requirements.labor.toLocaleString('pt-BR')} / R$ {pendingDecision.investments.production.toLocaleString('pt-BR')}
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ 
-                  width: `${Math.min(100, pendingDecision.investments.production > 0 ? (laborRequired / pendingDecision.investments.production) * 100 : 0)}%`,
+                  width: `${Math.min(100, pendingDecision.investments.production > 0 ? (requirements.labor / pendingDecision.investments.production) * 100 : 0)}%`,
                   height: '100%',
-                  background: laborRequired > pendingDecision.investments.production ? 'var(--accent-danger)' : 'var(--accent-blue)'
+                  background: requirements.labor > pendingDecision.investments.production ? 'var(--accent-danger)' : 'var(--accent-blue)'
                 }} />
               </div>
             </div>
@@ -509,13 +476,14 @@ export const GameDashboard: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'center' }}>
           <button 
             onClick={submitRoundDecision} 
-            disabled={totalInvestments > currentCash || totalInvestments <= 0}
+            disabled={!isDecisionValid(pendingDecision, currentCash)}
             className="btn-primary" 
+            aria-label={`Processar Rodada ${currentRound}`}
             style={{ 
               padding: '1.2rem 3.5rem', 
               fontSize: '1.1rem',
-              opacity: (totalInvestments > currentCash || totalInvestments <= 0) ? 0.4 : 1,
-              cursor: (totalInvestments > currentCash || totalInvestments <= 0) ? 'not-allowed' : 'pointer'
+              opacity: isDecisionValid(pendingDecision, currentCash) ? 1 : 0.4,
+              cursor: isDecisionValid(pendingDecision, currentCash) ? 'pointer' : 'not-allowed'
             }}
           >
             Processar Rodada {currentRound} <ArrowRight size={20} />
