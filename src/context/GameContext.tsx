@@ -3,7 +3,7 @@ import type { GameState, PlayerDecision, RoundResult, GameEvent } from '../data/
 import { products } from '../data/products';
 import { events } from '../data/events';
 import { executeRound } from '../engine/marketEngine';
-import { generateSsisFeedback, generateCouncilFeedback } from '../engine/ssisEngine';
+import { generateSsisFeedback, generateCouncilFeedback, classifyManagementProfile } from '../engine/ssisEngine';
 
 interface GameContextType {
   state: GameState;
@@ -58,30 +58,60 @@ const defaultState: GameState = {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
+// Helper to get player-specific localStorage keys
+const gameStateKey = (email: string) => `essenza_game_state_${email}`;
+const cognitiveRunsKey = (email: string) => `essenza_cognitive_runs_${email}`;
+
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GameState>(defaultState);
 
-  // Load game from localStorage if it exists (great feature for recovery)
+  // Load game from localStorage if it exists (recovery only for the same player)
   useEffect(() => {
-    const saved = localStorage.getItem('essenza_game_state');
-    if (saved) {
-      try {
-        setState(JSON.parse(saved));
-      } catch (e) {
-        console.error("Error reading saved state", e);
+    // Try to find any existing session to restore (only if on start screen)
+    // We only restore if we find a saved state with a valid email
+    try {
+      // Scan localStorage for any essenza_game_state_* key
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('essenza_game_state_')) {
+          const saved = localStorage.getItem(key);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // Only restore if the game was in progress (not on start screen)
+            if (parsed.gameState && parsed.gameState !== 'start') {
+              setState(parsed);
+            }
+          }
+          break; // Only restore the first one found
+        }
       }
+    } catch (e) {
+      console.error('Error reading saved state', e);
     }
   }, []);
 
   const saveState = (newState: GameState) => {
     setState(newState);
-    localStorage.setItem('essenza_game_state', JSON.stringify(newState));
+    if (newState.playerEmail) {
+      localStorage.setItem(gameStateKey(newState.playerEmail), JSON.stringify(newState));
+    }
   };
 
   const startGame = (name: string, email: string) => {
+    // Clear any previous session for a different player
+    // Remove all game state keys that don't belong to this email
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('essenza_game_state_') && key !== gameStateKey(email)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     // Sorteia evento da rodada 1
     const positiveEvents = events.filter(e => e.type === 'positive');
-    const firstEvent = positiveEvents[Math.floor(Math.random() * positiveEvents.length)]; // Começa com positivo para incentivar
+    const firstEvent = positiveEvents[Math.floor(Math.random() * positiveEvents.length)];
 
     const newState: GameState = {
       ...defaultState,
@@ -106,7 +136,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pendingDecision: updater(prev.pendingDecision)
       };
       // Keep it in sync
-      localStorage.setItem('essenza_game_state', JSON.stringify(updated));
+      if (updated.playerEmail) {
+        localStorage.setItem(gameStateKey(updated.playerEmail), JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -145,7 +177,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       baseResult.playerMetrics,
       state.activeEvent,
       baseResult.rivalA,
-      baseResult.rivalB
+      baseResult.rivalB,
+      state.playerEmail
     );
 
     // Generate council dialogue feedback
@@ -183,6 +216,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const nextRound = () => {
     const nextR = state.currentRound + 1;
     if (nextR > 3) {
+      // Save this run in the training history
+      try {
+        const playerKey = cognitiveRunsKey(state.playerEmail);
+        const historyRunsStr = localStorage.getItem(playerKey) || '[]';
+        const historyRuns = JSON.parse(historyRunsStr);
+        const thisRun = {
+          date: new Date().toISOString(),
+          playerName: state.playerName,
+          finalCash: state.currentCash,
+          totalRevenue: state.history.reduce((acc, r) => acc + r.playerMetrics.revenue, 0),
+          totalProfit: state.history.reduce((acc, r) => acc + r.playerMetrics.profit, 0),
+          avgIge: Math.round(state.history.reduce((acc, r) => acc + r.playerMetrics.ige, 0) / state.history.length),
+          profileName: classifyManagementProfile(state.history).profileName
+        };
+        historyRuns.push(thisRun);
+        localStorage.setItem(playerKey, JSON.stringify(historyRuns));
+      } catch (err) {
+        console.error('Error saving cognitive run history', err);
+      }
+
       const newState: GameState = {
         ...state,
         gameState: 'final_report'
@@ -225,7 +278,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetGame = () => {
-    localStorage.removeItem('essenza_game_state');
+    if (state.playerEmail) {
+      localStorage.removeItem(gameStateKey(state.playerEmail));
+    }
     setState(defaultState);
   };
 

@@ -1,4 +1,5 @@
 import type { RoundResult, PlayerDecision, GameEvent } from '../data/types';
+import { products } from '../data/products';
 
 export interface PedagogicalGrades {
   planning: number;
@@ -12,12 +13,12 @@ export function generateSsisFeedback(
   decision: PlayerDecision,
   metrics: RoundResult['playerMetrics'],
   event: GameEvent | null,
-  _rivalA: RoundResult['rivalA'],
-  _rivalB: RoundResult['rivalB']
+  rivalA: RoundResult['rivalA'],
+  rivalB: RoundResult['rivalB'],
+  playerEmail: string
 ) {
   const profit = metrics.profit;
   const cash = metrics.cash;
-  const reputation = metrics.reputation;
   const quality = metrics.quality;
   const innovation = metrics.innovation;
   const satisfaction = metrics.satisfaction;
@@ -27,43 +28,178 @@ export function generateSsisFeedback(
   const totalProduced = metrics.productResults.reduce((acc, curr) => acc + curr.produced, 0);
   const totalStock = metrics.productResults.reduce((acc, curr) => acc + curr.stockRemaining, 0);
 
+  // Find top-performing product by revenue
+  let topRevenueProduct = '';
+  let maxRevenue = -1;
+  
+  // Find product with highest stock remaining
+  let worstStockProduct = '';
+  let worstStockProductId = '';
+  let maxStockRemaining = 0;
+  
+  // Find product with highest lost sales (demanded > sold)
+  let worstLostSalesProduct = '';
+  let maxLostSales = 0;
+  
+  // Find if any product was sold at a price below production cost
+  let underpricedProduct = '';
+  // Check if margin is too thin
+  let thinMarginProduct = '';
+  let thinMarginVal = 0;
+
+  metrics.productResults.forEach((pr) => {
+    const prodInfo = products.find(p => p.id === pr.productId);
+    if (pr.revenue > maxRevenue) {
+      maxRevenue = pr.revenue;
+      topRevenueProduct = prodInfo ? prodInfo.name : pr.productId;
+    }
+    if (pr.stockRemaining > maxStockRemaining) {
+      maxStockRemaining = pr.stockRemaining;
+      worstStockProduct = prodInfo ? prodInfo.name : pr.productId;
+      worstStockProductId = pr.productId;
+    }
+    const lost = pr.demanded - pr.sold;
+    if (lost > maxLostSales) {
+      maxLostSales = lost;
+      worstLostSalesProduct = prodInfo ? prodInfo.name : pr.productId;
+    }
+    if (prodInfo) {
+      const price = decision.prices[pr.productId] || prodInfo.defaultPrice;
+      if (price < prodInfo.productionCost) {
+        underpricedProduct = prodInfo.name;
+      } else {
+        const margin = price - prodInfo.productionCost;
+        const marginPercent = (margin / price) * 100;
+        if (marginPercent < 22 && pr.produced > 0) {
+          thinMarginProduct = prodInfo.name;
+          thinMarginVal = marginPercent;
+        }
+      }
+    }
+  });
+
+  const maxCompetitorProfit = Math.max(rivalA.profit, rivalB.profit);
+  const bestCompetitorName = rivalA.profit > rivalB.profit ? 'Rival A (Volume)' : 'Rival B (Premium)';
+
   // 1. Diagnostic
   let diagnostic = '';
   if (profit > 100000) {
-    diagnostic = `Desempenho excelente nesta rodada! O lucro líquido superou as expectativas (R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}). Isso ocorreu porque sua estratégia de precificação encontrou equilíbrio perfeito com a demanda e o marketing impulsionou a reputação da marca para ${Math.round(reputation)} pontos.`;
-  } else if (profit > 0) {
-    diagnostic = `A Essenza fechou a rodada no azul com lucro de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. A operação está estável, mas há margem para melhoria. `;
-    if (totalStock > totalProduced * 0.3) {
-      diagnostic += `Notamos um acúmulo de estoque preocupante (${totalStock} unidades paradas). O capital investido em matéria-prima e produção ficou imobilizado no estoque, limitando seu lucro líquido.`;
+    diagnostic = `Desempenho excelente nesta rodada! O lucro líquido alcançou R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
+    if (topRevenueProduct) {
+      diagnostic += `O grande destaque foi o/a **${topRevenueProduct}**, liderando vendas com R$ ${maxRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em receita. `;
+    }
+    if (profit > maxCompetitorProfit) {
+      diagnostic += `Você superou todos os concorrentes e obteve o melhor resultado financeiro do mercado! `;
     } else {
-      diagnostic += `Seu volume de vendas foi saudável, e a produção atendeu bem à demanda média do mercado.`;
+      diagnostic += `Apesar do ótimo lucro, o **${bestCompetitorName}** faturou R$ ${maxCompetitorProfit.toLocaleString('pt-BR')} no mesmo período. `;
+    }
+  } else if (profit > 0) {
+    diagnostic = `A Essenza fechou a rodada no azul com lucro líquido de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
+    if (topRevenueProduct) {
+      diagnostic += `O principal pilar de vendas foi o/a **${topRevenueProduct}** (R$ ${maxRevenue.toLocaleString('pt-BR')} de faturamento). `;
+    }
+    if (maxStockRemaining > 0 && worstStockProduct) {
+      diagnostic += `Contudo, o desempenho geral foi freado pelo acúmulo de estoque em **${worstStockProduct}** (${maxStockRemaining} unidades paradas), imobilizando capital de giro essencial na fábrica. `;
+    }
+    if (maxCompetitorProfit > profit) {
+      diagnostic += `O **${bestCompetitorName}** liderou a rodada com lucro de R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}. `;
     }
   } else {
     diagnostic = `A rodada encerrou com saldo negativo (prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}). `;
     if (totalProduced === 0) {
-      diagnostic += `Você não programou nenhuma produção nesta rodada, resultando em receita nula enquanto os custos fixos de marketing e logística consumiram seu capital. `;
-    } else if (totalStock > totalProduced * 0.5) {
-      diagnostic += `Houve excesso de produção ou precificação acima do mercado, gerando ${totalStock} peças em estoque e alto custo operacional não coberto pelas vendas. `;
+      diagnostic += `Não houve programação de produção nesta rodada, gerando receita nula enquanto os custos operacionais drenaram o caixa. `;
+    } else if (maxStockRemaining > totalProduced * 0.3 && worstStockProduct) {
+      diagnostic += `O principal fator foi o excesso de estoque de **${worstStockProduct}** (${maxStockRemaining} unidades não vendidas), indicando que a produção superou muito a demanda ou que seu preço ficou desalinhado. `;
     } else {
-      diagnostic += `Os custos de investimento em marketing (R$ ${decision.investments.marketing.toLocaleString('pt-BR')}) e inovação foram muito altos em comparação ao retorno imediato em vendas. `;
+      diagnostic += `Os investimentos em Marketing (R$ ${decision.investments.marketing.toLocaleString('pt-BR')}) e Operações pesaram mais do que o retorno imediato gerado pelo faturamento. `;
     }
-    if (event && event.type === 'negative') {
-      diagnostic += ` Além disso, o evento "${event.title}" impactou negativamente seus resultados.`;
+    diagnostic += `Enquanto isso, o **${bestCompetitorName}** liderou com lucro de R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}. `;
+  }
+
+  // Price analysis comparison against competitors for worst stock product
+  if (maxStockRemaining > 200 && worstStockProductId) {
+    const playerPrice = decision.prices[worstStockProductId];
+    const rAPrice = rivalA.prices[worstStockProductId];
+    const rBPrice = rivalB.prices[worstStockProductId];
+    if (playerPrice > rAPrice && playerPrice > rBPrice) {
+      diagnostic += ` Seu preço para o/a **${worstStockProduct}** (R$ ${playerPrice.toFixed(2)}) foi o mais caro do mercado, facilitando a atração de clientes pelos rivais (Rival A: R$ ${rAPrice.toFixed(2)}, Rival B: R$ ${rBPrice.toFixed(2)}).`;
     }
+  }
+
+  if (maxLostSales > 100 && worstLostSalesProduct) {
+    diagnostic += ` Notamos também uma ruptura de estoque expressiva em **${worstLostSalesProduct}**: você perdeu a oportunidade de vender aproximadamente ${Math.round(maxLostSales)} unidades adicionais por falta de estoque disponível.`;
+  }
+
+  if (event) {
+    diagnostic += ` O evento de mercado "${event.title}" alterou a dinâmica desta rodada, afetando a área de ${event.affectedArea} com um impacto direto nas vendas.`;
   }
 
   // 2. Recommendations
   let recommendation = '';
-  if (totalStock > totalProduced * 0.3) {
-    recommendation = `Reduza o volume de produção nas categorias com muito estoque acumulado. Aumente moderadamente o investimento em Marketing para ajudar a escoar as peças paradas e considere uma leve redução temporária nos preços de venda.`;
-  } else if (metrics.marketShare < 0.2) {
-    recommendation = `Sua participação de mercado está baixa (${Math.round(metrics.marketShare * 100)}%). Sugerimos reforçar o orçamento de Marketing (atualmente em R$ ${decision.investments.marketing.toLocaleString('pt-BR')}) para competir com as campanhas agressivas dos concorrentes.`;
-  } else if (quality < 60) {
-    recommendation = `Para manter a imagem sofisticada da Essenza, inverte mais em Matéria-Prima e Produção. O conselho está preocupado com o indicador de qualidade de ${Math.round(quality)} pontos.`;
-  } else if (cash < 100000) {
-    recommendation = `Atenção ao fluxo de caixa! Seu saldo está baixo (R$ ${cash.toLocaleString('pt-BR')}). Evite grandes investimentos de expansão na próxima rodada e foque em produtos com alta margem e giro rápido, como a Camiseta Básica ou o Kit de Meia/Cueca.`;
+  const recommendationsList: string[] = [];
+
+  if (underpricedProduct) {
+    recommendationsList.push(`Você está vendendo o/a **${underpricedProduct}** abaixo do custo de fabricação. Aumente o preço imediatamente para evitar prejuízos unitários.`);
+  } else if (thinMarginProduct) {
+    recommendationsList.push(`A margem do/a **${thinMarginProduct}** está muito espremida (${thinMarginVal.toFixed(1)}%). Reajuste o preço ou diminua custos operacionais de fabricação.`);
+  }
+
+  if (maxLostSales > 150 && worstLostSalesProduct) {
+    recommendationsList.push(`Aumente a produção do/a **${worstLostSalesProduct}** para a próxima rodada para suprir a demanda reprimida (${Math.round(maxLostSales)} unidades perdidas).`);
+  }
+
+  if (maxStockRemaining > 300 && worstStockProduct) {
+    recommendationsList.push(`Reduza a produção de **${worstStockProduct}** para escoar as ${maxStockRemaining} peças que já estão acumuladas no estoque.`);
+    const worstProductInfo = products.find(p => p.name === worstStockProduct);
+    if (worstProductInfo) {
+      const currentPrice = decision.prices[worstProductInfo.id] || worstProductInfo.defaultPrice;
+      if (currentPrice > worstProductInfo.defaultPrice * 1.1) {
+        recommendationsList.push(`Considere reduzir levemente o preço do/a **${worstStockProduct}** (atualmente R$ ${currentPrice.toFixed(2)}) para incentivar a saída.`);
+      }
+    }
+  }
+
+  if (metrics.marketShare < 0.22) {
+    recommendationsList.push(`Sua participação de mercado está tímida (${Math.round(metrics.marketShare * 100)}%). Aumente o orçamento de Marketing (atualmente R$ ${decision.investments.marketing.toLocaleString('pt-BR')}) para competir com os rivais.`);
+  }
+
+  if (quality < 65) {
+    recommendationsList.push(`Melhore a qualidade da sua grife investindo mais em Matéria-Prima (atualmente R$ ${decision.investments.materials.toLocaleString('pt-BR')}).`);
+  }
+
+  if (cash < 100000) {
+    recommendationsList.push(`Atenção ao fluxo de caixa de R$ ${cash.toLocaleString('pt-BR')}! Evite expansões arriscadas na próxima rodada.`);
+  }
+
+  if (recommendationsList.length > 0) {
+    recommendation = recommendationsList.slice(0, 3).join(' ');
   } else {
-    recommendation = `Mantenha a consistência. A próxima rodada pode trazer novos eventos sazonais. Lembre-se de verificar a previsão de temperatura e investir em Logística e Inovação para blindar a marca contra crises de distribuição.`;
+    recommendation = `Mantenha a consistência atual. Monitore as tendências de temperatura nas previsões do conselho para ajustar a produção dos itens sazonais antes que a estação mude.`;
+  }
+
+  // Local Cognitive Memory Engine Training Analyser
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const playerRunsKey = `essenza_cognitive_runs_${playerEmail}`;
+      const historyRunsStr = window.localStorage.getItem(playerRunsKey);
+      if (historyRunsStr) {
+        const historyRuns = JSON.parse(historyRunsStr);
+        if (historyRuns.length > 0) {
+          const totalProfitHistory = historyRuns.reduce((acc: number, r: any) => acc + (r.totalProfit || 0), 0);
+          const avgProfitHistory = totalProfitHistory / historyRuns.length;
+          const bestProfit = Math.max(...historyRuns.map((r: any) => r.totalProfit || 0));
+
+          recommendation += `\n\n🤖 **[Modelo Cognitivo - Treinamento Histórico]**: Analisamos sua performance comparada a **${historyRuns.length}** simulações passadas. `;
+          if (profit > avgProfitHistory) {
+            recommendation += `Seu lucro nesta rodada superou a média histórica das suas simulações (R$ ${Math.round(avgProfitHistory).toLocaleString('pt-BR')}). O modelo cognitivo identificou aprendizado e consolidação tática de mercado!`;
+          } else {
+            recommendation += `Seu lucro ficou abaixo da sua média histórica (R$ ${Math.round(avgProfitHistory).toLocaleString('pt-BR')}) e seu recorde pessoal é R$ ${Math.round(bestProfit).toLocaleString('pt-BR')}. Recomenda-se ajustar as margens comparando com as rodadas anteriores.`;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    // Ignore sandbox/localStorage issues
   }
 
   // 3. Forecast
@@ -124,14 +260,51 @@ export function generateCouncilFeedback(
   const efficiency = metrics.efficiency;
   const reputation = metrics.reputation;
 
+  // Find top product and stock facts
+  let worstStockProduct = '';
+  let maxStockRemaining = 0;
+  let worstLostSalesProduct = '';
+  let maxLostSales = 0;
+  let topRevenueProduct = '';
+  let maxRevenue = -1;
+
+  metrics.productResults.forEach((pr) => {
+    const prodInfo = products.find(p => p.id === pr.productId);
+    if (pr.revenue > maxRevenue) {
+      maxRevenue = pr.revenue;
+      topRevenueProduct = prodInfo ? prodInfo.name : pr.productId;
+    }
+    if (pr.stockRemaining > maxStockRemaining) {
+      maxStockRemaining = pr.stockRemaining;
+      worstStockProduct = prodInfo ? prodInfo.name : pr.productId;
+    }
+    const lost = pr.demanded - pr.sold;
+    if (lost > maxLostSales) {
+      maxLostSales = lost;
+      worstLostSalesProduct = prodInfo ? prodInfo.name : pr.productId;
+    }
+  });
+
   // Sr. Rocha (Diretor Financeiro, Conservador)
   let rocha = '';
   if (cash < 80000) {
-    rocha = `Alerta vermelho! Nosso caixa está em R$ ${cash.toLocaleString('pt-BR')}. Precisamos cortar custos imediatamente e não gastar mais do que faturamos na próxima rodada!`;
+    rocha = `Alerta vermelho! Nosso caixa está em R$ ${cash.toLocaleString('pt-BR')}. `;
+    if (maxStockRemaining > 400 && worstStockProduct) {
+      rocha += `Temos capital de giro parado na forma de ${maxStockRemaining} unidades de **${worstStockProduct}** no estoque. `;
+    }
+    rocha += `Precisamos cortar custos imediatamente e não gastar mais do que faturamos!`;
   } else if (profit > 100000) {
-    rocha = `Excelente rodada. Um lucro de R$ ${profit.toLocaleString('pt-BR')} solidifica nossa posição de liquidez. Continuem com essa disciplina fiscal.`;
+    rocha = `Excelente rodada. Um lucro de R$ ${profit.toLocaleString('pt-BR')} solidifica nossa posição de liquidez. `;
+    if (topRevenueProduct) {
+      rocha += `O faturamento com **${topRevenueProduct}** foi fundamental para este balanço positivo. `;
+    }
+    rocha += `Continuem com essa disciplina fiscal.`;
   } else if (profit < 0) {
-    rocha = `Prejuízo inaceitável de R$ ${Math.abs(profit).toLocaleString('pt-BR')}. Gastamos demais em investimentos abstratos e não geramos receita suficiente. Reduzam a exposição ao risco.`;
+    rocha = `Prejuízo inaceitável de R$ ${Math.abs(profit).toLocaleString('pt-BR')}. `;
+    if (decision.investments.marketing + decision.investments.logistics > 150000) {
+      rocha += `Gastamos demais em marketing e logística (R$ ${(decision.investments.marketing + decision.investments.logistics).toLocaleString('pt-BR')}) e não geramos receita suficiente. `;
+    }
+    rocha += `Reduzam a exposição ao risco.`;
   } else {
     rocha = `Resultado razoável, mas a rentabilidade sobre os investimentos realizados está apertada. Precisamos otimizar nossa margem de lucro.`;
   }
@@ -139,19 +312,28 @@ export function generateCouncilFeedback(
   // Dra. Luna (Diretora de Marketing, Agressiva)
   let luna = '';
   const marketingInv = decision.investments.marketing;
-  if (marketingInv < 40000) {
-    luna = `Estamos invisíveis no mercado! Apenas R$ ${marketingInv.toLocaleString('pt-BR')} em marketing é um erro grave. Os concorrentes estão nos engolindo em reputação!`;
+  if (marketingInv < 45000) {
+    luna = `Estamos invisíveis no mercado! Apenas R$ ${marketingInv.toLocaleString('pt-BR')} em marketing é um erro grave. `;
+    if (worstStockProduct && maxStockRemaining > 200) {
+      luna += `Como pretendemos vender as ${maxStockRemaining} unidades de **${worstStockProduct}** sem promoção ativa? `;
+    }
+    luna += `Os concorrentes estão nos engolindo em reputação!`;
   } else if (reputation > 75) {
-    luna = `Que espetáculo de engajamento! A Essenza está se tornando um ícone da moda casual refinada. Nossa marca nunca esteve tão forte.`;
+    luna = `Que espetáculo de engajamento! A Essenza está se tornando um ícone da moda casual refinada. `;
+    if (topRevenueProduct) {
+      luna += `A campanha fez as vendas de **${topRevenueProduct}** brilharem. `;
+    }
+    luna += `Nossa marca nunca esteve tão forte.`;
   } else {
     luna = `Precisamos de mais ousadia comercial. O mercado é dinâmico e quem lidera as tendências capta os clientes de maior valor. Recomendo aumentar o orçamento de marketing.`;
   }
 
   // Eng. Vane (Diretor de Operações, Pragmática)
   let vane = '';
-  const totalStock = metrics.productResults.reduce((acc, curr) => acc + curr.stockRemaining, 0);
-  if (totalStock > 2000) {
-    vane = `Temos um grande problema de ociosidade e estoque: ${totalStock} peças estocadas geram custo de armazenagem elevado e mostram falta de sincronia entre fábrica e vendas.`;
+  if (maxStockRemaining > 1500 && worstStockProduct) {
+    vane = `Temos um grande problema de ociosidade e estoque: ${maxStockRemaining} peças de **${worstStockProduct}** estocadas geram custo de armazenagem elevado e mostram falta de sincronia entre fábrica e vendas.`;
+  } else if (maxLostSales > 200 && worstLostSalesProduct) {
+    vane = `Deixamos dinheiro na mesa! Faltou capacidade e planejamento produtivo para o/a **${worstLostSalesProduct}** (${Math.round(maxLostSales)} unidades de demanda perdida). Ajuste as metas operacionais.`;
   } else if (quality > 75 && efficiency > 70) {
     vane = `Parabéns ao time da fábrica. Nossos índices de qualidade (${Math.round(quality)}) e eficiência operacional (${Math.round(efficiency)}) estão perfeitamente ajustados aos padrões premium.`;
   } else {

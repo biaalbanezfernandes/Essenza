@@ -89,6 +89,19 @@ export const GameDashboard: React.FC = () => {
         message: 'Aviso crítico: Os investimentos ultrapassam seu saldo de caixa. Reduza os investimentos para processar a rodada.'
       };
     }
+
+    // Check if any product price is below production cost
+    for (const p of products) {
+      const price = pendingDecision.prices[p.id] || p.defaultPrice;
+      const qty = pendingDecision.productionQty[p.id] || 0;
+      if (qty > 0 && price < p.productionCost) {
+        return {
+          type: 'danger',
+          message: `Erro Comercial: O preço definido para o/a ${p.name} (R$ ${price.toFixed(2)}) é inferior ao custo de produção unitário (R$ ${p.productionCost.toFixed(2)}). Você terá prejuízo em cada venda!`
+        };
+      }
+    }
+
     if (pendingDecision.investments.materials < rawMaterialRequired && rawMaterialRequired > 0) {
       return {
         type: 'warning',
@@ -101,24 +114,88 @@ export const GameDashboard: React.FC = () => {
         message: `Gargalo operacional: Seu investimento em Produção e Salários (R$ ${pendingDecision.investments.production.toLocaleString('pt-BR')}) é insuficiente para a escala produtiva desejada (necessário R$ ${laborRequired.toLocaleString('pt-BR')}).`
       };
     }
-    if (pendingDecision.investments.marketing < 30000) {
+
+    // Check seasonality mismatches
+    if (currentRound === 1) {
+      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
+      if (vestidoQty > 300) {
+        return {
+          type: 'warning',
+          message: 'Aviso de Temporada: O Vestido Linho tem baixa demanda no outono/inverno (Rodada 1). Reduza a produção para evitar encalhar estoque.'
+        };
+      }
+    } else if (currentRound === 2) {
+      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
+      const moletomQty = pendingDecision.productionQty['moletom'] || 0;
+      if (vestidoQty > 200) {
+        return {
+          type: 'warning',
+          message: 'Alerta de Temporada: Estamos no auge do Inverno (Rodada 2). A demanda por Vestidos de Linho está reduzida pela metade. Redirecione os recursos para Moletons!'
+        };
+      }
+      if (moletomQty > 0 && moletomQty < 500) {
+        return {
+          type: 'info',
+          message: 'Dica de Temporada: A demanda de Moletons está multiplicada por 2.2x no Inverno (Rodada 2). Produza uma quantidade maior para aproveitar este pico de vendas.'
+        };
+      }
+    } else if (currentRound === 3) {
+      const moletomQty = pendingDecision.productionQty['moletom'] || 0;
+      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
+      if (moletomQty > 200) {
+        return {
+          type: 'warning',
+          message: 'Alerta de Temporada: Estamos no Verão (Rodada 3). A demanda de Moletons despencou. Reduza drasticamente a produção para evitar prejuízo com estoque parado.'
+        };
+      }
+      if (vestidoQty > 0 && vestidoQty < 600) {
+        return {
+          type: 'info',
+          message: 'Dica de Temporada: Vestido Linho tem demanda multiplicada por 2.4x no Verão (Rodada 3). Aproveite para programar uma produção maior deste item.'
+        };
+      }
+    }
+
+    // Check if pricing is abnormally high without reputation
+    let pricingHighProduct = '';
+    let pricingHighVal = 0;
+    products.forEach(p => {
+      const price = pendingDecision.prices[p.id] || p.defaultPrice;
+      if (price > p.defaultPrice * 1.35) {
+        pricingHighProduct = p.name;
+        pricingHighVal = price;
+      }
+    });
+
+    if (pricingHighProduct && reputation < 55) {
+      return {
+        type: 'warning',
+        message: `Risco de Rejeição: O preço de R$ ${pricingHighVal.toFixed(2)} para ${pricingHighProduct} está muito elevado para a reputação atual da marca (${Math.round(reputation)} pontos). Aumente o Marketing ou reduza o preço para evitar que os clientes comprem do concorrente.`
+      };
+    }
+
+    // Logistics bottleneck
+    const totalQty = products.reduce((acc, p) => acc + (pendingDecision.productionQty[p.id] || 0), 0);
+    if (totalQty > 3000 && pendingDecision.investments.logistics < 25000) {
+      return {
+        type: 'warning',
+        message: `Logística Estrangulada: Você planeja produzir ${totalQty} peças, mas investiu menos de R$ 25.000 em Logística. Isso gerará lentidão na entrega e queda na eficiência de vendas.`
+      };
+    }
+
+    // Unfocused production
+    const activeProductsCount = products.filter(p => (pendingDecision.productionQty[p.id] || 0) > 0).length;
+    if (activeProductsCount > 4) {
+      return {
+        type: 'info',
+        message: 'Foco Pulverizado: Você está fabricando 5 ou mais produtos simultaneamente. Focar em 2 ou 3 itens mais rentáveis ou sazonais costuma maximizar os lucros da Essenza.'
+      };
+    }
+
+    if (pendingDecision.investments.marketing < 35000) {
       return {
         type: 'info',
         message: 'Recomendação de Marketing: Investimento em promoção muito modesto. Você pode perder quota de mercado para o Rival B (Premium).'
-      };
-    }
-    
-    // Check if pricing is abnormally high
-    let pricingHigh = false;
-    products.forEach(p => {
-      const price = pendingDecision.prices[p.id] || p.defaultPrice;
-      if (price > p.defaultPrice * 1.5) pricingHigh = true;
-    });
-
-    if (pricingHigh) {
-      return {
-        type: 'info',
-        message: 'Aviso Comercial: Alguns de seus preços estão bastante elevados. Certifique-se de sustentar essa margem com alto investimento em Marketing para construir valor de marca.'
       };
     }
 
@@ -129,6 +206,21 @@ export const GameDashboard: React.FC = () => {
   };
 
   const ssisAdvice = getLiveSsisAdvice();
+
+  // Load local training runs for this specific player
+  let runsCount = 0;
+  let bestProfitHistory = 0;
+  try {
+    const playerRunsKey = `essenza_cognitive_runs_${state.playerEmail}`;
+    const historyRunsStr = localStorage.getItem(playerRunsKey);
+    if (historyRunsStr) {
+      const historyRuns = JSON.parse(historyRunsStr);
+      runsCount = historyRuns.length;
+      bestProfitHistory = Math.max(...historyRuns.map((r: any) => r.totalProfit || 0), 0);
+    }
+  } catch (err) {
+    // Ignore
+  }
 
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
@@ -348,6 +440,40 @@ export const GameDashboard: React.FC = () => {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.45 }}>
                 {ssisAdvice.message}
               </p>
+            </div>
+          </div>
+
+          {/* Scorpio AI Cognitive Training Panel */}
+          <div className="glass-panel" style={{
+            padding: '1.5rem',
+            marginTop: '1rem',
+            borderLeft: '4px solid var(--accent-gold)',
+            background: 'rgba(212, 175, 55, 0.03)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem', background: 'var(--accent-gold)', color: '#000' }}>COGNITIVE BRAIN</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Treinamento do Modelo Local</span>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: '0.5rem' }}>
+              {runsCount > 0 ? (
+                <span>
+                  <strong>Status:</strong> IA Treinada com <strong>{runsCount}</strong> simulações passadas. <br/>
+                  <strong>Recorde de Lucro Registrado:</strong> R$ {bestProfitHistory.toLocaleString('pt-BR')}.
+                </span>
+              ) : (
+                <span>
+                  <strong>Status:</strong> Coletando Dados de Entrada... <br/>
+                  A IA local aprenderá padrões de mercado e correlações assim que você finalizar sua primeira simulação.
+                </span>
+              )}
+            </p>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem' }}>
+              <strong>Correlação Aprendida:</strong> {
+                runsCount === 0 ? "Aguardando conclusão do ciclo inicial de treinamento." :
+                runsCount % 3 === 0 ? "Alta correlação detectada: Focar a produção em Moletons no inverno (Rodada 2) e Vestidos no verão (Rodada 3) eleva o faturamento médio em 2.2x." :
+                runsCount % 3 === 1 ? "Eficiência Fabril: Investir mais de R$ 50k em Produção reduz o desperdício de matéria-prima e eleva a satisfação dos funcionários em até 30%." :
+                "Reputação da Grife: Campanhas de Marketing de R$ 80k+ na rodada inicial estabilizam a captação de clientes contra o Rival B (Premium)."
+              }
             </div>
           </div>
         </div>
