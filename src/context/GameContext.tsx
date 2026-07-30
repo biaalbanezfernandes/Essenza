@@ -183,6 +183,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Generate council dialogue feedback
     const councilFeedback = generateCouncilFeedback(
+      state.currentRound,
       state.pendingDecision,
       baseResult.playerMetrics,
       state.activeEvent

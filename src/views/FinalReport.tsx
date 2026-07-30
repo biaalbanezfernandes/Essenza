@@ -4,7 +4,7 @@ import { classifyManagementProfile } from '../engine/ssisEngine';
 import emailjs from '@emailjs/browser';
 import { 
   TrendingUp, RefreshCw, Send, CheckCircle, 
-  Mail, Calendar, Download, Trophy, AlertCircle, ExternalLink, Award, Check
+  Mail, Calendar, Download, Trophy, AlertCircle, ExternalLink, Award
 } from 'lucide-react';
 
 // ─── EmailJS CONFIG ──────────────────────────────────────────────────────────
