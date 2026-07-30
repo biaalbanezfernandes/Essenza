@@ -1,140 +1,82 @@
-# ESSENZA
+# ESSENZA — Simulador Empresarial Inteligente
 
-## Sobre o Projeto
-
-O ESSENZA é um simulador empresarial inteligente desenvolvido para a FECART, inspirado em competições de simulação empresarial como a promovida pelo Sebrae em 2008.
-
-O projeto combina conceitos de administração, empreendedorismo, gamificação e Inteligência Artificial para criar uma experiência interativa na qual o usuário administra uma empresa do setor de vestuário e precisa tomar decisões estratégicas diante de cenários de mercado dinâmicos.
-
-O principal diferencial do projeto é a utilização da Inteligência Artificial como agente de análise e aprendizagem, auxiliando o usuário na interpretação de dados empresariais e na compreensão das consequências de suas decisões.
+Plataforma de simulação empresarial e aprendizado gamificado desenvolvida para a **FECART 2026** (Colégio FECAP). O **ESSENZA** combina conceitos de gestão comercial, finanças, tomada de decisão estratégica e Inteligência Artificial (sistema **S.S.I.S.**).
 
 ---
 
-## Objetivo
+## 🚀 Como Executar o Projeto Localmente
 
-Desenvolver uma plataforma educacional capaz de ensinar conceitos de gestão empresarial por meio de uma simulação interativa baseada em tomada de decisão, análise de indicadores e feedback inteligente gerado por IA.
-
----
-
-## Como Funciona
-
-O jogador assume o papel de gestor da empresa fictícia Essenza, uma marca de roupas casuais.
-
-A cada rodada, recebe recursos financeiros e deve decidir como distribuí-los entre áreas estratégicas da empresa:
-
-* Matéria-prima
-* Produção
-* Funcionários
-* Marketing
-* Logística
-* Desenvolvimento de Coleção
-
-Com base nessas decisões, o sistema calcula indicadores empresariais e apresenta os resultados da rodada.
+### 🛑 Importante: Não use o "Live Server" do VS Code!
+* **Por que o Live Server não funciona?**  
+  O Live Server serve apenas arquivos HTML/CSS estáticos simples. O **ESSENZA** é uma aplicação moderna construída em **React com TypeScript (`.tsx`)**. O navegador não consegue interpretar arquivos `.tsx` diretamente sem que eles sejam compilados pelo Vite em tempo real. Se você tentar abrir via Live Server, a tela ficará **totalmente em branco**.
 
 ---
 
-## Inteligência Artificial
+### ✅ Passo a Passo para Rodar
 
-A IA é o elemento central do projeto.
-
-Suas funções incluem:
-
-* Analisar decisões tomadas pelo jogador;
-* Interpretar indicadores empresariais;
-* Identificar padrões de desempenho;
-* Gerar recomendações estratégicas;
-* Explicar causas de lucros e prejuízos;
-* Simular cenários alternativos;
-* Produzir feedbacks educacionais personalizados;
-* Gerar notícias automáticas e o jornal final da empresa.
-
-O objetivo não é apenas mostrar resultados, mas ajudar o usuário a compreender o raciocínio empresarial por trás deles.
+1. **Abra o terminal** na pasta raiz do projeto (`Essenza`).
+2. **Instale as dependências** (caso ainda não tenha feito):
+   ```bash
+   npm install
+   ```
+3. **Inicie o servidor de desenvolvimento do Vite**:
+   ```bash
+   npm run dev
+   ```
+4. **Acesse no seu navegador**:
+   > 🌐 **`http://localhost:5173/`** *(ou o endereço indicado no terminal)*
 
 ---
 
-## Principais Indicadores
+## 🛠️ Tecnologias Utilizadas
 
-O simulador monitora:
-
-* Lucro
-* Prejuízo
-* Vendas
-* Participação de mercado
-* Reputação da marca
-* Satisfação dos funcionários
-* Crescimento empresarial
-* Nível de estoque
+- **Frontend**: React 18 + TypeScript 5
+- **Bundler**: Vite 5
+- **Estilização**: Vanilla CSS (Design System Executivo Premium Dark Mode + Glassmorphism)
+- **Ícones**: Lucide React
+- **Gráficos**: Gráfico Radar SVG nativo customizado
+- **Envio de Certificado**: EmailJS (`@emailjs/browser`)
+- **Versionamento**: Git & GitHub
 
 ---
 
-## Eventos Dinâmicos
+## ✉️ Configuração do Envio de Certificado por E-mail (EmailJS)
 
-Durante a simulação podem ocorrer eventos externos e internos.
+Ao finalizar as 3 rodadas comerciais, o gestor recebe um **Certificado Oficial de Desempenho** assinado pela **Profa. Dra. Débora Mendonça M. Machado**. O certificado pode ser impresso ou enviado digitalmente por e-mail.
 
-### Eventos Externos
+### Credenciais Configuradas:
+- **Service ID**: `service_psjyr8r`
+- **Public Key**: `0KWHSmZLCrygDSvZl`
 
-* Inflação
-* Crises econômicas
-* Aumento do custo do algodão
-* Mudanças de tendência da moda
-* Parcerias comerciais
-* Influenciadores promovendo a marca
-
-### Eventos Internos
-
-* Greves de funcionários
-* Defeitos de fabricação
-* Excesso de estoque
-* Sucesso de novas coleções
-* Falhas de marketing
+Para mais detalhes sobre a criação do template no painel do EmailJS, consulte o arquivo [`CONFIGURAR_EMAIL.md`](./CONFIGURAR_EMAIL.md).
 
 ---
 
-## Tecnologias Previstas
+## 🎯 Funcionalidades do Simulador
 
-* Python
-* Streamlit
-* Inteligência Artificial Generativa
-* Modelos de Linguagem (LLMs)
-* Processamento de Linguagem Natural (PLN)
-* Banco de Dados
-* Git e GitHub
-
----
-
-## Estrutura do Projeto
-
-```text
-ESSENZA/
-│
-├── app/
-├── simulation/
-├── ai/
-├── database/
-├── assets/
-├── reports/
-├── docs/
-└── README.md
-```
+1. **Ficha Cadastral Executiva**: Registro inicial do gestor.
+2. **Painel de Decisões Estratégicas (3 Rodadas)**:
+   - Alocação de orçamento: Matéria-Prima, Produção, Marketing e Logística.
+   - Definição do Mix de Produção e Preço de Venda para 6 produtos da marca.
+3. **Motor de Mercado Dinâmico (`marketEngine`)**:
+   - Simulação de demanda baseada em elasticidade de preço, investimentos e concorrentes (Rival Volume e Rival Premium).
+   - Eventos aleatórios de mercado (internos e externos).
+4. **Inteligência S.S.I.S. (`ssisEngine`)**:
+   - Diagnósticos preventivos durante as decisões.
+   - Análise de indicadores empresariais e feedbacks pedagógicos.
+   - Notícias automáticas da rodada.
+5. **Relatório Final & Certificação**:
+   - Classificação do perfil de gestão.
+   - Avaliação pedagógica detalhada (Planejamento, Finanças, Pessoas e Inovação).
+   - Emissão de Certificado Oficial assinado com opção de envio por e-mail e impressão em PDF.
 
 ---
 
-## Status do Projeto
+## 👥 Equipe e Instituição
 
-🚧 Em desenvolvimento
-
-Atualmente o projeto encontra-se em fase de modelagem e implementação do simulador empresarial e da arquitetura de Inteligência Artificial.
-
----
-
-## Equipe
-
-* Beatriz Lancellotti Albanez Fernandes
-* Lucca Cappellanno Paniagua
-* Laura Berti Pontes
-
----
-
-## FECART
-
-Projeto desenvolvido para apresentação na Feira de Ciência, Cultura e Tecnologia (FECART), com foco na aplicação da Inteligência Artificial em ambientes educacionais e de simulação empresarial.
+- **Alunos Desenvolvedores**:
+  - Beatriz Lancellotti Albanez Fernandes
+  - Lucca Cappellanno Paniagua
+  - Laura Berti Pontes
+- **Apoio Acadêmico**: Colégio FECAP — **FECART 2026**
+- **Coordenação**: Profa. Dra. Débora Mendonça M. Machado (Coordenadora dos Cursos Técnicos — Colégio FECAP)
