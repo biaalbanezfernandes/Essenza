@@ -11,9 +11,9 @@ import {
 
 // ─── EmailJS CONFIG ──────────────────────────────────────────────────────────
 // Estas chaves devem ser configuradas no painel do EmailJS (emailjs.com)
-const EMAILJS_SERVICE_ID  = 'service_psjyr8r';   
-const EMAILJS_TEMPLATE_ID = 'template_essenza';  
-const EMAILJS_PUBLIC_KEY  = '0KWHSmZLCrygDSvZl';    
+const EMAILJS_SERVICE_ID = 'service_ea25zeo';
+const EMAILJS_TEMPLATE_ID = 'template_9srpl41';
+const EMAILJS_PUBLIC_KEY = 'nyfgnr8aavqMopwpz';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const FinalReport: React.FC = () => {
@@ -136,7 +136,8 @@ export const FinalReport: React.FC = () => {
       const response = await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
-        templateParams
+        templateParams,
+        EMAILJS_PUBLIC_KEY
       );
 
       if (response.status === 200) {
