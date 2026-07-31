@@ -81,4 +81,9 @@ const EMAILJS_PUBLIC_KEY  = 'SUA_PUBLIC_KEY';    // ← cole sua Public Key aqui
 ```
 
 ## 6. Testar
-Finalize uma simulação e clique em **Enviar por E-mail** na tela de certificado!
+Finalize uma simulação e você verá duas opções:
+1.  **Enviar Certificado Agora**: Envia o e-mail formatado via EmailJS.
+2.  **Baixar Certificado (PDF)**: Gera e baixa um arquivo PDF de alta qualidade do certificado.
+
+## Notas sobre o PDF
+A nova funcionalidade de PDF utiliza as bibliotecas `jspdf` e `html2canvas`, que já foram adicionadas às dependências do projeto. O certificado gerado preserva a identidade visual escura e sofisticada do Essenza.
