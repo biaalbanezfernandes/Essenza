@@ -12,7 +12,7 @@ import {
 // ─── EmailJS CONFIG ──────────────────────────────────────────────────────────
 // Estas chaves devem ser configuradas no painel do EmailJS (emailjs.com)
 const EMAILJS_SERVICE_ID = 'service_ea25zeo';
-const EMAILJS_TEMPLATE_ID = 'template_9srpl41';
+const EMAILJS_TEMPLATE_ID = 'template_q6gvfd3';
 const EMAILJS_PUBLIC_KEY = 'nyfgnr8aavqMopwpz';
 // ─────────────────────────────────────────────────────────────────────────────
 

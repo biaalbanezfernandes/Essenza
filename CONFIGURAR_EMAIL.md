@@ -75,9 +75,9 @@ No painel, vá em **Account** → **General** → copie a **Public Key**
 Abra o arquivo `src/views/FinalReport.tsx` e substitua as linhas:
 
 ```ts
-const EMAILJS_SERVICE_ID  = 'service_essenza';   // ← cole seu Service ID aqui
-const EMAILJS_TEMPLATE_ID = 'template_essenza';  // ← cole seu Template ID aqui
-const EMAILJS_PUBLIC_KEY  = 'SUA_PUBLIC_KEY';    // ← cole sua Public Key aqui
+const EMAILJS_SERVICE_ID  = 'service_ea25zeo';   // Service ID ativo
+const EMAILJS_TEMPLATE_ID = 'template_q6gvfd3';  // Template ID ativo
+const EMAILJS_PUBLIC_KEY  = 'nyfgnr8aavqMopwpz';  // Public Key ativa
 ```
 
 ## 6. Testar
