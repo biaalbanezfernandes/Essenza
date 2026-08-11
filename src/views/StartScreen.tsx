@@ -45,6 +45,10 @@ export const StartScreen: React.FC = () => {
   const [pendingName, setPendingName] = useState('');
   const [pendingEmail, setPendingEmail] = useState('');
 
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [showBriefing, briefingStep]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {

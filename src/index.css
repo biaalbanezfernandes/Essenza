@@ -293,6 +293,7 @@ p {
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+
 /* Radar Chart Custom Styling */
 .radar-container {
   position: relative;
@@ -301,3 +302,39 @@ p {
   margin: 0 auto;
   aspect-ratio: 1;
 }
+
+/* Tutorial Spotlight & Highlights */
+.tutorial-spotlight-active {
+  position: relative !important;
+  z-index: 100 !important;
+  outline: 3px solid var(--accent-gold) !important;
+  outline-offset: 6px !important;
+  box-shadow: 0 0 35px 8px rgba(212, 175, 55, 0.45), 0 0 15px 2px rgba(255, 255, 255, 0.3) !important;
+  border-color: var(--accent-gold) !important;
+  animation: tutorialPulse 2s infinite alternate !important;
+  border-radius: var(--radius-lg) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+@keyframes tutorialPulse {
+  0% {
+    box-shadow: 0 0 25px 4px rgba(212, 175, 55, 0.4), 0 0 10px 1px rgba(255, 255, 255, 0.2);
+    outline-color: #d4af37;
+  }
+  100% {
+    box-shadow: 0 0 45px 12px rgba(212, 175, 55, 0.7), 0 0 20px 4px rgba(255, 255, 255, 0.5);
+    outline-color: #fff;
+  }
+}
+
+.tutorial-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 16, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 90;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+

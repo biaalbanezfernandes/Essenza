@@ -30,10 +30,31 @@ export const RoundResults: React.FC = () => {
       
       {/* Title Header */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>Balanço Operacional</span>
+        <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>
+          {currentRound === 1 ? 'Balanço da Fase Tutorial' : 'Balanço Operacional'}
+        </span>
         <h2 style={{ fontSize: '2.25rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Resultados da Rodada {currentRound}</h2>
         <p style={{ color: 'var(--text-secondary)' }}>Relatório analítico de mercado e posicionamento estratégico</p>
       </div>
+
+      {/* Tutorial Completion Callout */}
+      {currentRound === 1 && (
+        <div className="glass-panel" style={{
+          padding: '1.25rem 2rem',
+          marginBottom: '2.5rem',
+          borderLeft: '6px solid var(--accent-success)',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 20, 38, 0.9) 100%)',
+          borderRadius: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+            <span className="badge-pill badge-success" style={{ fontSize: '0.7rem' }}>Fase 1 Concluída!</span>
+            <strong style={{ fontSize: '1.1rem', color: '#fff' }}>🎉 Parabéns! Você concluiu a Fase Tutorial!</strong>
+          </div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>
+            Você aprendeu a distribuir investimentos nas 4 áreas, precificar os produtos e usar o assistente S.S.I.S. Agora você está pronto para encarar a <strong>Fase 2 (Inverno)</strong>, onde a demanda por casacos e moletons vai multiplicar!
+          </p>
+        </div>
+      )}
 
       {/* Financial Overview Cards */}
       <div style={{

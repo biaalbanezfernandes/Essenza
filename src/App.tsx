@@ -8,6 +8,11 @@ import { FinalReport } from './views/FinalReport';
 const GameContent: React.FC = () => {
   const { state } = useGame();
 
+  // Always scroll to top when changing game screen or round
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [state.gameState, state.currentRound]);
+
   switch (state.gameState) {
     case 'start':
       return <StartScreen />;

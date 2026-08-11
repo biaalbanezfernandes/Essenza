@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { products } from '../data/products';
 import type { PlayerDecision } from '../data/types';
+import { InlineTutorialCallout, tutorialSteps } from '../components/TutorialTourModal';
 import { 
   TrendingUp, Award, Zap, Heart, Settings, 
-  DollarSign, AlertTriangle, HelpCircle, ArrowRight, Info
+  DollarSign, AlertTriangle, HelpCircle, ArrowRight, Info,
+  BookOpen, GraduationCap
 } from 'lucide-react';
 
 export const GameDashboard: React.FC = () => {
@@ -12,6 +14,13 @@ export const GameDashboard: React.FC = () => {
   
   // Destructure state values
   const { currentRound, currentCash, reputation, quality, innovation, satisfaction, efficiency, marketShare, activeEvent, pendingDecision } = state;
+
+  // Local state for tutorial tour (5 steps)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(currentRound === 1);
+  const [tutorialStepIndex, setTutorialStepIndex] = useState(0);
+
+  // Local state to track contextual help popovers
+  const [activeHelpPopover, setActiveHelpPopover] = useState<string | null>(null);
 
   // Local state to track validation errors
   const [cashError, setCashError] = useState('');
@@ -222,66 +231,235 @@ export const GameDashboard: React.FC = () => {
     // Ignore
   }
 
+  const togglePopover = (key: string) => {
+    setActiveHelpPopover(prev => prev === key ? null : key);
+  };
+
+  const handleNextStep = () => {
+    if (tutorialStepIndex < tutorialSteps.length - 1) {
+      setTutorialStepIndex(prev => prev + 1);
+    } else {
+      setIsTutorialOpen(false);
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (tutorialStepIndex > 0) {
+      setTutorialStepIndex(prev => prev - 1);
+    }
+  };
+
+  const handleCloseTutorial = () => {
+    setIsTutorialOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  };
+
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
-      
+
+      {/* Top Banner for Phase 1 */}
+      {currentRound === 1 && (
+        <div className="glass-panel" style={{
+          padding: '1.25rem 2rem',
+          marginBottom: '2rem',
+          borderLeft: '6px solid var(--accent-gold)',
+          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(13, 20, 38, 0.9) 100%)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          boxShadow: '0 0 30px rgba(212, 175, 55, 0.15)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              background: 'var(--accent-gold-glow)',
+              color: 'var(--accent-gold)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <GraduationCap size={26} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>FASE 1 • OUTONO</span>
+                <strong style={{ fontSize: '1.1rem', color: '#fff' }}>
+                  {isTutorialOpen ? 'Tutorial Guiado em 5 Passos' : 'Modo de Planejamento Livre'}
+                </strong>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-primary)', marginTop: '0.2rem' }}>
+                {isTutorialOpen 
+                  ? 'Siga os 5 mini-passos para aprender como gerenciar a Essenza.' 
+                  : 'Altere seus investimentos e preços à vontade. Clique em "Processar Rodada 1" no final da página apenas quando estiver pronto.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setTutorialStepIndex(0);
+              setIsTutorialOpen(true);
+            }}
+            className="btn-primary"
+            style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
+          >
+            <BookOpen size={18} /> {isTutorialOpen ? 'Reiniciar Tutorial' : 'Abrir Guia do Tutorial'}
+          </button>
+        </div>
+      )}
+
       {/* Upper Bar: Title & Cash Status */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>Rodada {currentRound} de 3</span>
-          <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Sala de Planejamento Estratégico</h2>
+      <div 
+        id="tutorial-cash" 
+        style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem', transition: 'all 0.3s ease' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>
+              {currentRound === 1 ? 'Rodada 1 de 3 (Outono)' : `Rodada ${currentRound} de 3`}
+            </span>
+            <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Sala de Planejamento Estratégico
+            </h2>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', gap: '2rem', alignItems: 'center', position: 'relative' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>CAIXA ATUAL</span>
+                <button 
+                  onClick={() => togglePopover('cash')} 
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', display: 'flex' }}
+                  title="Ver dica do Caixa"
+                >
+                  <HelpCircle size={14} />
+                </button>
+              </div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-display)' }}>
+                R$ {currentCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            
+            <div style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', height: '40px' }} />
+            
+            <div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>CAIXA PREVISTO</span>
+              <div style={{ 
+                fontSize: '1.4rem', 
+                fontWeight: 800, 
+                color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-success)', 
+                fontFamily: 'var(--font-display)' 
+              }}>
+                R$ {remainingCashLive.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            {/* Contextual Popover for Cash */}
+            {activeHelpPopover === 'cash' && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '0.5rem',
+                width: '320px',
+                background: 'rgba(15, 23, 42, 0.98)',
+                border: '1px solid var(--accent-gold)',
+                borderRadius: '12px',
+                padding: '1rem',
+                zIndex: 200,
+                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                fontSize: '0.8rem',
+                lineHeight: 1.4
+              }}>
+                <strong style={{ color: 'var(--accent-gold)', display: 'block', marginBottom: '0.3rem' }}>💡 Dica do Caixa:</strong>
+                <p style={{ color: '#fff', margin: 0 }}>
+                  O <strong>Caixa Atual</strong> é o seu dinheiro no banco. O <strong>Caixa Previsto</strong> é o valor que sobra após os 4 investimentos. Se ficar vermelho, ajuste os valores para poder avançar!
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>CAIXA ATUAL</span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-display)' }}>
-              R$ {currentCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </div>
-          </div>
-          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', height: '40px' }} />
-          <div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>CAIXA PREVISTO</span>
-            <div style={{ 
-              fontSize: '1.4rem', 
-              fontWeight: 800, 
-              color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-success)', 
-              fontFamily: 'var(--font-display)' 
-            }}>
-              R$ {remainingCashLive.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </div>
-          </div>
-        </div>
+        {/* STEP 0 (PASSO 1 DE 5: CAIXA) INLINE TUTORIAL CALLOUT */}
+        {isTutorialOpen && tutorialStepIndex === 0 && (
+          <InlineTutorialCallout
+            stepIndex={0}
+            totalSteps={5}
+            step={tutorialSteps[0]}
+            onNext={handleNextStep}
+            onPrev={handlePrevStep}
+            onClose={handleCloseTutorial}
+          />
+        )}
       </div>
 
       {/* Event Alert Panel */}
       {activeEvent && (
-        <div className="glass-panel" style={{
-          padding: '1.25rem 2rem', 
-          marginBottom: '2rem', 
-          borderLeft: `5px solid ${activeEvent.type === 'positive' ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
-          background: activeEvent.type === 'positive' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
-          borderRadius: '8px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span className={`badge-pill ${activeEvent.type === 'positive' ? 'badge-success' : 'badge-danger'}`}>
-              Evento de Mercado: {activeEvent.type === 'positive' ? 'Positivo' : 'Adverso'}
-            </span>
-            <strong style={{ fontSize: '1rem', color: '#fff' }}>{activeEvent.title}</strong>
+        <div 
+          id="tutorial-event"
+          className="glass-panel" 
+          style={{
+            padding: '1.25rem 2rem', 
+            marginBottom: '2rem', 
+            borderLeft: `5px solid ${activeEvent.type === 'positive' ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
+            background: activeEvent.type === 'positive' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+            borderRadius: '8px',
+            position: 'relative'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className={`badge-pill ${activeEvent.type === 'positive' ? 'badge-success' : 'badge-danger'}`}>
+                Evento de Mercado: {activeEvent.type === 'positive' ? 'Positivo' : 'Adverso'}
+              </span>
+              <strong style={{ fontSize: '1rem', color: '#fff' }}>{activeEvent.title}</strong>
+            </div>
+
+            <button 
+              onClick={() => togglePopover('event')} 
+              style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem' }}
+            >
+              <HelpCircle size={14} /> Dica de Notícias
+            </button>
           </div>
+          
           <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
             {activeEvent.description} <span style={{ color: 'var(--accent-gold)' }}>Área afetada: {activeEvent.affectedArea} ({activeEvent.multiplier}x)</span>.
           </p>
+
+          {/* Contextual Popover for Event */}
+          {activeHelpPopover === 'event' && (
+            <div style={{
+              marginTop: '0.75rem',
+              background: 'rgba(15, 23, 42, 0.98)',
+              border: '1px solid var(--accent-gold)',
+              borderRadius: '10px',
+              padding: '0.75rem 1rem',
+              fontSize: '0.8rem',
+              color: '#fff'
+            }}>
+              💡 <strong>Notícia da estação:</strong> Eventos alteram vendas ou custos temporariamente. Ajuste sua estratégia para aproveitar ou economizar!
+            </div>
+          )}
         </div>
       )}
 
       {/* Permanent Metrics Panel */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-        gap: '1rem',
-        marginBottom: '2.5rem'
-      }}>
+      <div 
+        id="tutorial-metrics"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2.5rem'
+        }}
+      >
         <div className="glass-panel" style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>REPUTAÇÃO</span>
           <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
@@ -342,10 +520,52 @@ export const GameDashboard: React.FC = () => {
 
         {/* Section 1: Financial Allocation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="glass-panel" style={{ padding: '2rem' }}>
-            <h3 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-display)' }}>
-              <DollarSign style={{ color: 'var(--accent-gold)' }} /> Alocação de Investimentos
-            </h3>
+          
+          {/* Investment Sliders Panel */}
+          <div 
+            id="tutorial-investments"
+            className="glass-panel" 
+            style={{ padding: '2rem', position: 'relative' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                <DollarSign style={{ color: 'var(--accent-gold)' }} /> Alocação de Investimentos
+              </h3>
+              <button 
+                onClick={() => togglePopover('investments')} 
+                style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem' }}
+              >
+                <HelpCircle size={14} /> Dica de Investimento
+              </button>
+            </div>
+
+            {/* STEP 1 (PASSO 2 DE 5: INVESTIMENTOS) INLINE TUTORIAL CALLOUT */}
+            {isTutorialOpen && tutorialStepIndex === 1 && (
+              <InlineTutorialCallout
+                stepIndex={1}
+                totalSteps={5}
+                step={tutorialSteps[1]}
+                onNext={handleNextStep}
+                onPrev={handlePrevStep}
+                onClose={handleCloseTutorial}
+              />
+            )}
+
+            {/* Contextual Popover for Investments */}
+            {activeHelpPopover === 'investments' && (
+              <div style={{
+                marginBottom: '1rem',
+                background: 'rgba(15, 23, 42, 0.98)',
+                border: '1px solid var(--accent-gold)',
+                borderRadius: '10px',
+                padding: '0.85rem 1rem',
+                fontSize: '0.8rem',
+                color: '#fff',
+                lineHeight: 1.45
+              }}>
+                <strong>💡 O que mexer aqui?</strong> Arraste os 4 sliders para distribuir sua verba. Se você programar a produção de muitas roupas mas investir pouco em Matéria-Prima ou Produção, a fábrica vai travar e você produzirá menos!
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Materials */}
@@ -422,67 +642,142 @@ export const GameDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Scorpio AI S.S.I.S live Assistant box */}
-          <div className="glass-panel" style={{
-            padding: '1.5rem',
-            borderLeft: `4px solid ${
-              ssisAdvice.type === 'danger' ? 'var(--accent-danger)' : 
-              ssisAdvice.type === 'warning' ? 'var(--accent-danger)' :
-              ssisAdvice.type === 'success' ? 'var(--accent-success)' : 'var(--accent-blue)'
-            }`
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>S.S.I.S. ASSISTENTE</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Análise de Planejamento</span>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-              <Info size={16} style={{ marginTop: '0.15rem', color: 'var(--accent-gold)', flexShrink: 0 }} />
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.45 }}>
-                {ssisAdvice.message}
-              </p>
-            </div>
-          </div>
+          {/* Scorpio AI S.S.I.S live Assistant & Cognitive Brain box */}
+          <div id="tutorial-ssis" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="glass-panel" style={{
+              padding: '1.5rem',
+              borderLeft: `4px solid ${
+                ssisAdvice.type === 'danger' ? 'var(--accent-danger)' : 
+                ssisAdvice.type === 'warning' ? 'var(--accent-danger)' :
+                ssisAdvice.type === 'success' ? 'var(--accent-success)' : 'var(--accent-blue)'
+              }`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>S.S.I.S. ASSISTENTE</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Análise Preventiva em Tempo Real</span>
+                </div>
+                <button 
+                  onClick={() => togglePopover('ssis')} 
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem' }}
+                >
+                  <HelpCircle size={14} /> Entender Dicas
+                </button>
+              </div>
 
-          {/* Scorpio AI Cognitive Training Panel */}
-          <div className="glass-panel" style={{
-            padding: '1.5rem',
-            marginTop: '1rem',
-            borderLeft: '4px solid var(--accent-gold)',
-            background: 'rgba(212, 175, 55, 0.03)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem', background: 'var(--accent-gold)', color: '#000' }}>COGNITIVE BRAIN</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Treinamento do Modelo Local</span>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: '0.5rem' }}>
-              {runsCount > 0 ? (
-                <span>
-                  <strong>Status:</strong> IA Treinada com <strong>{runsCount}</strong> simulações passadas. <br/>
-                  <strong>Recorde de Lucro Registrado:</strong> R$ {bestProfitHistory.toLocaleString('pt-BR')}.
-                </span>
-              ) : (
-                <span>
-                  <strong>Status:</strong> Coletando Dados de Entrada... <br/>
-                  A IA local aprenderá padrões de mercado e correlações assim que você finalizar sua primeira simulação.
-                </span>
+              {/* STEP 3 (PASSO 4 DE 5: ROBÔ SSIS) INLINE TUTORIAL CALLOUT */}
+              {isTutorialOpen && tutorialStepIndex === 3 && (
+                <InlineTutorialCallout
+                  stepIndex={3}
+                  totalSteps={5}
+                  step={tutorialSteps[3]}
+                  onNext={handleNextStep}
+                  onPrev={handlePrevStep}
+                  onClose={handleCloseTutorial}
+                />
               )}
-            </p>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem' }}>
-              <strong>Correlação Aprendida:</strong> {
-                runsCount === 0 ? "Aguardando conclusão do ciclo inicial de treinamento." :
-                runsCount % 3 === 0 ? "Alta correlação detectada: Focar a produção em Moletons no inverno (Rodada 2) e Vestidos no verão (Rodada 3) eleva o faturamento médio em 2.2x." :
-                runsCount % 3 === 1 ? "Eficiência Fabril: Investir mais de R$ 50k em Produção reduz o desperdício de matéria-prima e eleva a satisfação dos funcionários em até 30%." :
-                "Reputação da Grife: Campanhas de Marketing de R$ 80k+ na rodada inicial estabilizam a captação de clientes contra o Rival B (Premium)."
-              }
+
+              {activeHelpPopover === 'ssis' && (
+                <div style={{
+                  marginBottom: '0.75rem',
+                  background: 'rgba(15, 23, 42, 0.98)',
+                  border: '1px solid var(--accent-gold)',
+                  borderRadius: '8px',
+                  padding: '0.75rem',
+                  fontSize: '0.8rem',
+                  color: '#fff'
+                }}>
+                  💡 <strong>O que o robô faz?</strong> Ele monitora todas as suas edições de preço, lotes e investimentos instantaneamente. Se a caixa estiver vermelha ou amarela, leia o conselho e corrija antes de enviar!
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <Info size={16} style={{ marginTop: '0.15rem', color: 'var(--accent-gold)', flexShrink: 0 }} />
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.45 }}>
+                  {ssisAdvice.message}
+                </p>
+              </div>
+            </div>
+
+            {/* Scorpio AI Cognitive Training Panel */}
+            <div className="glass-panel" style={{
+              padding: '1.5rem',
+              borderLeft: '4px solid var(--accent-gold)',
+              background: 'rgba(212, 175, 55, 0.03)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem', background: 'var(--accent-gold)', color: '#000' }}>COGNITIVE BRAIN</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Treinamento do Modelo Local</span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, marginBottom: '0.5rem' }}>
+                {runsCount > 0 ? (
+                  <span>
+                    <strong>Status:</strong> IA Treinada com <strong>{runsCount}</strong> simulações passadas. <br/>
+                    <strong>Recorde de Lucro Registrado:</strong> R$ {bestProfitHistory.toLocaleString('pt-BR')}.
+                  </span>
+                ) : (
+                  <span>
+                    <strong>Status:</strong> Coletando Dados de Entrada... <br/>
+                    A IA local aprenderá padrões de mercado e correlações assim que você finalizar sua primeira simulação.
+                  </span>
+                )}
+              </p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem' }}>
+                <strong>Correlação Aprendida:</strong> {
+                  runsCount === 0 ? "Aguardando conclusão do ciclo inicial de treinamento." :
+                  runsCount % 3 === 0 ? "Alta correlação detectada: Focar a produção em Moletons no inverno (Rodada 2) e Vestidos no verão (Rodada 3) eleva o faturamento médio em 2.2x." :
+                  runsCount % 3 === 1 ? "Eficiência Fabril: Investir mais de R$ 50k em Produção reduz o desperdício de matéria-prima e eleva a satisfação dos funcionários em até 30%." :
+                  "Reputação da Grife: Campanhas de Marketing de R$ 80k+ na rodada inicial estabilizam a captação de clientes contra o Rival B (Premium)."
+                }
+              </div>
             </div>
           </div>
         </div>
 
         {/* Section 2: Products Mix, Price and Qty */}
-        <div className="glass-panel" style={{ padding: '2rem', overflowX: 'auto' }}>
-          <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Settings style={{ color: 'var(--accent-gold)' }} /> Mix de Produtos e Lotes
-          </h3>
+        <div 
+          id="tutorial-products"
+          className="glass-panel" 
+          style={{ padding: '2rem', overflowX: 'auto', position: 'relative' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Settings style={{ color: 'var(--accent-gold)' }} /> Mix de Produtos e Lotes
+            </h3>
+            <button 
+              onClick={() => togglePopover('products')} 
+              style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem' }}
+            >
+              <HelpCircle size={14} /> Dica de Produtos
+            </button>
+          </div>
+
+          {/* STEP 2 (PASSO 3 DE 5: PRODUTOS) INLINE TUTORIAL CALLOUT */}
+          {isTutorialOpen && tutorialStepIndex === 2 && (
+            <InlineTutorialCallout
+              stepIndex={2}
+              totalSteps={5}
+              step={tutorialSteps[2]}
+              onNext={handleNextStep}
+              onPrev={handlePrevStep}
+              onClose={handleCloseTutorial}
+            />
+          )}
+
+          {activeHelpPopover === 'products' && (
+            <div style={{
+              marginBottom: '1rem',
+              background: 'rgba(15, 23, 42, 0.98)',
+              border: '1px solid var(--accent-gold)',
+              borderRadius: '10px',
+              padding: '0.85rem 1rem',
+              fontSize: '0.8rem',
+              color: '#fff',
+              lineHeight: 1.45
+            }}>
+              💡 <strong>Como mexer aqui?</strong> Altere os campos de <strong>Preço (R$)</strong> e <strong>Qtd. Produzir</strong>. Atenção ao custo de produção e à sazonalidade! Fique atento também às barras de uso de insumos no rodapé desta tabela.
+            </div>
+          )}
 
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
             <thead>
@@ -613,7 +908,22 @@ export const GameDashboard: React.FC = () => {
       </div>
 
       {/* Warnings & Submit button bar */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+      <div 
+        id="tutorial-submit"
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}
+      >
+        {/* STEP 4 (PASSO 5 DE 5: MODO LIVRE / ENVIO) INLINE TUTORIAL CALLOUT */}
+        {isTutorialOpen && tutorialStepIndex === 4 && (
+          <InlineTutorialCallout
+            stepIndex={4}
+            totalSteps={5}
+            step={tutorialSteps[4]}
+            onNext={handleNextStep}
+            onPrev={handlePrevStep}
+            onClose={handleCloseTutorial}
+          />
+        )}
+
         {cashError && (
           <div className="glass-panel" style={{
             padding: '1rem 2rem',
@@ -644,7 +954,7 @@ export const GameDashboard: React.FC = () => {
               cursor: (totalInvestments > currentCash || totalInvestments <= 0) ? 'not-allowed' : 'pointer'
             }}
           >
-            Processar Rodada {currentRound} <ArrowRight size={20} />
+            {currentRound === 1 ? 'Processar Rodada 1' : `Processar Rodada ${currentRound}`} <ArrowRight size={20} />
           </button>
         </div>
       </div>

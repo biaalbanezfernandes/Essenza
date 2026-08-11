@@ -65,29 +65,9 @@ const cognitiveRunsKey = (email: string) => `essenza_cognitive_runs_${email}`;
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GameState>(defaultState);
 
-  // Load game from localStorage if it exists (recovery only for the same player)
+  // Default to 'start' screen on initial app load unless specifically resuming
   useEffect(() => {
-    // Try to find any existing session to restore (only if on start screen)
-    // We only restore if we find a saved state with a valid email
-    try {
-      // Scan localStorage for any essenza_game_state_* key
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('essenza_game_state_')) {
-          const saved = localStorage.getItem(key);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            // Only restore if the game was in progress (not on start screen)
-            if (parsed.gameState && parsed.gameState !== 'start') {
-              setState(parsed);
-            }
-          }
-          break; // Only restore the first one found
-        }
-      }
-    } catch (e) {
-      console.error('Error reading saved state', e);
-    }
+    // Keep initial state as defaultState ('start' screen)
   }, []);
 
   const saveState = (newState: GameState) => {
