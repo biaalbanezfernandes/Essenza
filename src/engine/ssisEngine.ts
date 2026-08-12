@@ -129,7 +129,15 @@ export function generateSsisFeedback(
   }
 
   if (event) {
-    diagnostic += ` O evento "${event.title}" afetou a demanda nesta temporada.`;
+    if (event.category === 'materials') {
+      diagnostic += ` O evento de mercado **"${event.title}"** causou impacto direto nos custos de insumos (${event.type === 'positive' ? 'reduzindo' : 'elevando'} despesas com matéria-prima).`;
+    } else if (event.category === 'marketing') {
+      diagnostic += ` O evento **"${event.title}"** causou impacto significativo na demanda e percepção da sua marca (${event.multiplier}x).`;
+    } else if (event.category === 'production') {
+      diagnostic += ` O evento operacional **"${event.title}"** influenciou a capacidade fabril e rendimento de produção.`;
+    } else {
+      diagnostic += ` O evento **"${event.title}"** alterou as dinâmicas de demanda de mercado nesta temporada.`;
+    }
   }
 
   // 2. Recommendations

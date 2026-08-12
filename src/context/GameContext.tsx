@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { GameState, PlayerDecision, RoundResult, GameEvent } from '../data/types';
+import type { GameState, PlayerDecision, RoundResult } from '../data/types';
 import { products } from '../data/products';
 import { events } from '../data/events';
 import { executeRound } from '../engine/marketEngine';
@@ -89,9 +89,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // Sorteia evento da rodada 1
-    const positiveEvents = events.filter(e => e.type === 'positive');
-    const firstEvent = positiveEvents[Math.floor(Math.random() * positiveEvents.length)];
+    // Sorteia evento da rodada 1 verdadeiramente aleatório de todo o catálogo
+    const firstEvent = events[Math.floor(Math.random() * events.length)];
 
     const newState: GameState = {
       ...defaultState,
@@ -223,17 +222,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       saveState(newState);
     } else {
-      // Sorteia próximo evento da rodada
-      // Garantir que na rodada 2 e 3 temos eventos condizentes (por exemplo, misturando negativos e positivos)
-      let nextEvent: GameEvent;
-      if (nextR === 2) {
-        // Round 2 is winter - let's make it cotton price crisis or summer heat anomalies or a mix
-        const candidates = events.filter(e => e.id !== state.activeEvent?.id);
-        nextEvent = candidates[Math.floor(Math.random() * candidates.length)];
-      } else {
-        const candidates = events.filter(e => e.id !== state.activeEvent?.id && !state.history.some(h => h.event?.id === e.id));
-        nextEvent = candidates[Math.floor(Math.random() * candidates.length)];
-      }
+      // Sorteia próximo evento aleatório da rodada sem repetição
+      const usedIds = state.history.map(h => h.event?.id).filter((id): id is string => Boolean(id));
+      if (state.activeEvent?.id) usedIds.push(state.activeEvent.id);
+
+      const candidates = events.filter(e => !usedIds.includes(e.id));
+      const nextEvent = candidates.length > 0
+        ? candidates[Math.floor(Math.random() * candidates.length)]
+        : events[Math.floor(Math.random() * events.length)];
 
       // Reset decisions baseline for the next round
       const nextDecision: PlayerDecision = {

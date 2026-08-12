@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { products } from '../data/products';
 import type { PlayerDecision } from '../data/types';
-import { InlineTutorialCallout, tutorialSteps } from '../components/TutorialTourModal';
+import { MicroTooltip, tutorialSteps } from '../components/TutorialTourModal';
 import { 
   TrendingUp, Award, Zap, Heart, Settings, 
   DollarSign, AlertTriangle, HelpCircle, ArrowRight, Info,
@@ -388,9 +388,9 @@ export const GameDashboard: React.FC = () => {
 
         {/* STEP 0 (PASSO 1 DE 5: CAIXA) INLINE TUTORIAL CALLOUT */}
         {isTutorialOpen && tutorialStepIndex === 0 && (
-          <InlineTutorialCallout
+          <MicroTooltip
             stepIndex={0}
-            totalSteps={5}
+            
             step={tutorialSteps[0]}
             onNext={handleNextStep}
             onPrev={handlePrevStep}
@@ -541,9 +541,9 @@ export const GameDashboard: React.FC = () => {
 
             {/* STEP 1 (PASSO 2 DE 5: INVESTIMENTOS) INLINE TUTORIAL CALLOUT */}
             {isTutorialOpen && tutorialStepIndex === 1 && (
-              <InlineTutorialCallout
+              <MicroTooltip
                 stepIndex={1}
-                totalSteps={5}
+                
                 step={tutorialSteps[1]}
                 onNext={handleNextStep}
                 onPrev={handlePrevStep}
@@ -667,9 +667,9 @@ export const GameDashboard: React.FC = () => {
 
               {/* STEP 3 (PASSO 4 DE 5: ROBÔ SSIS) INLINE TUTORIAL CALLOUT */}
               {isTutorialOpen && tutorialStepIndex === 3 && (
-                <InlineTutorialCallout
+                <MicroTooltip
                   stepIndex={3}
-                  totalSteps={5}
+                  
                   step={tutorialSteps[3]}
                   onNext={handleNextStep}
                   onPrev={handlePrevStep}
@@ -754,9 +754,9 @@ export const GameDashboard: React.FC = () => {
 
           {/* STEP 2 (PASSO 3 DE 5: PRODUTOS) INLINE TUTORIAL CALLOUT */}
           {isTutorialOpen && tutorialStepIndex === 2 && (
-            <InlineTutorialCallout
+            <MicroTooltip
               stepIndex={2}
-              totalSteps={5}
+              
               step={tutorialSteps[2]}
               onNext={handleNextStep}
               onPrev={handlePrevStep}
@@ -914,9 +914,9 @@ export const GameDashboard: React.FC = () => {
       >
         {/* STEP 4 (PASSO 5 DE 5: MODO LIVRE / ENVIO) INLINE TUTORIAL CALLOUT */}
         {isTutorialOpen && tutorialStepIndex === 4 && (
-          <InlineTutorialCallout
+          <MicroTooltip
             stepIndex={4}
-            totalSteps={5}
+            
             step={tutorialSteps[4]}
             onNext={handleNextStep}
             onPrev={handlePrevStep}

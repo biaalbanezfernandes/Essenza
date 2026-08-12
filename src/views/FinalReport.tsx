@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { 
   TrendingUp, RefreshCw, Send, CheckCircle, 
-  Mail, Calendar, Download, Trophy, AlertCircle, ExternalLink, Award, Loader2
+  Mail, Download, Trophy, AlertCircle, ExternalLink, Award, Loader2
 } from 'lucide-react';
 
 // ─── EmailJS CONFIG ──────────────────────────────────────────────────────────
@@ -364,106 +364,38 @@ export const FinalReport: React.FC = () => {
 
       {/* ── CERTIFICADO OFICIAL ───────────────────────────────────────────── */}
       <div ref={certificateRef} id="print-area" className="glass-panel" style={{
-        padding: '3.5rem 3rem',
-        border: '3px double var(--accent-gold)',
-        borderRadius: '12px',
-        background: '#060913',
-        boxShadow: '0 0 60px -10px var(--accent-gold-glow)',
-        maxWidth: '840px',
-        margin: '0 auto 3rem',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
+        fontFamily: 'Georgia, serif', maxWidth: '700px', margin: '0 auto 3rem', background: '#060913', color: '#f3f4f6', padding: '3rem', border: '3px double #d4af37', borderRadius: '12px',
+        boxShadow: '0 0 60px -10px var(--accent-gold-glow)', position: 'relative', overflow: 'hidden'
       }}>
-        {/* Marca d'água */}
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          opacity: 0.025, fontSize: '11rem', fontWeight: 900,
-          fontFamily: 'serif', pointerEvents: 'none', userSelect: 'none',
-          lineHeight: 1, whiteSpace: 'nowrap', color: 'white'
-        }}>
-          FECART
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <span style={{ border: '1px solid #d4af37', padding: '0.4rem 1.2rem', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#d4af37' }}> Colégio FECAP — FECART 2026 </span>
         </div>
-
-        {/* Timbre superior */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            border: '1.5px solid var(--accent-gold)',
-            padding: '0.5rem 1.5rem',
-            fontSize: '0.7rem',
-            fontFamily: 'var(--font-display)',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--accent-gold)'
-          }}>
-            Colégio FECAP — FECART 2026
-          </div>
-        </div>
-
-        <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '2.4rem', fontStyle: 'italic', fontWeight: 'normal', color: '#fff', marginBottom: '0.5rem' }}>
-          Certificado de Desempenho Empresarial
-        </h2>
-        <div style={{ width: '80px', height: '2px', background: 'var(--accent-gold)', margin: '0 auto 2rem', opacity: 0.6 }} />
-
-        <p style={{ fontSize: '1rem', color: '#9ca3af', lineHeight: 1.8, maxWidth: '640px', margin: '0 auto 1.5rem' }}>
-          Certificamos que <strong style={{ color: '#fff', fontSize: '1.1rem' }}>{playerName || 'Gestor(a)'}</strong> participou
-          do Simulador Empresarial <strong style={{ color: '#d4af37' }}>ESSENZA</strong> na Feira Científica{' '}
-          <strong style={{ color: '#fff' }}>FECART 2026</strong>. Ao longo de 3 rodadas comerciais, demonstrou habilidades estratégicas de gestão comercial,
-          financeira e operacional, sendo classificado(a) com o perfil executivo:
+        <h1 style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'normal', fontSize: '2rem', color: '#fff', marginBottom: '0.5rem' }}>Certificado de Desempenho</h1>
+        <div style={{ width: '60px', height: '2px', background: '#d4af37', margin: '0 auto 2rem' }} />
+        <p style={{ textAlign: 'center', lineHeight: 1.8, color: '#9ca3af', fontSize: '1rem' }}>
+          Certificamos que <strong style={{ color: '#fff', fontSize: '1.1rem' }}>{playerName || 'Gestor(a)'}</strong> participou do Simulador Empresarial <strong style={{ color: '#d4af37' }}>ESSENZA</strong> na Feira Científica <strong style={{ color: '#fff' }}>FECART 2026</strong>. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:
         </p>
-
-        <h3 style={{ fontSize: '2rem', color: '#d4af37', fontFamily: 'var(--font-display)', marginBottom: '0.3rem', fontWeight: 800, letterSpacing: '-0.01em' }}>
-          {profile.emoji} {profile.profileName}
-        </h3>
-        <p style={{ fontSize: '0.9rem', color: '#9ca3af', fontStyle: 'italic', marginBottom: '2rem' }}>
-          "{profile.subtitle}"
-        </p>
-
-        {/* Notas */}
-        <div style={{
-          display: 'flex', justifyContent: 'center', gap: '2.5rem',
-          margin: '0 auto 3rem', maxWidth: '540px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          padding: '1.25rem 0'
-        }}>
-          {[
-            { label: 'Planejamento', val: avgPlanning },
-            { label: 'Finanças',     val: avgFinance },
-            { label: 'Pessoas',      val: avgPeople },
-            { label: 'Inovação',     val: avgInnovation },
-          ].map((item, i, arr) => (
-            <React.Fragment key={item.label}>
-              <div>
-                <span style={{ fontSize: '0.65rem', color: '#6b7280', display: 'block', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</span>
-                <strong style={{ fontSize: '1.15rem', color: '#fff' }}>{item.val}</strong>
-              </div>
-              {i < arr.length - 1 && <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)' }} />}
-            </React.Fragment>
-          ))}
+        <h2 style={{ textAlign: 'center', color: '#d4af37', fontSize: '1.8rem', margin: '1.5rem 0' }}>{profile.emoji} {profile.profileName}</h2>
+        <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.9rem', marginBottom: '2rem' }}>"{profile.subtitle}"</p>
+        
+        <table style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '1rem 0', marginBottom: '2rem', textAlign: 'center' }}>
+          <tbody>
+            <tr>
+              <td><span style={{ fontSize: '0.65rem', color: '#6b7280', display: 'block', textTransform: 'uppercase' }}>Planejamento</span><strong style={{ color: '#fff' }}>{avgPlanning}</strong></td>
+              <td><span style={{ fontSize: '0.65rem', color: '#6b7280', display: 'block', textTransform: 'uppercase' }}>Finanças</span><strong style={{ color: '#fff' }}>{avgFinance}</strong></td>
+              <td><span style={{ fontSize: '0.65rem', color: '#6b7280', display: 'block', textTransform: 'uppercase' }}>Pessoas</span><strong style={{ color: '#fff' }}>{avgPeople}</strong></td>
+              <td><span style={{ fontSize: '0.65rem', color: '#6b7280', display: 'block', textTransform: 'uppercase' }}>Inovação</span><strong style={{ color: '#fff' }}>{avgInnovation}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.3)', width: '260px', margin: '0 auto 0.5rem' }} />
+          <strong style={{ color: '#fff', fontSize: '0.9rem' }}>Membros Essenza</strong><br />
+          <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Comissão empresarial da Essenza</span>
         </div>
-
-        {/* ── ASSINATURA ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.3)', width: '280px', marginBottom: '0.5rem' }} />
-
-          <strong style={{ color: '#fff', fontSize: '0.95rem', fontFamily: 'var(--font-display)' }}>
-            Profa. Dra. Débora Mendonça M. Machado
-          </strong>
-          <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
-            Coordenadora dos Cursos Técnicos — Colégio FECAP
-          </span>
-          <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>
-            Ph.D. em Gestão de Projetos, Inovação e Empreendedorismo
-          </span>
-        </div>
-
-        {/* Data */}
-        <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#6b7280', fontSize: '0.75rem' }}>
-          <Calendar size={14} style={{ color: '#d4af37' }} />
-          <span>São Paulo, {today}</span>
-        </div>
+        
+        <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.75rem' }}>São Paulo, {today}</p>
       </div>
 
       {/* Botões de Ação */}

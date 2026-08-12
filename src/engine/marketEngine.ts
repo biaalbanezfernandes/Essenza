@@ -4,7 +4,8 @@ import { products } from '../data/products';
 // Helper to calculate baseline metrics based on investments
 export function calculateMetrics(
   investments: { materials: number; production: number; marketing: number; logistics: number },
-  event: GameEvent | null
+  event: GameEvent | null,
+  isPlayer: boolean = true
 ) {
   const materials = investments.materials;
   const production = investments.production;
@@ -18,16 +19,19 @@ export function calculateMetrics(
   let efficiency = 40 + Math.min(60, (production * 0.4 + logistics * 0.6) / 1100);
   let reputation = 35 + Math.min(65, (marketing * 0.7 + quality * 0.3) / 1100);
 
-  // Apply event multipliers
+  // Apply event multipliers based on scope
   if (event) {
-    if (event.category === 'marketing') {
-      reputation *= event.type === 'positive' ? event.multiplier : event.multiplier;
-    } else if (event.category === 'production') {
-      efficiency *= event.type === 'positive' ? event.multiplier : event.multiplier;
-      satisfaction *= event.type === 'positive' ? event.multiplier : 0.9;
-    } else if (event.category === 'logistics') {
-      efficiency *= event.type === 'positive' ? event.multiplier : event.multiplier;
-      innovation *= event.type === 'positive' ? event.multiplier : event.multiplier;
+    const isTargeted = event.scope === 'player' ? isPlayer : true;
+    if (isTargeted) {
+      if (event.category === 'marketing') {
+        reputation *= event.multiplier;
+      } else if (event.category === 'production') {
+        efficiency *= event.multiplier;
+        satisfaction *= event.type === 'positive' ? 1.1 : 0.85;
+      } else if (event.category === 'logistics') {
+        efficiency *= event.multiplier;
+        innovation *= event.multiplier;
+      }
     }
   }
 
@@ -128,18 +132,22 @@ export function executeRound(
   rivalACash: number,
   rivalBCash: number
 ): Omit<RoundResult, 'ssisFeedback' | 'councilFeedback'> {
-  // 1. Calculate player's stats for this round based on current investments
-  const pStats = calculateMetrics(playerDecision.investments, event);
+  // Stochastic noise factor for event intensity per round execution (0.925 to 1.075)
+  const randomNoise = event ? (0.925 + Math.random() * 0.15) : 1.0;
+  const effectiveEventMult = event ? 1 + (event.multiplier - 1) * randomNoise : 1.0;
 
-  // 2. Generate competitor decisions
+  // 1. Calculate stats for player and competitors
+  const pStats = calculateMetrics(playerDecision.investments, event, true);
+
+  // Competitor decisions
   const rivalADecision = generateCompetitorDecision('Rival A', round, playerDecision.investments.marketing, rivalACash);
   const rivalBDecision = generateCompetitorDecision('Rival B', round, playerDecision.investments.marketing, rivalBCash);
 
-  // Calculate competitor stats
-  const rAStats = calculateMetrics(rivalADecision.investments, event);
-  const rBStats = calculateMetrics(rivalBDecision.investments, event);
+  // Competitor stats
+  const rAStats = calculateMetrics(rivalADecision.investments, event, false);
+  const rBStats = calculateMetrics(rivalBDecision.investments, event, false);
 
-  // 3. Compute demand and sales for each product
+  // 2. Compute demand and sales for each product
   const productResults: ProductResult[] = [];
   const rivalASales: { [pId: string]: number } = {};
   const rivalBSales: { [pId: string]: number } = {};
@@ -173,15 +181,22 @@ export function executeRound(
     if (product.seasonality === 'Verão' && round === 3) seasonalityMult = 2.4;
     if (product.seasonality === 'Verão' && round !== 3) seasonalityMult = 0.5;
 
-    // Apply global event multiplier to base demand
+    // Apply global and category event multipliers to base demand
     let eventDemandMult = 1.0;
     if (event) {
       if (event.category === 'general') {
-        eventDemandMult = event.multiplier;
-      } else if (event.id === 'frio_atípico_verao' && product.id === 'vestido_linho') {
-        eventDemandMult = event.multiplier;
-      } else if (event.id === 'boato_redes' && event.category === 'marketing') {
-        eventDemandMult = 0.85; // general reduction for affected
+        if (event.id === 'verao_antecipado' && (product.seasonality === 'Verão' || product.id === 'camiseta_basica')) {
+          eventDemandMult = effectiveEventMult * 1.15;
+        } else if (event.id === 'tendencia_casual' && ['camiseta_basica', 'polo_essenza', 'moletom'].includes(product.id)) {
+          eventDemandMult = effectiveEventMult * 1.10;
+        } else if (event.id === 'frio_atípico_verao') {
+          if (product.id === 'vestido_linho') eventDemandMult = 0.50 * randomNoise;
+          if (product.id === 'moletom') eventDemandMult = 1.35 * randomNoise;
+        } else if (event.id === 'inflacao_alta') {
+          eventDemandMult = effectiveEventMult;
+        } else {
+          eventDemandMult = effectiveEventMult;
+        }
       }
     }
 
@@ -190,24 +205,34 @@ export function executeRound(
     // Calculate Desirability Scores
     // Player
     const playerPriceRatio = playerDecision.prices[product.id] / product.defaultPrice;
-    const playerDesirability =
+    let playerDesirability =
       ((pStats.reputation * 0.35 + pStats.quality * 0.35 + pStats.innovation * 0.3) *
         Math.log(playerDecision.investments.marketing + 1000)) /
       Math.pow(playerPriceRatio, 2.2);
 
+    // Apply player-specific marketing/reputation event multipliers directly to desirability score
+    if (event && event.scope === 'player' && event.category === 'marketing') {
+      playerDesirability *= effectiveEventMult;
+    }
+
     // Rival A
     const rAPriceRatio = rivalADecision.prices[product.id] / product.defaultPrice;
-    const rADesirability =
+    let rADesirability =
       ((rAStats.reputation * 0.35 + rAStats.quality * 0.35 + rAStats.innovation * 0.3) *
         Math.log(rivalADecision.investments.marketing + 1000)) /
       Math.pow(rAPriceRatio, 2.2);
 
     // Rival B
     const rBPriceRatio = rivalBDecision.prices[product.id] / product.defaultPrice;
-    const rBDesirability =
+    let rBDesirability =
       ((rBStats.reputation * 0.35 + rBStats.quality * 0.35 + rBStats.innovation * 0.3) *
         Math.log(rivalBDecision.investments.marketing + 1000)) /
       Math.pow(rBPriceRatio, 2.2);
+
+    if (event && event.id === 'dumping_concorrente') {
+      rADesirability *= 1.25;
+      rBDesirability *= 1.20;
+    }
 
     const totalDesirability = playerDesirability + rADesirability + rBDesirability;
 
@@ -221,19 +246,37 @@ export function executeRound(
     const rADemand = Math.round(totalProductMarketDemand * rAShare);
     const rBDemand = Math.round(totalProductMarketDemand * rBShare);
 
-    // Sales are capped by production quantity
-    const playerProd = playerDecision.productionQty[product.id] || 0;
-    const rAProd = rivalADecision.productionQty[product.id] || 0;
-    const rBProd = rivalBDecision.productionQty[product.id] || 0;
+    // Production quantity with event modifications (e.g. factory defects, strikes)
+    let playerProd = playerDecision.productionQty[product.id] || 0;
+    let rAProd = rivalADecision.productionQty[product.id] || 0;
+    let rBProd = rivalBDecision.productionQty[product.id] || 0;
 
-    const playerSold = Math.min(playerDemand, playerProd);
-    const rASold = Math.min(rADemand, rAProd);
-    const rBSold = Math.min(rBDemand, rBProd);
+    if (event) {
+      if (event.id === 'defeito_lote') {
+        playerProd = Math.floor(playerProd * 0.80); // 20% lost to dye batch defects
+      } else if (event.id === 'greve_costureiros') {
+        playerProd = Math.floor(playerProd * 0.75);
+        rAProd = Math.floor(rAProd * 0.75);
+        rBProd = Math.floor(rBProd * 0.75);
+      }
+    }
 
-    // Event costs multiplier (materials price spike)
+    // Sales are capped by production quantity & logistics delivery conversion
+    let logisticsConversion = 1.0;
+    if (event && event.id === 'greve_transportes') {
+      logisticsConversion = 0.70 * randomNoise;
+    } else if (event && event.id === 'logistica_eficiente') {
+      logisticsConversion = 1.10;
+    }
+
+    const playerSold = Math.min(Math.round(playerDemand * logisticsConversion), playerProd);
+    const rASold = Math.min(Math.round(rADemand * logisticsConversion), rAProd);
+    const rBSold = Math.min(Math.round(rBDemand * logisticsConversion), rBProd);
+
+    // Event costs multiplier (materials price spike/drop)
     let costMult = 1.0;
     if (event && event.category === 'materials') {
-      costMult = event.multiplier; // ex: 1.30x for materials
+      costMult = effectiveEventMult;
     }
 
     const playerProdCost = playerProd * product.productionCost * costMult;
@@ -265,26 +308,13 @@ export function executeRound(
     });
   });
 
-  // 4. Calculate total costs and profits
-  // Player
+  // 3. Bottleneck Check
   const playerFixedInv =
     playerDecision.investments.materials +
     playerDecision.investments.production +
     playerDecision.investments.marketing +
     playerDecision.investments.logistics;
 
-  // Let's establish that the cost of goods produced is covered by the raw materials & production investments.
-  // Wait, if the investments themselves ARE the expenses, then the player has already spent that money from cash.
-  // To avoid double-counting, the cash remaining is cash_previous - investments_made + revenue_earned.
-  // This is clean: cash spent = total investments made.
-  // Wait, what if the player schedules production but didn't invest enough in Materials or Production to cover it?
-  // Let's implement a penalty or validation:
-  // Let's calculate the required budget:
-  // Raw material cost: 50% of the production cost.
-  // Production labor cost: 50% of the production cost.
-  // If player's materials investment < 50% of production cost, they get a bottleneck (can only produce up to their material investment).
-  // If player's production investment < 50% of production cost, they get a bottleneck (can only produce up to their labor investment).
-  // Let's apply this bottleneck dynamically! It makes the simulation incredibly realistic and strategic.
   let playerBottleneckMult = 1.0;
   const playerRequiredMaterials = productResults.reduce((acc, curr) => {
     const prod = products.find((p) => p.id === curr.productId);
@@ -317,26 +347,41 @@ export function executeRound(
     });
   }
 
-  // Calculate net profit for player in this round
-  // Revenue - Total Investments made
-  const playerCosts = playerFixedInv;
+  // 4. Calculate Direct Event Cost Adjustments (Cotton crisis, energy tariff, tax breaks)
+  let extraEventCosts = 0;
+  if (event) {
+    if (event.category === 'materials') {
+      // Cotton price spike / bumper crop alters raw material expense directly
+      extraEventCosts += playerDecision.investments.materials * (effectiveEventMult - 1);
+    } else if (event.id === 'crise_energia') {
+      // Energy tariff adds surcharge to production overhead
+      extraEventCosts += playerDecision.investments.production * 0.20 * randomNoise;
+    } else if (event.id === 'incentivo_fiscal') {
+      // Tax break provides a rebate on fixed investments
+      extraEventCosts -= playerFixedInv * 0.15 * randomNoise;
+    }
+  }
+
+  const playerCosts = Math.round(playerFixedInv + extraEventCosts);
   const playerProfit = playerTotalRevenue - playerCosts;
   const playerNewCash = playerCash + playerProfit;
 
   // Competitors
-  const rACosts =
-    rivalADecision.investments.materials +
-    rivalADecision.investments.production +
-    rivalADecision.investments.marketing +
-    rivalADecision.investments.logistics;
+  const rACosts = Math.round(
+    (rivalADecision.investments.materials +
+      rivalADecision.investments.production +
+      rivalADecision.investments.marketing +
+      rivalADecision.investments.logistics) * (event?.category === 'materials' ? effectiveEventMult : 1.0)
+  );
   const rAProfit = rivalATotalRevenue - rACosts;
   const rANewCash = rivalACash + rAProfit;
 
-  const rBCosts =
-    rivalBDecision.investments.materials +
-    rivalBDecision.investments.production +
-    rivalBDecision.investments.marketing +
-    rivalBDecision.investments.logistics;
+  const rBCosts = Math.round(
+    (rivalBDecision.investments.materials +
+      rivalBDecision.investments.production +
+      rivalBDecision.investments.marketing +
+      rivalBDecision.investments.logistics) * (event?.category === 'materials' ? effectiveEventMult : 1.0)
+  );
   const rBProfit = rivalBTotalRevenue - rBCosts;
   const rBNewCash = rivalBCash + rBProfit;
 
@@ -347,9 +392,8 @@ export function executeRound(
   const rBShare = totalMarketRevenue > 0 ? rivalBTotalRevenue / totalMarketRevenue : 0.33;
 
   // 6. IGE (Índice Geral de Gestão): 0 - 100
-  // Lucro score, Reputação, Qualidade, Inovação, Satisfação, Market Share
-  const profitScore = Math.max(0, Math.min(100, (playerProfit + 50000) / 2500)); // scaling R$ -50k to R$ 200k
-  const shareScore = playerShare * 200; // 50% share is 100 points
+  const profitScore = Math.max(0, Math.min(100, (playerProfit + 50000) / 2500));
+  const shareScore = playerShare * 200;
   const ige = Math.round(
     (profitScore * 0.25 +
       pStats.reputation * 0.2 +
@@ -360,7 +404,6 @@ export function executeRound(
   );
 
   // 7. Risk Index: 0 - 100
-  // Caixa, Satisfação, Qualidade, Estabilidade Operacional (evitar gargalo)
   const cashRisk = playerNewCash < 50000 ? 80 : playerNewCash < 150000 ? 40 : 10;
   const satisfRisk = (100 - pStats.satisfaction) * 0.8;
   const qualRisk = (100 - pStats.quality) * 0.6;

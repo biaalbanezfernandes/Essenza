@@ -9,7 +9,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'marketing',
     multiplier: 1.40,
-    affectedArea: 'Marketing'
+    affectedArea: 'Marketing',
+    scope: 'player'
   },
   {
     id: 'verao_antecipado',
@@ -18,7 +19,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'general',
     multiplier: 1.30,
-    affectedArea: 'Demanda Geral'
+    affectedArea: 'Demanda Geral',
+    scope: 'market'
   },
   {
     id: 'safra_algodao',
@@ -27,7 +29,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'materials',
     multiplier: 0.75, // Reduz custos de matéria-prima (multiplica custo)
-    affectedArea: 'Custo de Matéria-Prima'
+    affectedArea: 'Custo de Matéria-Prima',
+    scope: 'market'
   },
   {
     id: 'logistica_eficiente',
@@ -36,7 +39,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'logistics',
     multiplier: 1.25,
-    affectedArea: 'Logística'
+    affectedArea: 'Logística',
+    scope: 'player'
   },
   {
     id: 'incentivo_fiscal',
@@ -45,7 +49,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'general',
     multiplier: 1.15,
-    affectedArea: 'Retorno Geral'
+    affectedArea: 'Retorno Geral',
+    scope: 'player'
   },
   {
     id: 'treinamento_equipe',
@@ -54,7 +59,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'production',
     multiplier: 1.20,
-    affectedArea: 'Produção e Eficiência'
+    affectedArea: 'Produção e Eficiência',
+    scope: 'player'
   },
   {
     id: 'tendencia_casual',
@@ -63,7 +69,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'general',
     multiplier: 1.25,
-    affectedArea: 'Demanda de Moda Casual'
+    affectedArea: 'Demanda de Moda Casual',
+    scope: 'market'
   },
   {
     id: 'selo_sustentabilidade',
@@ -72,7 +79,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'marketing',
     multiplier: 1.30,
-    affectedArea: 'Reputação e Vendas'
+    affectedArea: 'Reputação e Vendas',
+    scope: 'player'
   },
   {
     id: 'parceria_varejo',
@@ -81,7 +89,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'marketing',
     multiplier: 1.20,
-    affectedArea: 'Marketing e Demanda'
+    affectedArea: 'Marketing e Demanda',
+    scope: 'player'
   },
   {
     id: 'inovacao_tecido',
@@ -90,7 +99,8 @@ export const events: GameEvent[] = [
     type: 'positive',
     category: 'logistics', // Inovação
     multiplier: 1.20,
-    affectedArea: 'Inovação e Qualidade'
+    affectedArea: 'Inovação e Qualidade',
+    scope: 'player'
   },
 
   // Eventos Negativos (11-20)
@@ -101,7 +111,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'production',
     multiplier: 0.70, // Reduz eficiência de produção
-    affectedArea: 'Capacidade de Produção'
+    affectedArea: 'Capacidade de Produção',
+    scope: 'market'
   },
   {
     id: 'crise_algodao',
@@ -110,7 +121,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'materials',
     multiplier: 1.30, // Eleva os custos de matéria-prima
-    affectedArea: 'Custo de Matéria-Prima'
+    affectedArea: 'Custo de Matéria-Prima',
+    scope: 'market'
   },
   {
     id: 'greve_transportes',
@@ -119,7 +131,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'logistics',
     multiplier: 0.70, // Prejudica a logística
-    affectedArea: 'Logística e Distribuição'
+    affectedArea: 'Logística e Distribuição',
+    scope: 'market'
   },
   {
     id: 'crise_energia',
@@ -128,7 +141,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'production',
     multiplier: 1.20, // Eleva custo de produção
-    affectedArea: 'Custo Operacional'
+    affectedArea: 'Custo Operacional',
+    scope: 'player'
   },
   {
     id: 'boato_redes',
@@ -137,7 +151,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'marketing',
     multiplier: 0.75, // Reduz a reputação e a demanda
-    affectedArea: 'Reputação e Demanda'
+    affectedArea: 'Reputação e Demanda',
+    scope: 'player'
   },
   {
     id: 'inflacao_alta',
@@ -146,7 +161,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'general',
     multiplier: 0.75, // Reduz a demanda global
-    affectedArea: 'Demanda de Mercado'
+    affectedArea: 'Demanda de Mercado',
+    scope: 'market'
   },
   {
     id: 'dumping_concorrente',
@@ -155,7 +171,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'general',
     multiplier: 0.80,
-    affectedArea: 'Vendas da Rodada'
+    affectedArea: 'Vendas da Rodada',
+    scope: 'market'
   },
   {
     id: 'defeito_lote',
@@ -164,7 +181,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'production',
     multiplier: 0.80,
-    affectedArea: 'Eficiência e Perdas'
+    affectedArea: 'Eficiência e Perdas',
+    scope: 'player'
   },
   {
     id: 'frio_atípico_verao',
@@ -173,7 +191,8 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'general',
     multiplier: 0.85,
-    affectedArea: 'Vendas de Produtos de Verão'
+    affectedArea: 'Vendas de Produtos de Verão',
+    scope: 'market'
   },
   {
     id: 'vazamento_dados_fake',
@@ -182,6 +201,7 @@ export const events: GameEvent[] = [
     type: 'negative',
     category: 'marketing',
     multiplier: 0.80,
-    affectedArea: 'Confiança e Tráfego'
+    affectedArea: 'Confiança e Tráfego',
+    scope: 'player'
   }
 ];

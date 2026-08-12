@@ -15,6 +15,7 @@ export interface GameEvent {
   category: 'marketing' | 'production' | 'materials' | 'logistics' | 'general';
   multiplier: number;
   affectedArea: string;
+  scope?: 'player' | 'market';
 }
 
 export interface CompetitorState {
