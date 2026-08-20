@@ -83,20 +83,16 @@ export const FinalReport: React.FC = () => {
       `💪 Ponto Forte: ${profile.pontoForte}\n` +
       `⚠️ Risco a Monitorar: ${profile.risco}\n` +
       `🧭 Recomendação Executiva: ${profile.executiveAdvice}\n\n` +
-      `======================================================================\n` +
-      `                  COLÉGIO FECAP — FECART 2026\n` +
-      `                  CERTIFICADO DE DESEMPENHO\n` +
-      `======================================================================\n\n` +
-      `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA na Feira Científica FECART 2026. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:\n\n` +
-      `                    ${profile.emoji} ${profile.profileName}\n` +
-      `                    "${profile.subtitle}"\n\n` +
-      `----------------------------------------------------------------------\n` +
-      `AVALIAÇÃO PEDAGÓGICA (0 a 10):\n` +
-      `• Planejamento: ${avgPlanning}\n` +
-      `• Finanças: ${avgFinance}\n` +
-      `• Pessoas: ${avgPeople}\n` +
-      `• Inovação: ${avgInnovation}\n` +
       `----------------------------------------------------------------------\n\n` +
+      `Colégio FECAP — FECART 2026\n` +
+      `Certificado de Desempenho\n\n` +
+      `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA na Feira Científica FECART 2026. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:\n\n` +
+      `${profile.emoji} ${profile.profileName}\n` +
+      `"${profile.subtitle}"\n\n` +
+      `Planejamento\n${avgPlanning}\t\n` +
+      `Finanças\n${avgFinance}\t\n` +
+      `Pessoas\n${avgPeople}\t\n` +
+      `Inovação\n${avgInnovation}\n\n` +
       `Membros Essenza\n` +
       `Comissão empresarial da Essenza\n` +
       `São Paulo, ${today}\n`
@@ -119,9 +115,15 @@ export const FinalReport: React.FC = () => {
     const templateParams = {
       to_email:        emailInput,
       to_name:         playerName || 'Gestor(a)',
+      player_name:     playerName || 'Gestor(a)',
       profile_name:    `${profile.emoji} ${profile.profileName}`,
-      profile_subtitle: profile.subtitle,
-      profile_desc:    profile.personalizedExplanation,
+      profile_subtitle: `"${profile.subtitle}"`,
+      profile_desc:    `"${profile.subtitle}"`,
+      description:     `"${profile.subtitle}"`,
+      subtitle:        `"${profile.subtitle}"`,
+      ia_explanation:  profile.personalizedExplanation,
+      ai_analysis:     profile.personalizedExplanation,
+      personalized_explanation: profile.personalizedExplanation,
       ponto_forte:     profile.pontoForte,
       risco:           profile.risco,
       executive_advice: profile.executiveAdvice,
@@ -135,20 +137,15 @@ export const FinalReport: React.FC = () => {
       final_cash:      fmt(finalCash),
       issue_date:      today,
       certificate_full_text:
-        `======================================================================\n` +
-        `                  COLÉGIO FECAP — FECART 2026\n` +
-        `                  CERTIFICADO DE DESEMPENHO\n` +
-        `======================================================================\n\n` +
+        `Colégio FECAP — FECART 2026\n` +
+        `Certificado de Desempenho\n\n` +
         `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA na Feira Científica FECART 2026. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:\n\n` +
-        `                    ${profile.emoji} ${profile.profileName}\n` +
-        `                    "${profile.subtitle}"\n\n` +
-        `----------------------------------------------------------------------\n` +
-        `AVALIAÇÃO PEDAGÓGICA (0 a 10):\n` +
-        `• Planejamento: ${avgPlanning}\n` +
-        `• Finanças: ${avgFinance}\n` +
-        `• Pessoas: ${avgPeople}\n` +
-        `• Inovação: ${avgInnovation}\n` +
-        `----------------------------------------------------------------------\n\n` +
+        `${profile.emoji} ${profile.profileName}\n` +
+        `"${profile.subtitle}"\n\n` +
+        `Planejamento\n${avgPlanning}\t\n` +
+        `Finanças\n${avgFinance}\t\n` +
+        `Pessoas\n${avgPeople}\t\n` +
+        `Inovação\n${avgInnovation}\n\n` +
         `Membros Essenza\n` +
         `Comissão empresarial da Essenza\n` +
         `São Paulo, ${today}`
