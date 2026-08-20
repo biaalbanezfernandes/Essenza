@@ -78,103 +78,75 @@ export function generateSsisFeedback(
   });
 
   const maxCompetitorProfit = Math.max(rivalA.profit, rivalB.profit);
-  const bestCompetitorName = rivalA.profit > rivalB.profit ? 'Rival A (Volume)' : 'Rival B (Premium)';
+  const bestCompetitorName = rivalA.profit > rivalB.profit ? 'Rival A' : 'Rival B';
 
-  // 1. Diagnostic
+  // 1. Diagnostic (Condensed & Direct)
   let diagnostic = '';
   if (profit > 100000) {
-    diagnostic = `Desempenho excelente na Rodada ${round}! O lucro líquido alcançou R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
-    if (topRevenueProduct) {
-      diagnostic += `O grande destaque foi o/a **${topRevenueProduct}**, liderando vendas com R$ ${maxRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em receita. `;
-    }
-    if (profit > maxCompetitorProfit) {
-      diagnostic += `Você superou todos os concorrentes e obteve o melhor resultado financeiro do mercado! `;
-    } else {
-      diagnostic += `Apesar do ótimo lucro, o **${bestCompetitorName}** faturou R$ ${maxCompetitorProfit.toLocaleString('pt-BR')} no mesmo período. `;
-    }
+    diagnostic = `Ótimo desempenho na Rodada ${round}: Lucro de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
+    if (topRevenueProduct) diagnostic += `Destaque: **${topRevenueProduct}** (R$ ${maxRevenue.toLocaleString('pt-BR')}). `;
+    diagnostic += profit > maxCompetitorProfit ? `Você liderou o mercado!` : `Líder do setor: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
   } else if (profit > 0) {
-    diagnostic = `A Essenza fechou a Rodada ${round} no azul com lucro líquido de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
-    if (topRevenueProduct) {
-      diagnostic += `O principal pilar de vendas foi o/a **${topRevenueProduct}** (R$ ${maxRevenue.toLocaleString('pt-BR')} de faturamento). `;
-    }
-    if (maxStockRemaining > 0 && worstStockProduct) {
-      diagnostic += `Contudo, o desempenho geral foi freado pelo acúmulo de estoque em **${worstStockProduct}** (${maxStockRemaining} unidades paradas). `;
-    }
-    if (maxCompetitorProfit > profit) {
-      diagnostic += `O **${bestCompetitorName}** liderou a rodada com lucro de R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}. `;
-    }
+    diagnostic = `Rodada ${round} no azul: Lucro de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
+    if (topRevenueProduct) diagnostic += `Carro-chefe: **${topRevenueProduct}**. `;
+    if (maxStockRemaining > 0 && worstStockProduct) diagnostic += `Atenção ao estoque de **${worstStockProduct}** (${maxStockRemaining} un. paradas). `;
+    if (maxCompetitorProfit > profit) diagnostic += `Líder: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
   } else {
-    diagnostic = `A Rodada ${round} encerrou com saldo negativo (prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}). `;
-    if (totalProduced === 0) {
-      diagnostic += `Não houve programação de produção nesta rodada, gerando receita nula enquanto os custos operacionais drenaram o caixa. `;
-    } else if (maxStockRemaining > totalProduced * 0.3 && worstStockProduct) {
-      diagnostic += `O principal fator foi o excesso de estoque de **${worstStockProduct}** (${maxStockRemaining} unidades não vendidas). `;
-    } else {
-      diagnostic += `Os investimentos em Marketing e Operações pesaram mais do que o retorno imediato gerado pelo faturamento. `;
-    }
-    diagnostic += `Enquanto isso, o **${bestCompetitorName}** liderou com lucro de R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}. `;
+    diagnostic = `Prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} na Rodada ${round}. `;
+    if (totalProduced === 0) diagnostic += `Fábrica sem produção programada. `;
+    else if (maxStockRemaining > totalProduced * 0.3 && worstStockProduct) diagnostic += `Sobras em **${worstStockProduct}** (${maxStockRemaining} un.). `;
+    else diagnostic += `Custos operacionais superaram a receita. `;
+    diagnostic += `Líder: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
   }
 
   if (maxStockRemaining > 200 && worstStockProductId) {
     const playerPrice = decision.prices[worstStockProductId];
-    const rAPrice = rivalA.prices[worstStockProductId];
-    const rBPrice = rivalB.prices[worstStockProductId];
-    if (playerPrice > rAPrice && playerPrice > rBPrice) {
-      diagnostic += ` Seu preço para o/a **${worstStockProduct}** (R$ ${playerPrice.toFixed(2)}) ficou acima dos concorrentes (Rival A: R$ ${rAPrice.toFixed(2)}, Rival B: R$ ${rBPrice.toFixed(2)}).`;
-    }
+    diagnostic += ` Preço de **${worstStockProduct}** (R$ ${playerPrice.toFixed(2)}) ficou acima dos rivais.`;
   }
 
   if (maxLostSales > 100 && worstLostSalesProduct) {
-    diagnostic += ` Ruptura de estoque em **${worstLostSalesProduct}**: cerca de ${Math.round(maxLostSales)} unidades deixaram de ser vendidas por falta de estoque.`;
+    diagnostic += ` Ruptura: ~${Math.round(maxLostSales)} unidades de **${worstLostSalesProduct}** não atendidas.`;
   }
 
   if (event) {
-    if (event.category === 'materials') {
-      diagnostic += ` O evento de mercado **"${event.title}"** causou impacto direto nos custos de insumos (${event.type === 'positive' ? 'reduzindo' : 'elevando'} despesas com matéria-prima).`;
-    } else if (event.category === 'marketing') {
-      diagnostic += ` O evento **"${event.title}"** causou impacto significativo na demanda e percepção da sua marca (${event.multiplier}x).`;
-    } else if (event.category === 'production') {
-      diagnostic += ` O evento operacional **"${event.title}"** influenciou a capacidade fabril e rendimento de produção.`;
-    } else {
-      diagnostic += ` O evento **"${event.title}"** alterou as dinâmicas de demanda de mercado nesta temporada.`;
-    }
+    diagnostic += ` Impacto do evento "${event.title}" (${event.affectedArea}).`;
   }
 
-  // 2. Recommendations
+  // 2. Recommendations (Condensed)
   const recommendationsList: string[] = [];
 
   if (underpricedProduct) {
-    recommendationsList.push(`Você está vendendo o/a **${underpricedProduct}** abaixo do custo de fabricação. Aumente o preço imediatamente.`);
+    recommendationsList.push(`Suba o preço de **${underpricedProduct}** (está abaixo do custo).`);
   } else if (thinMarginProduct) {
-    recommendationsList.push(`A margem do/a **${thinMarginProduct}** está apertada (${thinMarginVal.toFixed(1)}%). Reajuste o preço ou reduza custos.`);
+    recommendationsList.push(`Margem baixa em **${thinMarginProduct}** (${thinMarginVal.toFixed(1)}%). Reajuste.`);
   }
 
   if (maxLostSales > 150 && worstLostSalesProduct) {
-    recommendationsList.push(`Aumente a produção do/a **${worstLostSalesProduct}** para suprir a demanda reprimida (${Math.round(maxLostSales)} unidades perdidas).`);
+    recommendationsList.push(`Aumente a produção de **${worstLostSalesProduct}** (${Math.round(maxLostSales)} pedidos perdidos).`);
   }
 
   if (maxStockRemaining > 300 && worstStockProduct) {
-    recommendationsList.push(`Reduza a produção ou faça uma promoção para desencalhar as ${maxStockRemaining} peças de **${worstStockProduct}**.`);
+    recommendationsList.push(`Reduza o lote ou promova desconto para **${worstStockProduct}** (${maxStockRemaining} paradas).`);
   }
 
   if (decision.investments.marketing < 40000) {
-    recommendationsList.push(`Amplie o orçamento de Marketing para aumentar o valor da marca e acelerar as vendas.`);
+    recommendationsList.push(`Reforce o Marketing para sustentar a demanda da marca.`);
   }
 
   if (recommendationsList.length === 0) {
-    recommendationsList.push(`Sua estrutura estratégica está bem equilibrada. Mantenha o acompanhamento dos concorrentes nas próximas temporadas.`);
+    recommendationsList.push(`Planejamento equilibrado. Mantenha o alinhamento com a estação.`);
   }
 
   const recommendation = recommendationsList.join(' ');
 
-  // 3. Forecast
+  // 3. Forecast (Condensed)
   let forecast = '';
   if (round === 1) {
-    forecast = 'Para a Rodada 2 (Inverno), a demanda por agasalhos e moletons aumentará. Prepare o estoque e invista em matéria-prima com antecedência.';
+    forecast = 'Rodada 2 (Inverno): Demanda por casacos e moletons vai multiplicar. Prepare matéria-prima e estoque.';
   } else if (round === 2) {
-    forecast = 'Para a Rodada 3 (Verão), a demanda migrará para camisetas e shorts leves. Ajuste o mix de produção para maximizar a rotação de caixa.';
+    forecast = 'Rodada 3 (Verão): Demanda migra para vestidos e peças leves. Rebalanceie o mix de produção.';
   } else {
-    forecast = 'Simulação concluída. Analise o balanço geral e o Certificado Oficial de Desempenho no Relatório Final.';
+    forecast = 'Simulação concluída! Veja suas métricas consolidadas e o Certificado Oficial no Relatório.';
   }
 
   // 4. Pedagogical Grades (0 to 10)
@@ -232,31 +204,31 @@ export function generateCouncilFeedback(
   // Sr. Rocha (Diretor Financeiro)
   let rocha = '';
   if (profit > 80000) {
-    rocha = `Excelente balanço financeiro! Lucro de R$ ${profit.toLocaleString('pt-BR')} comprova nossa boa gestão de caixa.`;
+    rocha = `Excelente! Lucro de R$ ${profit.toLocaleString('pt-BR')} comprova solidez e gestão de caixa eficaz.`;
   } else if (profit < 0) {
-    rocha = `Atenção ao déficit! O prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR')} exige contenção imediata de custos desnecessários.`;
+    rocha = `Atenção: Prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR')}. Corte desperdícios imediatamente!`;
   } else {
-    rocha = `Resultado estável, mas precisamos buscar margens mais robustas na próxima temporada.`;
+    rocha = `Resultado estável, mas precisamos buscar margens mais fortes na próxima rodada.`;
   }
 
   // Dra. Luna (Diretora de Marketing)
   let luna = '';
   if (decision.investments.marketing < 45000) {
-    luna = `Precisamos de mais presença de mercado. Investir apenas R$ ${decision.investments.marketing.toLocaleString('pt-BR')} limita nosso alcance frente aos concorrentes.`;
+    luna = `Com apenas R$ ${decision.investments.marketing.toLocaleString('pt-BR')} em Marketing, perdemos espaço para os rivais.`;
   } else if (reputation > 75) {
-    luna = `Excelente posicionamento de marca! Nossa reputação de ${Math.round(reputation)} pontos reflete o acerto das campanhas.`;
+    luna = `Marca em alta! ${Math.round(reputation)} pontos de reputação mostram o acerto da divulgação.`;
   } else {
-    luna = `O mercado de moda exige visibilidade constante. Recomendo otimizar o orçamento de divulgação.`;
+    luna = `Visibilidade contínua é essencial no vestuário. Otimize as campanhas.`;
   }
 
   // Eng. Vane (Diretora de Operações)
   let vane = '';
   if (maxStockRemaining > 500 && worstStockProduct) {
-    vane = `Alerta de fábrica: acumulamos ${maxStockRemaining} unidades paradas de **${worstStockProduct}**. Ajuste o ritmo de produção.`;
+    vane = `Alerta fabril: ${maxStockRemaining} unidades encalhadas de **${worstStockProduct}**. Ajuste os lotes.`;
   } else if (quality > 75 && efficiency > 70) {
-    vane = `Parabéns à equipe de operações. Qualidade (${Math.round(quality)}) e eficiência (${Math.round(efficiency)}) estão alinhadas aos padrões premium.`;
+    vane = `Operações nota 10: Qualidade (${Math.round(quality)}) e eficiência (${Math.round(efficiency)}) no padrão premium.`;
   } else {
-    vane = `Recomendo equilibrar a compra de matéria-prima e os investimentos em logística para otimizar as entregas.`;
+    vane = `Equilibre a compra de matéria-prima e logística para entregas rápidas.`;
   }
 
   return { rocha, luna, vane };
@@ -271,21 +243,21 @@ export function generateRoundNewspaper(
 ): string {
   let text = '';
   if (round === 1) {
-    text = `A Essenza iniciou a temporada com receita de R$ ${metrics.revenue.toLocaleString('pt-BR')} e ${Math.round(metrics.marketShare * 100)}% de market share. `;
-    if (event) text += `O cenário foi influenciado pelo evento "${event.title}". `;
-    text += metrics.profit > 0 ? `Analistas destacam o início positivo da marca.` : `A empresa foca em ajustes operacionais para a próxima rodada.`;
+    text = `A Essenza abriu a temporada com faturamento de R$ ${metrics.revenue.toLocaleString('pt-BR')} e ${Math.round(metrics.marketShare * 100)}% de market share. `;
+    if (event) text += `Cenário afetado por: "${event.title}". `;
+    text += metrics.profit > 0 ? `Início consistente no mercado.` : `A empresa busca recuperação na próxima estação.`;
   } else if (round === 2) {
-    text = `Na segunda temporada, a Essenza alcançou faturamento de R$ ${metrics.revenue.toLocaleString('pt-BR')}. `;
+    text = `Na 2ª temporada, a receita somou R$ ${metrics.revenue.toLocaleString('pt-BR')}. `;
     if (rivalA.profit > metrics.profit && rivalA.profit > rivalB.profit) {
-      text += `O Rival A se destacou nas vendas por volume. `;
+      text += `Rival A destacou-se em volume de vendas. `;
     } else if (rivalB.profit > metrics.profit) {
-      text += `O Rival B manteve destaque na linha premium. `;
+      text += `Rival B manteve margens premium. `;
     } else {
-      text += `A Essenza liderou em rentabilidade nesta temporada. `;
+      text += `Essenza liderou em rentabilidade e market share. `;
     }
   } else {
-    text = `A temporada final consolidou a trajetória da Essenza com caixa final de R$ ${metrics.cash.toLocaleString('pt-BR')}. `;
-    text += `A gestão encerra o ciclo com aprendizado prático em estratégia, precificação e visão de mercado.`;
+    text = `Ciclo encerrado com saldo em caixa de R$ ${metrics.cash.toLocaleString('pt-BR')}. `;
+    text += `A gestão conclui a jornada empresarial com domínio prático de mercado e finanças.`;
   }
   return text;
 }
@@ -327,29 +299,29 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
     return {
       profileName: 'CEO Estrategista de Alta Performance',
       emoji: '🏆',
-      subtitle: 'Excelência Comercial, Escala de Margem & Liderança de Mercado',
-      description: 'Sua gestão na Essenza foi caracterizada por um equilíbrio magistral entre expansão de receita e preservação rigorosa da saúde financeira. Você calibrou a força da marca com uma cadeia de suprimentos ágil, superando os concorrentes e transformando a Essenza em uma potência do setor.',
+      subtitle: 'Excelência Comercial, Margens Altas & Liderança',
+      description: 'Gestão de altíssimo nível, unindo expansão de faturamento, marketing forte e preservação rigorosa do caixa.',
       strengths: [
-        'Excelente relação de Retorno sobre Investimento (ROI)',
-        'Visão holística entre produção, preço e expansão de mercado',
-        'Capacidade de capturar market share sem comprometer o caixa'
+        'Alto Retorno sobre Investimento (ROI)',
+        'Sincronia entre produção, preço e demanda',
+        'Crescimento veloz sem comprometer a liquidez'
       ],
-      executiveAdvice: 'Mantenha esse ímpeto de liderança investindo continuamente no valor de marca a longo prazo para criar barreiras inabaláveis contra novos entrantes.'
+      executiveAdvice: 'Mantenha os investimentos no valor da marca para criar barreiras sólidas contra os concorrentes.'
     };
   }
 
   if (avgQuality > 72 && avgReputation > 70 && matPct > 0.28) {
     return {
-      profileName: 'Mestre do Posicionamento Premium & Valor Agregado',
+      profileName: 'Mestre do Posicionamento Premium',
       emoji: '💎',
-      subtitle: 'Foco na Excelência do Produto, Experiência da Marca & Margens Elevadas',
-      description: 'Você conduziu a Essenza pela trilha da alta sofisticação. Em vez de entrar em uma guerra destrutiva de preços por volume, sua tomada de decisão garantiu tecidos de primeira linha, acabamento superior e reputação impecável junto ao consumidor exigente.',
+      subtitle: 'Qualidade Superior, Experiência de Marca & Alto Valor',
+      description: 'Foco na alta sofisticação, materiais nobres e fidelidade do cliente em vez de guerras predatórias de preços.',
       strengths: [
-        'Construção de valor intangível de marca superior à média',
-        'Lealdade do cliente ancorada em qualidade e acabamento',
-        'Proteção contra guerras de preços pelo apelo exclusivo'
+        'Forte construção de valor intangível da marca',
+        'Lealdade e satisfação do consumidor exigente',
+        'Margens unitárias protegidas'
       ],
-      executiveAdvice: 'Explore edições limitadas para aumentar ainda mais o preço médio por peça e maximizar o valor vitalício do cliente.'
+      executiveAdvice: 'Lance coleções exclusivas de edição limitada para elevar ainda mais o ticket médio.'
     };
   }
 
@@ -357,57 +329,57 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
     return {
       profileName: 'Líder Disruptivo & Expansão de Mercado',
       emoji: '🚀',
-      subtitle: 'Domínio de Canais, Marketing Agressivo & Tráfego Qualificado',
-      description: 'Sua marca registrada na simulação foi a coragem e a agressividade comercial. Você enxergou o marketing não como um custo, mas como o principal motor de crescimento da Essenza. Suas campanhas colocaram a empresa no topo do recall da marca.',
+      subtitle: 'Marketing Agressivo, Tração & Domínio de Canais',
+      description: 'Agressividade comercial marcante, utilizando a publicidade como principal alavanca para acelerar a receita.',
       strengths: [
-        'Agressividade tática e domínio dos canais de divulgação',
-        'Capacidade de gerar alta demanda reprimida rapidamente',
-        'Visão orientada ao crescimento de faturamento'
+        'Domínio ágil dos canais de divulgação',
+        'Capacidade de capturar demanda rapidamente',
+        'Crescimento expressivo de faturamento'
       ],
-      executiveAdvice: 'Garanta que a infraestrutura logística e o planejamento de matéria-prima acompanhem a força das campanhas para evitar rupturas de estoque.'
+      executiveAdvice: 'Alinhe a capacidade fabril e estoque à força do marketing para evitar rupturas de pedidos.'
     };
   }
 
   if (finalCash > 580000 || totalInv < 200000) {
     return {
-      profileName: 'Guardião da Saúde Financeira & Solidez de Capital',
+      profileName: 'Guardião da Saúde Financeira',
       emoji: '🛡️',
-      subtitle: 'Preservação de Caixa, Disciplina Fiscal & Gestão Racional de Riscos',
-      description: 'Sua marca foi a estabilidade e a responsabilidade fiscal. Você manteve uma reserva financeira extremamente robusta na Essenza, garantindo proteção total contra volatilidades do mercado.',
+      subtitle: 'Preservação de Caixa, Disciplina & Baixo Risco',
+      description: 'Gestão prudente e foco em liquidez, garantindo blindagem do capital e solvência contra qualquer imprevisto.',
       strengths: [
-        'Saúde de caixa e liquidez imediatas impecáveis',
-        'Rigor financeiro e aversão a desperdícios operacionais',
-        'Proteção absoluta contra alavancagem excessiva'
+        'Excelente saúde financeira e caixa protegido',
+        'Disciplina orçamentária e aversão a desperdícios',
+        'Segurança contra oscilações de mercado'
       ],
-      executiveAdvice: 'Reinvista pequenos percentuais do capital em inovação para impulsionar ainda mais o crescimento nas próximas oportunidades.'
+      executiveAdvice: 'Reinvista pequenos percentuais do caixa em inovação para capturar ganhos ainda maiores.'
     };
   }
 
   if (prodPct > 0.34 || (logPct > 0.28 && prodPct > 0.28)) {
     return {
-      profileName: 'Arquiteto da Eficiência Operacional & Escala',
+      profileName: 'Arquiteto da Eficiência Operacional',
       emoji: '⚙️',
-      subtitle: 'Engenharia de Processos, Logística Ágil & Sincronia Fabril',
-      description: 'Sua liderança foi pautada pela eficiência de entrega e organização. Você alocou recursos em capacidade instalada, qualificação e logística para garantir que cada peça produzida chegasse com rapidez ao cliente.',
+      subtitle: 'Processos Otimizados, Logística Ágil & Escala',
+      description: 'Foco na produtividade fabril, entrega rápida e controle minucioso da cadeia de suprimentos têxtil.',
       strengths: [
-        'Sincronismo de produção e mitigação de estoques ociosos',
-        'Eficiência logístico-operacional e fluxo de entrega contínuo',
+        'Controle de estoques e ritmo fabril eficiente',
+        'Logística ágil e fluxo de entrega contínuo',
         'Domínio da cadeia de suprimentos (Supply Chain)'
       ],
-      executiveAdvice: 'Alie sua potência operacional a um marketing mais forte para garantir que a demanda absorva 100% da sua capacidade fabril.'
+      executiveAdvice: 'Reforce o marketing para garantir que a demanda absorva 100% da sua capacidade produtiva.'
     };
   }
 
   return {
     profileName: 'Arquiteto Estratégico Holístico',
     emoji: '🎯',
-    subtitle: 'Visão 360°, Tomada de Decisão Equilibrada & Adaptabilidade',
-    description: 'Sua atuação à frente da Essenza demonstrou maturidade executiva e flexibilidade. Você distribuiu recursos harmoniosamente entre suprimentos, produção, divulgação e distribuição, ajustando rotas conforme as oscilações do mercado.',
+    subtitle: 'Visão 360°, Equilíbrio & Adaptabilidade',
+    description: 'Equilíbrio consistente entre suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado.',
     strengths: [
-      'Equilíbrio entre investimento em receita e controle de custos',
-      'Flexibilidade estratégica para responder a eventos imprevisíveis',
-      'Visão integrada de todas as áreas de negócios'
+      'Balanço harmônico entre receitas e despesas',
+      'Boa capacidade de adaptação aos eventos sazonais',
+      'Visão integrada de todas as áreas do negócio'
     ],
-    executiveAdvice: 'Identifique a alavanca de maior potencial da sua coleção e concentre um investimento adicional nela para maximizar os lucros.'
+    executiveAdvice: 'Identifique o produto de maior rentabilidade da coleção e concentre nele seu investimento prioritário.'
   };
 }

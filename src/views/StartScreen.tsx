@@ -1,37 +1,77 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { Mail, User, BookOpen, Cpu, ChevronRight, ChevronLeft, Play } from 'lucide-react';
+import { Mail, User, BookOpen, Cpu, ChevronRight, ChevronLeft, Play, Clock, DollarSign, Tag, Award } from 'lucide-react';
 
-const briefingSlides = [
+interface BriefingSlide {
+  label: string;
+  icon: string;
+  title: string;
+  intro?: string;
+  items: { icon?: string; title: string; desc: string }[];
+}
+
+const briefingSlides: BriefingSlide[] = [
   {
     label: 'A MISSÃO',
     icon: '🏭',
     title: 'Bem-vindo à Essenza',
-    body: `Você acaba de ser nomeado CEO da Essenza, uma grife de moda casual brasileira em ascensão. A empresa tem potencial para dominar o mercado nacional — mas a concorrência é feroz e o mercado é imprevisível.\n\nSua missão começa agora.`
+    intro: 'Você assume como CEO com a missão de liderar o mercado de moda casual brasileira.',
+    items: [
+      { title: 'Capital Inicial', desc: 'R$ 500.000,00 disponíveis em caixa para gerenciar.' },
+      { title: 'Objetivo Executivo', desc: 'Maximizar o lucro, construir reputação de marca e vencer a concorrência.' }
+    ]
   },
   {
-    label: 'O CENÁRIO',
+    label: 'A CONCORRÊNCIA',
     icon: '📊',
     title: 'O Mercado em Disputa',
-    body: `Dois rivais poderosos disputam os mesmos clientes:\n\n⚔️ Rival A — aposta em volume e preço baixo, inundando o mercado.\n\n💎 Rival B — marca premium com marketing agressivo e preços elevados.\n\nA Essenza precisa encontrar sua própria estratégia para sobreviver e crescer.`
+    intro: 'Dois rivais com modelos de negócios distintos disputam os mesmos clientes:',
+    items: [
+      { icon: '⚔️', title: 'Rival A (Volume)', desc: 'Produção massiva com preços baixos e margens enxutas.' },
+      { icon: '💎', title: 'Rival B (Premium)', desc: 'Preços altos ancorados em campanhas agressivas de marketing.' }
+    ]
   },
   {
-    label: 'AS RODADAS',
+    label: 'AS ESTAÇÕES',
     icon: '🗓️',
-    title: '3 Rodadas, 3 Estações',
-    body: `A simulação cobre 3 temporadas diferentes:\n\n🍂 Rodada 1 — Outono. Estabilize a empresa.\n❄️ Rodada 2 — Inverno. Alta demanda por peças térmicas.\n☀️ Rodada 3 — Verão. A coleção leve é sua maior aposta.\n\nCada estação muda completamente o comportamento do consumidor. Planeje com antecedência!`
+    title: '3 Rodadas Estratégicas',
+    intro: 'Cada rodada representa uma estação climática que muda os hábitos de consumo:',
+    items: [
+      { icon: '🍂', title: 'Rodada 1 (Outono)', desc: 'Fase de aprendizado e estabilização de caixa (tempo livre).' },
+      { icon: '❄️', title: 'Rodada 2 (Inverno)', desc: 'Forte aumento na demanda por agasalhos e moletons.' },
+      { icon: '☀️', title: 'Rodada 3 (Verão)', desc: 'Pico de vendas para vestidos de linho e peças leves.' }
+    ]
   },
   {
-    label: 'SUAS DECISÕES',
+    label: 'DECISÕES',
     icon: '💡',
-    title: 'O Que Você Vai Decidir',
-    body: `A cada rodada, você define:\n\n💰 Quanto investir em Matéria-Prima, Produção, Marketing e Logística.\n🏷️ O preço de venda de cada produto da coleção.\n📦 Quantas peças produzir de cada item.\n\nErre no estoque e o caixa sangra. Acerte na temporada e a receita explode.`
+    title: 'O Que Você Vai Definir',
+    intro: 'A cada rodada, equilibre seus investimentos e sua capacidade produtiva:',
+    items: [
+      { title: '4 Investimentos', desc: 'Matéria-Prima, Produção & Salários, Marketing e Logística.' },
+      { title: 'Mix de 6 Produtos', desc: 'Defina preço de venda e lotes a produzir para cada peça do catálogo.' }
+    ]
+  },
+  {
+    label: 'RITMO & ATENÇÃO',
+    icon: '⏱️',
+    title: 'Dinâmica de Jogo & Equipe',
+    intro: 'Nas Rodadas 2 e 3, a pressão de mercado aumenta:',
+    items: [
+      { icon: '⏳', title: 'Cronômetro (1m30s)', desc: '1 minuto e meio por rodada para planejar e processar suas decisões.' },
+      { icon: '🚨', title: 'Alarme aos 15s', desc: 'Alerta visual vermelho piscante avisando que o tempo está no fim.' },
+      { icon: '👤', title: 'Recados da Equipe', desc: 'Colaboradores podem surgir na tela com recados. Clique no [X] no canto para dispensá-los e continuar!' }
+    ]
   },
   {
     label: 'A IA S.S.I.S.',
     icon: '🤖',
-    title: 'Seu Consultor de IA',
-    body: `A Inteligência Artificial S.S.I.S. (Sistema de Suporte Inteligente de Simulação) estará do seu lado em cada rodada:\n\n⚡ Avisos em tempo real enquanto você planeja.\n📋 Diagnóstico detalhado dos seus resultados.\n📈 Comparações com seus jogos anteriores para ajudar você a evoluir.\n\nO Conselho de Diretores também avaliará suas decisões. Prepare-se para críticas diretas!`
+    title: 'IA Scorpio & Conselho',
+    intro: 'Suporte executivo contínuo durante toda a sua jornada:',
+    items: [
+      { icon: '⚡', title: 'Alertas em Tempo Real', desc: 'A IA avisa sobre margens e riscos de caixa antes de você enviar a rodada.' },
+      { icon: '📋', title: 'Avaliação & Certificado', desc: 'Pareceres dos diretores ao fim de cada fase e certificado pedagógico oficial.' }
+    ]
   }
 ];
 
@@ -88,7 +128,7 @@ export const StartScreen: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.87)',
+          background: 'rgba(0,0,0,0.88)',
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
@@ -101,13 +141,13 @@ export const StartScreen: React.FC = () => {
             border: '1px solid var(--border-color)',
             borderRadius: '20px',
             padding: '2.5rem',
-            maxWidth: '600px',
+            maxWidth: '620px',
             width: '100%',
             boxShadow: '0 0 100px rgba(212,175,55,0.18)',
           }} className="animate-fade-in">
 
             {/* Progress bar */}
-            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.75rem' }}>
               {briefingSlides.map((_, i) => (
                 <div key={i} style={{
                   flex: 1,
@@ -120,9 +160,9 @@ export const StartScreen: React.FC = () => {
             </div>
 
             {/* Label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>{slide.label}</span>
-              <span style={{ fontSize: '1.5rem' }}>{slide.icon}</span>
+              <span style={{ fontSize: '1.3rem' }}>{slide.icon}</span>
             </div>
 
             {/* Title */}
@@ -130,22 +170,45 @@ export const StartScreen: React.FC = () => {
               fontSize: '1.75rem',
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              marginBottom: '1.25rem',
+              marginBottom: '0.75rem',
               color: 'white'
             }}>
               {slide.title}
             </h2>
 
-            {/* Body */}
-            <p style={{
-              fontSize: '0.95rem',
-              color: 'var(--text-primary)',
-              lineHeight: 1.8,
-              whiteSpace: 'pre-line',
-              minHeight: '165px'
-            }}>
-              {slide.body}
-            </p>
+            {/* Intro */}
+            {slide.intro && (
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                {slide.intro}
+              </p>
+            )}
+
+            {/* Structured Items */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '170px' }}>
+              {slide.items.map((item, idx) => (
+                <div key={idx} style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '10px',
+                  padding: '0.75rem 1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  {item.icon && (
+                    <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{item.icon}</span>
+                  )}
+                  <div>
+                    <strong style={{ color: '#fff', fontSize: '0.88rem', display: 'block' }}>
+                      {item.title}
+                    </strong>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.35 }}>
+                      {item.desc}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
 
             {/* Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' }}>
@@ -247,69 +310,91 @@ export const StartScreen: React.FC = () => {
               <BookOpen style={{ color: 'var(--accent-gold)' }} /> Como Funciona a Simulação
             </h2>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                 <div style={{
                   background: 'var(--accent-blue-glow)',
                   color: 'var(--accent-blue)',
-                  width: '40px',
-                  height: '40px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  <strong>1</strong>
+                  <DollarSign size={18} />
                 </div>
                 <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Gestão de Recursos</h4>
-                  <p style={{ fontSize: '0.9rem' }}>
-                    Você assume a liderança da Essenza com um capital de <strong>R$ 500.000,00</strong>. Em cada uma das <strong>3 rodadas</strong>, aloque verbas em 4 áreas estratégicas: Matéria-Prima, Produção, Marketing e Logística.
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Gestão de Recursos (R$ 500k)</h4>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    Aloque o orçamento em Matéria-Prima, Produção, Marketing e Logística. Mantenha o caixa sempre positivo.
                   </p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                 <div style={{
                   background: 'var(--accent-gold-glow)',
                   color: 'var(--accent-gold)',
-                  width: '40px',
-                  height: '40px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  <strong>2</strong>
+                  <Tag size={18} />
                 </div>
                 <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Ajuste de Mix e Preço</h4>
-                  <p style={{ fontSize: '0.9rem' }}>
-                    Defina a quantidade de produção e o preço de venda para <strong>6 produtos exclusivos</strong> de moda casual. Cuidado para não produzir além da matéria-prima comprada ou da capacidade de maquinário contratada!
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Mix de 6 Produtos & Preço</h4>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    Ajuste lotes e preços conforme a estação (Inverno = moletons; Verão = vestidos). Respeite os custos de produção.
                   </p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                 <div style={{
-                  background: 'var(--accent-success-glow)',
-                  color: 'var(--accent-success)',
-                  width: '40px',
-                  height: '40px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#ef4444',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  <strong>3</strong>
+                  <Clock size={18} />
                 </div>
                 <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.25rem' }}>A Inteligência S.S.I.S.</h4>
-                  <p style={{ fontSize: '0.9rem' }}>
-                    O sistema de IA analisará suas escolhas preventivamente e gerará diagnósticos profundos ao fim de cada rodada. O Conselho Administrativo também dará feedbacks corporativos baseados em despesas e vendas.
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Timer (1m30s) & Alarme Policial</h4>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    As Rodadas 2 e 3 contam com timer de 1m30s e alarme nos 15s finais. A Rodada 1 é livre para aprender.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{
+                  background: 'var(--accent-success-glow)',
+                  color: 'var(--accent-success)',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Award size={18} />
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Recados da Equipe & IA Scorpio</h4>
+                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                    Funcionários surgem com recados (feche no [X]). A IA Scorpio dá diagnósticos e dicas ao vivo.
                   </p>
                 </div>
               </div>
@@ -319,7 +404,7 @@ export const StartScreen: React.FC = () => {
           {/* Form Panel */}
           <div className="glass-panel" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)' }}>Ficha Cadastral do Gestor</h3>
-            <p style={{ marginBottom: '2rem', fontSize: '0.9rem' }}>Insira seus dados executivos para abrir sua sala de controle e receber o certificado ao término.</p>
+            <p style={{ marginBottom: '2rem', fontSize: '0.9rem' }}>Insira seus dados para abrir sua sala de controle e receber o certificado oficial.</p>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -330,7 +415,7 @@ export const StartScreen: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: Beatriz Fernandes"
+                  placeholder="Digite seu nome completo"
                   className="input-control"
                   required
                 />
@@ -368,7 +453,7 @@ export const StartScreen: React.FC = () => {
           <span>•</span>
           <span>Apoio Acadêmico FECAP</span>
           <span>•</span>
-          <span>Ambiente Premium</span>
+          <span>Ambiente Executivo</span>
         </div>
       </div>
     </>

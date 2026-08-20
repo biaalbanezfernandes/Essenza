@@ -48,10 +48,10 @@ export const RoundResults: React.FC = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
             <span className="badge-pill badge-success" style={{ fontSize: '0.7rem' }}>Fase 1 Concluída!</span>
-            <strong style={{ fontSize: '1.1rem', color: '#fff' }}>🎉 Parabéns! Você concluiu a Fase Tutorial!</strong>
+            <strong style={{ fontSize: '1.1rem', color: '#fff' }}>🎉 Parabéns! Tutorial Concluído!</strong>
           </div>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>
-            Você aprendeu a distribuir investimentos nas 4 áreas, precificar os produtos e usar o assistente S.S.I.S. Agora você está pronto para encarar a <strong>Fase 2 (Inverno)</strong>, onde a demanda por casacos e moletons vai multiplicar!
+            Você aprendeu os fundamentos. Na <strong>Rodada 2 (Inverno)</strong>, a demanda de moletons vai disparar — e você terá <strong>timer de 1m30s</strong>, <strong>alarme policial nos 15s finais</strong> e <strong>interrupções da equipe (NPCs)</strong>!
           </p>
         </div>
       )}
@@ -172,7 +172,7 @@ export const RoundResults: React.FC = () => {
           {/* Product breakdown list */}
           <div className="glass-panel" style={{ padding: '2rem' }}>
             <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Percent style={{ color: 'var(--accent-gold)' }} /> Desempenho de Vendas do Portfólio
+              <Percent style={{ color: 'var(--accent-gold)' }} /> Desempenho do Portfólio
             </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -196,15 +196,15 @@ export const RoundResults: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      <span>Demanda do Mercado: {result.demanded} un.</span>
+                      <span>Demanda: {result.demanded} un.</span>
                       <span style={{ color: sellout > 90 ? 'var(--accent-success)' : sellout < 50 ? 'var(--accent-danger)' : 'var(--text-secondary)' }}>
-                        Taxa de Conversão: {Math.round(sellout)}%
+                        Conversão: {Math.round(sellout)}%
                       </span>
                     </div>
 
                     {result.stockRemaining > 0 && (
                       <span style={{ fontSize: '0.75rem', color: '#ffb3b3' }}>
-                        Sobrou em estoque: {result.stockRemaining} unidades (Custo imobilizado: {fmt(result.stockRemaining * (prod?.productionCost || 0))})
+                        Estoque parado: {result.stockRemaining} un. (Custo imobilizado: {fmt(result.stockRemaining * (prod?.productionCost || 0))})
                       </span>
                     )}
                   </div>
