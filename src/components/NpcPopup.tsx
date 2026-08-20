@@ -79,7 +79,7 @@ export const NpcPopup: React.FC<NpcPopupProps> = ({ currentRound, disabled = fal
         animation: 'fadeIn 0.2s ease-out forwards',
         padding: '1.5rem',
       }}
-      onClick={(e) => {
+      onClick={() => {
         // Dismiss if clicking backdrop or image directly
         handleDismiss();
       }}

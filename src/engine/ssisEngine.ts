@@ -8,13 +8,30 @@ export interface PedagogicalGrades {
   innovation: number;
 }
 
+export interface EntrepreneurProfileDef {
+  id: 'visionario' | 'inovador' | 'gestor' | 'lider' | 'social' | 'pratico';
+  title: string;
+  emoji: string;
+  shortSentence: string;
+  pontoForte: string;
+  risco: string;
+  description: string;
+  subtitle: string;
+}
+
 export interface ManagementProfile {
   profileName: string;
   emoji: string;
   subtitle: string;
   description: string;
+  pontoForte: string;
+  risco: string;
+  personalizedExplanation: string;
+  certificateSummary: string;
   strengths: string[];
   executiveAdvice: string;
+  activeProfileId: 'visionario' | 'inovador' | 'gestor' | 'lider' | 'social' | 'pratico';
+  allProfiles: EntrepreneurProfileDef[];
 }
 
 export function generateSsisFeedback(
@@ -34,14 +51,14 @@ export function generateSsisFeedback(
 
   let topRevenueProduct = '';
   let maxRevenue = -1;
-  
+
   let worstStockProduct = '';
   let worstStockProductId = '';
   let maxStockRemaining = 0;
-  
+
   let worstLostSalesProduct = '';
   let maxLostSales = 0;
-  
+
   let underpricedProduct = '';
   let thinMarginProduct = '';
   let thinMarginVal = 0;
@@ -262,6 +279,69 @@ export function generateRoundNewspaper(
   return text;
 }
 
+export const ALL_ENTREPRENEUR_PROFILES: EntrepreneurProfileDef[] = [
+  {
+    id: 'visionario',
+    title: 'CEO Estrategista & Visionário',
+    emoji: '🚀',
+    shortSentence: 'Pensa no longo prazo e enxerga tendências antes dos concorrentes.',
+    pontoForte: 'Estratégia',
+    risco: 'Apostar demais no futuro e esquecer o presente',
+    description: 'Pensa no longo prazo. Enxerga tendências antes dos concorrentes. Gosta de expansão e grandes projetos.',
+    subtitle: 'Visão de Futuro, Tendências & Expansão Comercial'
+  },
+  {
+    id: 'inovador',
+    title: 'Mestre do Posicionamento Inovador',
+    emoji: '💡',
+    shortSentence: 'Busca produtos, processos e soluções diferentes com tecnologia e experimentação.',
+    pontoForte: 'Criatividade',
+    risco: 'Ter muitas ideias e pouca execução',
+    description: 'Busca produtos, processos e soluções diferentes. Gosta de tecnologia e experimentação. Está sempre tentando melhorar o negócio.',
+    subtitle: 'Criatividade, Sofisticação & Experimentação Inovadora'
+  },
+  {
+    id: 'gestor',
+    title: 'Guardião da Gestão & Finanças',
+    emoji: '📊',
+    shortSentence: 'Focado em organização, processos, custos e decisões baseadas em dados.',
+    pontoForte: 'Eficiência',
+    risco: 'Ser excessivamente conservador',
+    description: 'Focado em organização, processos e números. Controla custos, estoque, funcionários e resultados. Prefere decisões baseadas em dados.',
+    subtitle: 'Organização, Controle de Custos & Preservação de Caixa'
+  },
+  {
+    id: 'lider',
+    title: 'Líder Inspiracional & Pessoas',
+    emoji: '🤝',
+    shortSentence: 'Prioriza pessoas, equipes e relacionamentos, valorizando networking e parcerias.',
+    pontoForte: 'Liderança',
+    risco: 'Tomar decisões pensando demais em agradar os outros',
+    description: 'Prioriza pessoas, equipes e relacionamentos. Sabe negociar e motivar funcionários. Valoriza networking e parcerias.',
+    subtitle: 'Gestão de Pessoas, Motivação & Parcerias Estratégicas'
+  },
+  {
+    id: 'social',
+    title: 'Arquiteto Estratégico Holístico',
+    emoji: '🎯',
+    shortSentence: 'Equilíbrio consistente entre suprimentos, produção, divulgação, finanças e propósito.',
+    pontoForte: 'Visão 360°',
+    risco: 'Dividir foco entre muitas áreas sem concentração prioritária',
+    description: 'Equilíbrio consistente entre suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado e compromisso social.',
+    subtitle: 'Equilíbrio consistente entre suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado.'
+  },
+  {
+    id: 'pratico',
+    title: 'Arquiteto da Eficiência Operacional',
+    emoji: '⚡',
+    shortSentence: 'Focado em resultados imediatos e execução rápida com mão na massa.',
+    pontoForte: 'Agilidade',
+    risco: 'Tomar decisões rápidas sem analisar suficientemente as consequências',
+    description: 'Focado em resultados imediatos e execução. Identifica um problema e tenta resolvê-lo rapidamente. Tem facilidade para colocar a mão na massa.',
+    subtitle: 'Processos Otimizados, Logística Ágil & Escala Fabril'
+  }
+];
+
 export function classifyManagementProfile(history: RoundResult[]): ManagementProfile {
   let totalMaterials = 0;
   let totalProduction = 0;
@@ -272,6 +352,11 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
   let finalCash = 500000;
   let avgQuality = 0;
   let avgReputation = 0;
+  let avgPeople = 0;
+  let avgInnovation = 0;
+  let avgFinance = 0;
+  let avgPlanning = 0;
+  let maxStockRemaining = 0;
 
   history.forEach((h) => {
     totalMaterials += h.playerDecision.investments.materials;
@@ -283,11 +368,28 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
     avgQuality += h.playerMetrics.quality;
     avgReputation += h.playerMetrics.reputation;
     finalCash = h.playerMetrics.cash;
+
+    if (h.ssisFeedback && h.ssisFeedback.pedagogicalGrade) {
+      avgPeople += h.ssisFeedback.pedagogicalGrade.people;
+      avgInnovation += h.ssisFeedback.pedagogicalGrade.innovation;
+      avgFinance += h.ssisFeedback.pedagogicalGrade.finance;
+      avgPlanning += h.ssisFeedback.pedagogicalGrade.planning;
+    }
+
+    h.playerMetrics.productResults.forEach((pr) => {
+      if (pr.stockRemaining > maxStockRemaining) {
+        maxStockRemaining = pr.stockRemaining;
+      }
+    });
   });
 
   const roundsCount = history.length || 1;
   avgQuality = Math.round(avgQuality / roundsCount);
   avgReputation = Math.round(avgReputation / roundsCount);
+  avgPeople = Math.round((avgPeople / roundsCount) * 10) / 10;
+  avgInnovation = Math.round((avgInnovation / roundsCount) * 10) / 10;
+  avgFinance = Math.round((avgFinance / roundsCount) * 10) / 10;
+  avgPlanning = Math.round((avgPlanning / roundsCount) * 10) / 10;
 
   const totalInv = totalMaterials + totalProduction + totalMarketing + totalLogistics;
   const prodPct = totalInv > 0 ? totalProduction / totalInv : 0;
@@ -295,91 +397,90 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
   const logPct = totalInv > 0 ? totalLogistics / totalInv : 0;
   const matPct = totalInv > 0 ? totalMaterials / totalInv : 0;
 
-  if (totalProfit > 120000 && finalCash > 550000 && mktPct > 0.22) {
-    return {
-      profileName: 'CEO Estrategista de Alta Performance',
-      emoji: '🏆',
-      subtitle: 'Excelência Comercial, Margens Altas & Liderança',
-      description: 'Gestão de altíssimo nível, unindo expansão de faturamento, marketing forte e preservação rigorosa do caixa.',
-      strengths: [
-        'Alto Retorno sobre Investimento (ROI)',
-        'Sincronia entre produção, preço e demanda',
-        'Crescimento veloz sem comprometer a liquidez'
-      ],
-      executiveAdvice: 'Mantenha os investimentos no valor da marca para criar barreiras sólidas contra os concorrentes.'
-    };
-  }
+  // Compute profile scores based on decision weights & metrics
+  const scores: Record<EntrepreneurProfileDef['id'], number> = {
+    visionario: mktPct * 45 + (totalRevenue > 400000 ? 25 : 10) + (avgPlanning >= 7.5 ? 20 : 10) + (totalProfit > 80000 ? 15 : 5),
+    inovador: matPct * 35 + (avgInnovation * 4) + (avgQuality > 70 ? 20 : 5) + (mktPct > 0.2 ? 15 : 5),
+    gestor: (avgFinance * 4) + (avgPlanning * 4) + (finalCash > 520000 ? 20 : 5) + (maxStockRemaining < 200 ? 20 : 5),
+    lider: (avgPeople * 7) + (logPct * 30) + (avgReputation > 70 ? 20 : 5),
+    social: (avgPeople * 5) + (avgQuality * 0.3) + (avgReputation > 75 ? 20 : 10) + (totalProfit > 0 ? 15 : 0),
+    pratico: prodPct * 45 + (totalProfit > 50000 ? 25 : 10) + (maxStockRemaining < 350 ? 20 : 5),
+  };
 
-  if (avgQuality > 72 && avgReputation > 70 && matPct > 0.28) {
-    return {
-      profileName: 'Mestre do Posicionamento Premium',
-      emoji: '💎',
-      subtitle: 'Qualidade Superior, Experiência de Marca & Alto Valor',
-      description: 'Foco na alta sofisticação, materiais nobres e fidelidade do cliente em vez de guerras predatórias de preços.',
-      strengths: [
-        'Forte construção de valor intangível da marca',
-        'Lealdade e satisfação do consumidor exigente',
-        'Margens unitárias protegidas'
-      ],
-      executiveAdvice: 'Lance coleções exclusivas de edição limitada para elevar ainda mais o ticket médio.'
-    };
-  }
+  let bestId: EntrepreneurProfileDef['id'] = 'gestor' as EntrepreneurProfileDef['id'];
+  let maxScore = -1;
 
-  if (mktPct > 0.38 || (totalRevenue > 600000 && mktPct > 0.3)) {
-    return {
-      profileName: 'Líder Disruptivo & Expansão de Mercado',
-      emoji: '🚀',
-      subtitle: 'Marketing Agressivo, Tração & Domínio de Canais',
-      description: 'Agressividade comercial marcante, utilizando a publicidade como principal alavanca para acelerar a receita.',
-      strengths: [
-        'Domínio ágil dos canais de divulgação',
-        'Capacidade de capturar demanda rapidamente',
-        'Crescimento expressivo de faturamento'
-      ],
-      executiveAdvice: 'Alinhe a capacidade fabril e estoque à força do marketing para evitar rupturas de pedidos.'
-    };
-  }
+  (Object.keys(scores) as Array<EntrepreneurProfileDef['id']>).forEach((id) => {
+    if (scores[id] > maxScore) {
+      maxScore = scores[id];
+      bestId = id;
+    }
+  });
 
-  if (finalCash > 580000 || totalInv < 200000) {
-    return {
-      profileName: 'Guardião da Saúde Financeira',
-      emoji: '🛡️',
-      subtitle: 'Preservação de Caixa, Disciplina & Baixo Risco',
-      description: 'Gestão prudente e foco em liquidez, garantindo blindagem do capital e solvência contra qualquer imprevisto.',
-      strengths: [
-        'Excelente saúde financeira e caixa protegido',
-        'Disciplina orçamentária e aversão a desperdícios',
-        'Segurança contra oscilações de mercado'
-      ],
-      executiveAdvice: 'Reinvista pequenos percentuais do caixa em inovação para capturar ganhos ainda maiores.'
-    };
-  }
+  const activeProfile = ALL_ENTREPRENEUR_PROFILES.find(p => p.id === bestId) || ALL_ENTREPRENEUR_PROFILES[0];
 
-  if (prodPct > 0.34 || (logPct > 0.28 && prodPct > 0.28)) {
-    return {
-      profileName: 'Arquiteto da Eficiência Operacional',
-      emoji: '⚙️',
-      subtitle: 'Processos Otimizados, Logística Ágil & Escala',
-      description: 'Foco na produtividade fabril, entrega rápida e controle minucioso da cadeia de suprimentos têxtil.',
-      strengths: [
-        'Controle de estoques e ritmo fabril eficiente',
-        'Logística ágil e fluxo de entrega contínuo',
-        'Domínio da cadeia de suprimentos (Supply Chain)'
-      ],
-      executiveAdvice: 'Reforce o marketing para garantir que a demanda absorva 100% da sua capacidade produtiva.'
-    };
+  let personalizedExplanation = '';
+  let certificateSummary = '';
+  let strengths: string[] = [];
+  let executiveAdvice = '';
+
+  switch (bestId) {
+    case 'visionario':
+      personalizedExplanation = `Sua gestão destacou-se por antecipar tendências e apostar forte na expansão da marca. Ao longo das ${roundsCount} rodadas, você alocou R$ ${totalMarketing.toLocaleString('pt-BR')} em estratégias de marketing e posicionamento, impulsionando o faturamento acumulado da Essenza para R$ ${totalRevenue.toLocaleString('pt-BR')} (Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}) com nota pedagógica de planejamento em ${avgPlanning}/10.`;
+      certificateSummary = `Demonstrou visão de futuro e gestão estratégica de expansão: alocou R$ ${totalMarketing.toLocaleString('pt-BR')} em marketing e impulsionou o faturamento para R$ ${totalRevenue.toLocaleString('pt-BR')}.`;
+      strengths = ['Visão de expansão comercial', 'Forte presença de marca', 'Antecipação de oportunidades'];
+      executiveAdvice = 'Consolide os custos operacionais do presente para dar base sólida aos projetos futuros.';
+      break;
+
+    case 'inovador':
+      personalizedExplanation = `Sua trajetória foi guiada pela busca de sofisticação e excelência de produto. Você destinou R$ ${totalMaterials.toLocaleString('pt-BR')} para matérias-primas nobres, alcançando ${avgQuality}% de padrão de qualidade, nota de inovação pedagógica ${avgInnovation}/10 e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em receita.`;
+      certificateSummary = `Demonstrou elevado padrão de sofisticação e inovação contínua: destinou R$ ${totalMaterials.toLocaleString('pt-BR')} em matérias-primas e atingiu ${avgQuality}% de qualidade.`;
+      strengths = ['Sofisticação de produto', 'Padrão elevado de qualidade', 'Identidade única de mercado'];
+      executiveAdvice = 'Assegure que as inovações se traduzam em execução prática e margens de lucro sustentáveis.';
+      break;
+
+    case 'gestor':
+      personalizedExplanation = `Sua liderança destacou-se pela disciplina analítica, controle de números e foco em liquidez. Você encerrou a simulação preservando R$ ${finalCash.toLocaleString('pt-BR')} em caixa disponível, com baixo nível de desperdício em estoque e nota pedagógica de gestão financeira em ${avgFinance}/10.`;
+      certificateSummary = `Demonstrou controle rigoroso de caixa e excelência na gestão financeira: preservou R$ ${finalCash.toLocaleString('pt-BR')} em liquidez e obteve nota ${avgFinance}/10 em finanças.`;
+      strengths = ['Excelente controle de liquidez', 'Decisões embasadas em dados', 'Rigor e aversão a desperdícios'];
+      executiveAdvice = 'Reinvista fatias calculadas do caixa para acelerar o crescimento do negócio.';
+      break;
+
+    case 'lider':
+      personalizedExplanation = `Sua condução priorizou a motivação da equipe, o clima organizacional e a consolidação de parcerias comerciais. Alcançou nota pedagógica de pessoas em ${avgPeople}/10 e manteve equilíbrio operacional ao investir R$ ${totalLogistics.toLocaleString('pt-BR')} em logística de entregas.`;
+      certificateSummary = `Demonstrou habilidade exemplar em gestão de pessoas e alianças de mercado: alcançou nota de liderança ${avgPeople}/10 e fortaleceu a cadeia logística.`;
+      strengths = ['Gestão e motivação de equipe', 'Parcerias na cadeia de suprimentos', 'Alta reputação institucional'];
+      executiveAdvice = 'Mantenha a firmeza em decisões difíceis de caixa sem receio de impopularidade.';
+      break;
+
+    case 'social':
+      personalizedExplanation = `Você demonstrou equilíbrio holístico consistente em todas as frentes do negócio, unindo forte desempenho financeiro (Faturamento de R$ ${totalRevenue.toLocaleString('pt-BR')}, Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}) com alta reputação institucional (${avgReputation} pts) e compromisso humano.`;
+      certificateSummary = `Demonstrou visão 360° e equilíbrio consistente em todas as áreas do negócio: conciliou suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado.`;
+      strengths = ['Visão integrada 360° do negócio', 'Equilíbrio entre vendas e pessoas', 'Boa capacidade de adaptação'];
+      executiveAdvice = 'Identifique o produto de maior rentabilidade e concentre nele seus investimentos prioritários.';
+      break;
+
+    case 'pratico':
+    default:
+      personalizedExplanation = `Sua marca principal foi a agilidade e capacidade de execução fabril imediata. Diante dos desafios de cada estação, você alocou R$ ${totalProduction.toLocaleString('pt-BR')} no ritmo produtivo da fábrica, garantindo vazão aos pedidos e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em faturamento.`;
+      certificateSummary = `Demonstrou alta agilidade operacional e capacidade de execução fabril: investiu R$ ${totalProduction.toLocaleString('pt-BR')} em produção e assegurou vazão comercial imediata.`;
+      strengths = ['Agilidade na solução de problemas', 'Execução fabril rápida', 'Foco em vazão e vendas imediatas'];
+      executiveAdvice = 'Reserve momentos entre as rodadas para planejar cenários preventivos de longo prazo.';
+      break;
   }
 
   return {
-    profileName: 'Arquiteto Estratégico Holístico',
-    emoji: '🎯',
-    subtitle: 'Visão 360°, Equilíbrio & Adaptabilidade',
-    description: 'Equilíbrio consistente entre suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado.',
-    strengths: [
-      'Balanço harmônico entre receitas e despesas',
-      'Boa capacidade de adaptação aos eventos sazonais',
-      'Visão integrada de todas as áreas do negócio'
-    ],
-    executiveAdvice: 'Identifique o produto de maior rentabilidade da coleção e concentre nele seu investimento prioritário.'
+    profileName: activeProfile.title,
+    emoji: activeProfile.emoji,
+    subtitle: activeProfile.subtitle,
+    description: activeProfile.description,
+    pontoForte: activeProfile.pontoForte,
+    risco: activeProfile.risco,
+    personalizedExplanation,
+    certificateSummary,
+    strengths,
+    executiveAdvice,
+    activeProfileId: activeProfile.id,
+    allProfiles: ALL_ENTREPRENEUR_PROFILES
   };
 }
