@@ -76,24 +76,30 @@ export const FinalReport: React.FC = () => {
   const handleOpenMailClient = () => {
     const subject = encodeURIComponent(`Certificado Oficial ESSENZA FECART 2026 — ${playerName || 'Gestor'}`);
     const body = encodeURIComponent(
-      `CERTIFICADO DE DESEMPENHO EMPRESARIAL — ESSENZA (FECART 2026)\n\n` +
-      `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA no Colégio FECAP.\n\n` +
-      `PERFIL DE GESTÃO IDENTIFICADO PELA ESSENZA IA: ${profile.emoji} ${profile.profileName.toUpperCase()}\n` +
-      `"${profile.subtitle}"\n\n` +
-      `ANÁLISE PERSONALIZADA DA IA:\n` +
+      `Olá, ${playerName || 'Gestor(a)'}! 👋\n\n` +
+      `Parabéns pela conclusão do Simulador Empresarial ESSENZA na Feira Científica FECART 2026!\n\n` +
+      `🧠 DIAGNÓSTICO DE LIDERANÇA ESSENZA IA:\n` +
       `${profile.personalizedExplanation}\n\n` +
+      `💪 Ponto Forte: ${profile.pontoForte}\n` +
+      `⚠️ Risco a Monitorar: ${profile.risco}\n` +
+      `🧭 Recomendação Executiva: ${profile.executiveAdvice}\n\n` +
+      `======================================================================\n` +
+      `                  COLÉGIO FECAP — FECART 2026\n` +
+      `                  CERTIFICADO DE DESEMPENHO\n` +
+      `======================================================================\n\n` +
+      `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA na Feira Científica FECART 2026. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:\n\n` +
+      `                    ${profile.emoji} ${profile.profileName}\n` +
+      `                    "${profile.subtitle}"\n\n` +
+      `----------------------------------------------------------------------\n` +
       `AVALIAÇÃO PEDAGÓGICA (0 a 10):\n` +
-      `- Planejamento de Demanda: ${avgPlanning}\n` +
-      `- Gestão Financeira e Caixa: ${avgFinance}\n` +
-      `- Liderança e Pessoas: ${avgPeople}\n` +
-      `- Inovação e Qualidade: ${avgInnovation}\n` +
-      `- Média do Índice IGE: ${avgIge}/100\n\n` +
-      `RESULTADOS CONSOLIDADOS:\n` +
-      `- Faturamento Acumulado: ${fmt(totalRevenue)}\n` +
-      `- Lucro Líquido Acumulado: ${fmt(totalProfit)}\n` +
-      `- Saldo Final em Caixa: ${fmt(finalCash)}\n\n` +
-      `São Paulo, ${today}\n\n` +
-      `Comissão Empresarial ESSENZA — Colégio FECAP`
+      `• Planejamento: ${avgPlanning}\n` +
+      `• Finanças: ${avgFinance}\n` +
+      `• Pessoas: ${avgPeople}\n` +
+      `• Inovação: ${avgInnovation}\n` +
+      `----------------------------------------------------------------------\n\n` +
+      `Membros Essenza\n` +
+      `Comissão empresarial da Essenza\n` +
+      `São Paulo, ${today}\n`
     );
     window.open(`mailto:${emailInput}?subject=${subject}&body=${body}`, '_blank');
   };
@@ -116,6 +122,9 @@ export const FinalReport: React.FC = () => {
       profile_name:    `${profile.emoji} ${profile.profileName}`,
       profile_subtitle: profile.subtitle,
       profile_desc:    profile.personalizedExplanation,
+      ponto_forte:     profile.pontoForte,
+      risco:           profile.risco,
+      executive_advice: profile.executiveAdvice,
       avg_planning:    String(avgPlanning),
       avg_finance:     String(avgFinance),
       avg_people:      String(avgPeople),
@@ -125,6 +134,24 @@ export const FinalReport: React.FC = () => {
       total_profit:    fmt(totalProfit),
       final_cash:      fmt(finalCash),
       issue_date:      today,
+      certificate_full_text:
+        `======================================================================\n` +
+        `                  COLÉGIO FECAP — FECART 2026\n` +
+        `                  CERTIFICADO DE DESEMPENHO\n` +
+        `======================================================================\n\n` +
+        `Certificamos que ${playerName || 'Gestor(a)'} participou do Simulador Empresarial ESSENZA na Feira Científica FECART 2026. Ao longo de 3 rodadas comerciais, demonstrou habilidades de gestão estratégica, financeira e operacional, sendo classificado(a) com o perfil:\n\n` +
+        `                    ${profile.emoji} ${profile.profileName}\n` +
+        `                    "${profile.subtitle}"\n\n` +
+        `----------------------------------------------------------------------\n` +
+        `AVALIAÇÃO PEDAGÓGICA (0 a 10):\n` +
+        `• Planejamento: ${avgPlanning}\n` +
+        `• Finanças: ${avgFinance}\n` +
+        `• Pessoas: ${avgPeople}\n` +
+        `• Inovação: ${avgInnovation}\n` +
+        `----------------------------------------------------------------------\n\n` +
+        `Membros Essenza\n` +
+        `Comissão empresarial da Essenza\n` +
+        `São Paulo, ${today}`
     };
 
     try {
