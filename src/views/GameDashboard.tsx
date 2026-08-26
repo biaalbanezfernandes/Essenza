@@ -222,8 +222,8 @@ export const GameDashboard: React.FC = () => {
 
   return (
     <div style={{ padding: '1.5rem 1.25rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }} className="animate-fade-in">
-      {/* Pop-up do Personagem Intruso Gigante em PNG */}
-      <NpcPopup currentRound={currentRound} />
+      {/* Pop-up do Personagem Intruso Gigante em PNG (Apenas após concluir o tutorial) */}
+      <NpcPopup currentRound={currentRound} disabled={isTutorialOpen} />
 
       {/* Top Header: Centered Big Timer and Round Badge */}
       <div style={{

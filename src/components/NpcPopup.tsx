@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { characters, type NpcCharacter } from '../data/characters';
 import { X } from 'lucide-react';
 
@@ -10,38 +10,48 @@ interface NpcPopupProps {
 export const NpcPopup: React.FC<NpcPopupProps> = ({ currentRound, disabled = false }) => {
   const [activeNpc, setActiveNpc] = useState<NpcCharacter | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
 
   // Trigger next random NPC popup
   const scheduleNextNpc = useCallback(() => {
     if (disabled) return;
+    clearTimer();
 
     // Random interval between 10s and 20s
     const delay = Math.floor(Math.random() * 10000) + 10000;
     
-    const timer = setTimeout(() => {
+    timerRef.current = setTimeout(() => {
+      if (disabled) return;
       const randomNpc = characters[Math.floor(Math.random() * characters.length)];
       setActiveNpc(randomNpc);
       setIsVisible(true);
     }, delay);
-
-    return () => clearTimeout(timer);
   }, [disabled]);
 
   useEffect(() => {
     if (disabled) {
       setIsVisible(false);
+      clearTimer();
       return;
     }
 
-    // Schedule initial NPC on mount (4s in rounds 2/3, 8s in round 1)
-    const initialDelay = currentRound === 1 ? 8000 : 4000;
-    const timer = setTimeout(() => {
+    clearTimer();
+    // Schedule initial NPC: 6s in round 1 (after tutorial finishes), 4s in rounds 2/3
+    const initialDelay = currentRound === 1 ? 6000 : 4000;
+    timerRef.current = setTimeout(() => {
       const randomNpc = characters[Math.floor(Math.random() * characters.length)];
       setActiveNpc(randomNpc);
       setIsVisible(true);
     }, initialDelay);
 
-    return () => clearTimeout(timer);
+    return () => clearTimer();
   }, [currentRound, disabled]);
 
   const handleDismiss = () => {
