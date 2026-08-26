@@ -43,8 +43,8 @@ export const NpcPopup: React.FC<NpcPopupProps> = ({ currentRound, disabled = fal
     }
 
     clearTimer();
-    // Schedule initial NPC: 6s in round 1 (after tutorial finishes), 4s in rounds 2/3
-    const initialDelay = currentRound === 1 ? 6000 : 4000;
+    // Schedule initial NPC: 2.5s after tutorial finishes / round starts
+    const initialDelay = 2500;
     timerRef.current = setTimeout(() => {
       const randomNpc = characters[Math.floor(Math.random() * characters.length)];
       setActiveNpc(randomNpc);
