@@ -628,13 +628,20 @@ export const GameDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Tutorial Step 5: Funcionários do Caos */}
+      <div id="tutorial-chaos-npc" style={{ width: '100%', maxWidth: '720px', margin: '0 auto 1.5rem' }}>
+        {isTutorialOpen && tutorialStepIndex === 5 && (
+          <MicroTooltip stepIndex={5} step={tutorialSteps[5]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
+        )}
+      </div>
+
       {/* Warnings & Submit button bar */}
       <div 
         id="tutorial-submit"
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}
       >
-        {isTutorialOpen && tutorialStepIndex === 5 && (
-          <MicroTooltip stepIndex={5} step={tutorialSteps[5]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
+        {isTutorialOpen && tutorialStepIndex === 6 && (
+          <MicroTooltip stepIndex={6} step={tutorialSteps[6]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
         )}
 
         {cashError && (
