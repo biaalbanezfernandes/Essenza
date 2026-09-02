@@ -51,8 +51,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({ playerData, rivalAData, 
       return Math.min(100, Math.max(10, norm));
     }
     if (key === 'share') {
-      // Scale from 0% (0) to 60% (100)
-      const norm = (val / 0.6) * 100;
+      // Scale from 0% (0) to 50% (100), so a baseline market share of 33.3% renders harmoniously at 66%
+      const norm = (val / 0.5) * 100;
       return Math.min(100, Math.max(10, norm));
     }
     return Math.min(100, Math.max(10, val));

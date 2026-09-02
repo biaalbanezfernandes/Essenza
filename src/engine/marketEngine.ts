@@ -61,14 +61,13 @@ export function generateCompetitorDecision(
   const productionQty: { [productId: string]: number } = {};
 
   if (competitorName === 'Rival A') {
-    // Rival A - Preço Baixo / Volume
-    // Investe pesado em produção e volume.
-    // Reage ao marketing do jogador.
-    const isPlayerHighMarketing = playerMarketing > 80000;
-    investments.marketing = isPlayerHighMarketing ? 80000 : 50000;
-    investments.materials = 120000 + round * 15000;
-    investments.production = 140000 + round * 20000;
-    investments.logistics = 40000;
+    // Rival A - Fast Fashion / Volume / Preço Acessível
+    // Foco em volume comercial e custo-benefício
+    const isPlayerHighMarketing = playerMarketing > 70000;
+    investments.marketing = isPlayerHighMarketing ? 50000 : 40000;
+    investments.materials = 50000 + round * 5000;
+    investments.production = 60000 + round * 5000;
+    investments.logistics = 25000;
 
     // Ensure they don't exceed cash
     const totalInv = investments.marketing + investments.materials + investments.production + investments.logistics;
@@ -80,24 +79,30 @@ export function generateCompetitorDecision(
       investments.logistics *= ratio;
     }
 
-    // Pricing is lower than default
+    // Pricing: ~10% lower than standard baseline
     products.forEach((p) => {
-      prices[p.id] = Math.round(p.defaultPrice * 0.85 * 10) / 10;
-      // High volume
-      let baseQty = 2500;
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 4000; // Winter in round 2
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 4500; // Summer in round 3
-      productionQty[p.id] = Math.floor(baseQty * (investments.production / 150000));
+      prices[p.id] = Math.round(p.defaultPrice * 0.90 * 10) / 10;
+      // Balanced competitive volume
+      let baseQty = 800;
+      if (p.id === 'camiseta_basica') baseQty = 1400;
+      if (p.id === 'kit_meia_cueca') baseQty = 1100;
+      if (p.id === 'polo_essenza') baseQty = 700;
+      if (p.id === 'calca_jeans') baseQty = 550;
+      if (p.id === 'vestido_linho') baseQty = 400;
+      if (p.id === 'moletom') baseQty = 350;
+
+      if (p.seasonality === 'Inverno' && round === 2) baseQty = 1200;
+      if (p.seasonality === 'Verão' && round === 3) baseQty = 1300;
+      productionQty[p.id] = Math.floor(baseQty * (investments.production / 60000));
     });
   } else {
-    // Rival B - Marca Premium
-    // Investe em inovação e marketing.
-    // Dobra inovação se o jogador cresce em marketing.
-    const isPlayerHighMarketing = playerMarketing > 80000;
-    investments.marketing = 130000 + round * 15000;
-    investments.materials = 80000 + round * 10000;
-    investments.production = 70000;
-    investments.logistics = isPlayerHighMarketing ? 150000 : 90000;
+    // Rival B - Marca Premium / Alto Valor Agregado
+    // Foco em branding, qualidade e margem unitária
+    const isPlayerHighMarketing = playerMarketing > 70000;
+    investments.marketing = isPlayerHighMarketing ? 70000 : 55000;
+    investments.materials = 55000 + round * 5000;
+    investments.production = 40000;
+    investments.logistics = 35000;
 
     const totalInv = investments.marketing + investments.materials + investments.production + investments.logistics;
     if (totalInv > competitorCash) {
@@ -108,14 +113,21 @@ export function generateCompetitorDecision(
       investments.logistics *= ratio;
     }
 
-    // Pricing is premium
+    // Pricing: ~25% premium above standard baseline
     products.forEach((p) => {
-      prices[p.id] = Math.round(p.defaultPrice * 1.3 * 10) / 10;
-      // Lower volume
-      let baseQty = 1200;
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 2000;
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 2200;
-      productionQty[p.id] = Math.floor(baseQty * (investments.production / 70000));
+      prices[p.id] = Math.round(p.defaultPrice * 1.25 * 10) / 10;
+      // Selective premium volume
+      let baseQty = 450;
+      if (p.id === 'camiseta_basica') baseQty = 700;
+      if (p.id === 'kit_meia_cueca') baseQty = 550;
+      if (p.id === 'polo_essenza') baseQty = 450;
+      if (p.id === 'calca_jeans') baseQty = 350;
+      if (p.id === 'vestido_linho') baseQty = 300;
+      if (p.id === 'moletom') baseQty = 250;
+
+      if (p.seasonality === 'Inverno' && round === 2) baseQty = 750;
+      if (p.seasonality === 'Verão' && round === 3) baseQty = 800;
+      productionQty[p.id] = Math.floor(baseQty * (investments.production / 40000));
     });
   }
 

@@ -166,27 +166,59 @@ export function generateSsisFeedback(
     forecast = 'Simulação concluída! Veja suas métricas consolidadas e o Certificado Oficial no Relatório.';
   }
 
-  // 4. Pedagogical Grades (0 to 10)
-  let planningGrade = 7.5;
-  if (maxStockRemaining > 500 || maxLostSales > 300) planningGrade -= 2.5;
-  if (maxStockRemaining < 150 && maxLostSales < 100) planningGrade += 2.0;
-  planningGrade = Math.min(10, Math.max(2, planningGrade));
+  // 4. Pedagogical Grades (0 to 10) - Real, dynamic calculations based on performance
+  const totalSold = metrics.productResults.reduce((acc, curr) => acc + curr.sold, 0);
+  const totalDemanded = metrics.productResults.reduce((acc, curr) => acc + curr.demanded, 0);
+  const totalStockRemaining = metrics.productResults.reduce((acc, curr) => acc + curr.stockRemaining, 0);
 
-  let financeGrade = 7.0;
-  if (profit > 100000) financeGrade = 9.5;
-  else if (profit > 50000) financeGrade = 8.5;
-  else if (profit > 0) financeGrade = 7.5;
-  else financeGrade = 4.0;
-  if (underpricedProduct) financeGrade -= 2.0;
+  // A. Planejamento de Demanda & Estoque
+  const sellThroughRate = totalProduced > 0 ? totalSold / totalProduced : 0.8;
+  const fillRate = totalDemanded > 0 ? Math.min(1.0, totalSold / totalDemanded) : 0.8;
+  const stockOverloadPenalty = totalProduced > 0 ? (totalStockRemaining / totalProduced) * 3.5 : 0;
 
-  let peopleGrade = Math.min(10, Math.max(3, (metrics.satisfaction / 10)));
-  let innovationGrade = Math.min(10, Math.max(3, ((quality + efficiency) / 20)));
+  let seasonalityBonus = 0;
+  if (round === 2) {
+    const moletomRes = metrics.productResults.find(p => p.productId === 'moletom');
+    if (moletomRes && moletomRes.produced >= 400) seasonalityBonus += 1.0;
+    else if (moletomRes && moletomRes.produced < 200) seasonalityBonus -= 1.0;
+  } else if (round === 3) {
+    const vestidoRes = metrics.productResults.find(p => p.productId === 'vestido_linho');
+    const moletomRes = metrics.productResults.find(p => p.productId === 'moletom');
+    if (vestidoRes && vestidoRes.produced >= 350) seasonalityBonus += 1.0;
+    if (moletomRes && moletomRes.produced > 350) seasonalityBonus -= 1.0;
+  }
+
+  let planningGrade = 4.0 + (sellThroughRate * 3.5) + (fillRate * 3.0) - stockOverloadPenalty + seasonalityBonus;
+  planningGrade = Math.min(10, Math.max(2.0, Math.round(planningGrade * 10) / 10));
+
+  // B. Gestão Financeira & Caixa
+  let financeBase = 7.0;
+  if (profit > 100000) financeBase = 9.5;
+  else if (profit > 50000) financeBase = 8.5;
+  else if (profit > 15000) financeBase = 7.8;
+  else if (profit >= 0) financeBase = 7.0;
+  else if (profit > -30000) financeBase = 5.5;
+  else financeBase = 3.5;
+
+  if (metrics.cash >= 450000) financeBase += 0.5;
+  if (metrics.cash < 150000) financeBase -= 1.5;
+  if (underpricedProduct) financeBase -= 2.0;
+  else if (thinMarginProduct) financeBase -= 0.6;
+  const financeGrade = Math.min(10, Math.max(2.0, Math.round(financeBase * 10) / 10));
+
+  // C. Liderança & Gestão de Pessoas
+  let peopleBase = (metrics.satisfaction / 10) * 0.7 + (Math.min(50000, decision.investments.logistics) / 50000) * 3.0;
+  const peopleGrade = Math.min(10, Math.max(2.0, Math.round(peopleBase * 10) / 10));
+
+  // D. Inovação Operacional & Qualidade
+  let innovationBase = (quality * 0.5 + efficiency * 0.3 + metrics.innovation * 0.2) / 10;
+  const innovationGrade = Math.min(10, Math.max(2.0, Math.round(innovationBase * 10) / 10));
 
   const pedagogicalGrade: PedagogicalGrades = {
-    planning: Math.round(planningGrade * 10) / 10,
-    finance: Math.round(financeGrade * 10) / 10,
-    people: Math.round(peopleGrade * 10) / 10,
-    innovation: Math.round(innovationGrade * 10) / 10,
+    planning: planningGrade,
+    finance: financeGrade,
+    people: peopleGrade,
+    innovation: innovationGrade,
   };
 
   return {
@@ -397,14 +429,28 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
   const logPct = totalInv > 0 ? totalLogistics / totalInv : 0;
   const matPct = totalInv > 0 ? totalMaterials / totalInv : 0;
 
-  // Compute profile scores based on decision weights & metrics
+  // Balanced, sensitive profile scoring (0 - 100+ scale based on signature strengths)
+  const invVariance = Math.max(prodPct, mktPct, matPct, logPct) - Math.min(prodPct, mktPct, matPct, logPct);
+  const isBalancedPortfolio = invVariance <= 0.16;
+
   const scores: Record<EntrepreneurProfileDef['id'], number> = {
-    visionario: mktPct * 45 + (totalRevenue > 400000 ? 25 : 10) + (avgPlanning >= 7.5 ? 20 : 10) + (totalProfit > 80000 ? 15 : 5),
-    inovador: matPct * 35 + (avgInnovation * 4) + (avgQuality > 70 ? 20 : 5) + (mktPct > 0.2 ? 15 : 5),
-    gestor: (avgFinance * 4) + (avgPlanning * 4) + (finalCash > 520000 ? 20 : 5) + (maxStockRemaining < 200 ? 20 : 5),
-    lider: (avgPeople * 7) + (logPct * 30) + (avgReputation > 70 ? 20 : 5),
-    social: (avgPeople * 5) + (avgQuality * 0.3) + (avgReputation > 75 ? 20 : 10) + (totalProfit > 0 ? 15 : 0),
-    pratico: prodPct * 45 + (totalProfit > 50000 ? 25 : 10) + (maxStockRemaining < 350 ? 20 : 5),
+    // Visionário: Lidera em Marketing, faturamento bruto e expansão de mercado
+    visionario: (mktPct * 165) + ((totalRevenue / 500000) * 30) + ((avgReputation / 100) * 25),
+
+    // Inovador: Lidera em Matéria-Prima de alta qualidade, padrão de excelência e inovação
+    inovador: (matPct * 165) + ((avgQuality / 100) * 35) + ((avgInnovation / 10) * 30),
+
+    // Gestor: Lidera em Preservação de Caixa, Eficiência Financeira e Controle de Estoque
+    gestor: (avgFinance * 6.5) + (avgPlanning * 3.5) + (finalCash >= 520000 ? 25 : finalCash >= 480000 ? 10 : 0) + (maxStockRemaining < 200 ? 15 : 0) + (mktPct < 0.25 ? 15 : 0),
+
+    // Líder: Lidera em Gestão de Pessoas, Logística de entrega e Clima Organizacional
+    lider: (logPct * 155) + (avgPeople * 7.5) + ((avgReputation / 100) * 25),
+
+    // Prático: Lidera em Produção Fabril, agilidade de vazão e vendas imediatas
+    pratico: (prodPct * 165) + ((totalRevenue / 500000) * 30) + (avgPlanning * 2.5),
+
+    // Social: Lidera em Equilíbrio 360°, consistência entre todas as áreas e alta reputação
+    social: (isBalancedPortfolio ? 55 : 5) + (avgPeople * 5.0) + ((avgReputation / 100) * 30) + (totalProfit > 0 ? 15 : 0),
   };
 
   let bestId: EntrepreneurProfileDef['id'] = 'gestor' as EntrepreneurProfileDef['id'];
