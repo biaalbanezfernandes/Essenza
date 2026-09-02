@@ -83,16 +83,18 @@ export function generateCompetitorDecision(
     products.forEach((p) => {
       prices[p.id] = Math.round(p.defaultPrice * 0.90 * 10) / 10;
       // Balanced competitive volume
-      let baseQty = 800;
-      if (p.id === 'camiseta_basica') baseQty = 1400;
-      if (p.id === 'kit_meia_cueca') baseQty = 1100;
-      if (p.id === 'polo_essenza') baseQty = 700;
-      if (p.id === 'calca_jeans') baseQty = 550;
-      if (p.id === 'vestido_linho') baseQty = 400;
-      if (p.id === 'moletom') baseQty = 350;
+      let baseQty = 700;
+      if (p.id === 'camiseta_basica') baseQty = 1200;
+      if (p.id === 'kit_meia_cueca') baseQty = 1000;
+      if (p.id === 'polo_essenza') baseQty = 800;
+      if (p.id === 'calca_jeans') baseQty = 700;
+      if (p.id === 'vestido_linho') baseQty = 600;
+      if (p.id === 'moletom') baseQty = 600;
 
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 1200;
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 1300;
+      if (p.seasonality === 'Inverno' && round === 2) baseQty = 1400;
+      if (p.seasonality === 'Verão' && round === 2) baseQty = 300;
+      if (p.seasonality === 'Verão' && round === 3) baseQty = 1400;
+      if (p.seasonality === 'Inverno' && round === 3) baseQty = 250;
       productionQty[p.id] = Math.floor(baseQty * (investments.production / 60000));
     });
   } else {
@@ -119,14 +121,16 @@ export function generateCompetitorDecision(
       // Selective premium volume
       let baseQty = 450;
       if (p.id === 'camiseta_basica') baseQty = 700;
-      if (p.id === 'kit_meia_cueca') baseQty = 550;
-      if (p.id === 'polo_essenza') baseQty = 450;
-      if (p.id === 'calca_jeans') baseQty = 350;
-      if (p.id === 'vestido_linho') baseQty = 300;
-      if (p.id === 'moletom') baseQty = 250;
+      if (p.id === 'kit_meia_cueca') baseQty = 600;
+      if (p.id === 'polo_essenza') baseQty = 500;
+      if (p.id === 'calca_jeans') baseQty = 450;
+      if (p.id === 'vestido_linho') baseQty = 400;
+      if (p.id === 'moletom') baseQty = 400;
 
-      if (p.seasonality === 'Inverno' && round === 2) baseQty = 750;
-      if (p.seasonality === 'Verão' && round === 3) baseQty = 800;
+      if (p.seasonality === 'Inverno' && round === 2) baseQty = 850;
+      if (p.seasonality === 'Verão' && round === 2) baseQty = 200;
+      if (p.seasonality === 'Verão' && round === 3) baseQty = 850;
+      if (p.seasonality === 'Inverno' && round === 3) baseQty = 150;
       productionQty[p.id] = Math.floor(baseQty * (investments.production / 40000));
     });
   }
@@ -174,24 +178,35 @@ export function executeRound(
   let rivalBTotalProdCost = 0;
 
   products.forEach((product) => {
-    // Determine base market demand
+    // Determine base market demand (calibrated across all 3 competitors)
     let baseDemand = 0;
     switch (product.id) {
-      case 'camiseta_basica': baseDemand = 16000; break;
-      case 'polo_essenza': baseDemand = 9000; break;
-      case 'moletom': baseDemand = 3000; break;
-      case 'calca_jeans': baseDemand = 6500; break;
-      case 'vestido_linho': baseDemand = 4000; break;
-      case 'kit_meia_cueca': baseDemand = 13000; break;
+      case 'camiseta_basica': baseDemand = 10000; break;
+      case 'kit_meia_cueca':  baseDemand = 8000; break;
+      case 'polo_essenza':    baseDemand = 6000; break;
+      case 'calca_jeans':     baseDemand = 5500; break;
+      case 'moletom':         baseDemand = 4000; break;
+      case 'vestido_linho':   baseDemand = 4000; break;
       default: baseDemand = 5000;
     }
 
-    // Sazonalidade: Inverno in Round 2, Verão in Round 3
+    // Sazonalidade das Estações:
+    // Rodada 1: Outono (Meia-Estação / Transição Equilibrada para todas as peças)
+    // Rodada 2: Inverno (Moletom x2.2, Vestido x0.35)
+    // Rodada 3: Verão (Vestido x2.3, Camiseta x1.25, Moletom x0.35)
     let seasonalityMult = 1.0;
-    if (product.seasonality === 'Inverno' && round === 2) seasonalityMult = 2.2;
-    if (product.seasonality === 'Inverno' && round !== 2) seasonalityMult = 0.6;
-    if (product.seasonality === 'Verão' && round === 3) seasonalityMult = 2.4;
-    if (product.seasonality === 'Verão' && round !== 3) seasonalityMult = 0.5;
+    if (round === 1) {
+      seasonalityMult = 1.0; // No Outono todas as peças têm demanda equilibrada
+    } else if (round === 2) {
+      // Inverno
+      if (product.seasonality === 'Inverno') seasonalityMult = 2.2;
+      else if (product.seasonality === 'Verão') seasonalityMult = 0.35;
+    } else if (round === 3) {
+      // Verão
+      if (product.seasonality === 'Verão') seasonalityMult = 2.3;
+      else if (product.id === 'camiseta_basica') seasonalityMult = 1.25;
+      else if (product.seasonality === 'Inverno') seasonalityMult = 0.35;
+    }
 
     // Apply global and category event multipliers to base demand
     let eventDemandMult = 1.0;

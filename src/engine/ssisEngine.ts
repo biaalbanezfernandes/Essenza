@@ -156,14 +156,14 @@ export function generateSsisFeedback(
 
   const recommendation = recommendationsList.join(' ');
 
-  // 3. Forecast (Condensed)
+  // 3. Forecast (Clara, Precisa e Acompanhando a Dinâmica do Jogo)
   let forecast = '';
   if (round === 1) {
-    forecast = 'Rodada 2 (Inverno): Demanda por casacos e moletons vai multiplicar. Prepare matéria-prima e estoque.';
+    forecast = 'Próxima Estação — RODADA 2 (INVERNO): A frente fria fará a procura por MOLETOM disparar para mais de 1.800 unidades, enquanto VESTIDO DE LINHO sofrerá queda expressiva (procura < 500 un.). Dica Estratégica: Amplie a produção de Moletom (1.400-2.000 un.) e reduza Vestido Linho (300-500 un.) para evitar sobras.';
   } else if (round === 2) {
-    forecast = 'Rodada 3 (Verão): Demanda migra para vestidos e peças leves. Rebalanceie o mix de produção.';
+    forecast = 'Próxima Estação — RODADA 3 (VERÃO): O calor extremo fará a procura por VESTIDO DE LINHO e CAMISETA BÁSICA disparar para mais de 1.800 unidades, enquanto MOLETOM despencará (procura < 400 un.). Dica Estratégica: Maximize Vestidos (1.400-2.000 un.) e Camisetas (1.400-1.800 un.), e reduza Moletons ao mínimo (200-400 un.).';
   } else {
-    forecast = 'Simulação concluída! Veja suas métricas consolidadas e o Certificado Oficial no Relatório.';
+    forecast = 'Simulação concluída com sucesso! Confira sua análise pedagógica, o Balanço Financeiro Consolidado e o Certificado Oficial no Relatório.';
   }
 
   // 4. Pedagogical Grades (0 to 10) - Real, dynamic calculations based on performance

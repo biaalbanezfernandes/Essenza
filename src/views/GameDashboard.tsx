@@ -40,6 +40,12 @@ export const GameDashboard: React.FC = () => {
     return acc + (qty * p.productionCost * 0.5);
   }, 0);
 
+  const estimatedRevenue = products.reduce((acc, p) => {
+    const qty = pendingDecision.productionQty[p.id] || 0;
+    const price = pendingDecision.prices[p.id] || p.defaultPrice;
+    return acc + (qty * price);
+  }, 0);
+
   const remainingCashLive = currentCash - totalInvestments;
 
   // Validate cash limit
@@ -121,41 +127,41 @@ export const GameDashboard: React.FC = () => {
     }
 
     if (currentRound === 1) {
-      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      if (vestidoQty > 1400) {
+      const totalQty = products.reduce((acc, p) => acc + (pendingDecision.productionQty[p.id] || 0), 0);
+      if (totalQty < 3000) {
         return {
-          type: 'warning',
-          message: 'Dica Outono: Procura por Vestido Linho é moderada. Mantenha os lotes calibrados.'
+          type: 'info',
+          message: 'Dica Outono: Demanda equilibrada em todas as peças. Mantenha os lotes em torno de 1.000 un.'
         };
       }
     } else if (currentRound === 2) {
       const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
       const moletomQty = pendingDecision.productionQty['moletom'] || 0;
-      if (vestidoQty > 800) {
+      if (vestidoQty > 600) {
         return {
           type: 'warning',
-          message: 'Alerta Inverno: Vestidos têm menor procura no frio. Priorize Moletons!'
+          message: 'Alerta Inverno: Vestidos têm menor procura no frio (< 500 un.). Reduza o lote para evitar sobras.'
         };
       }
-      if (moletomQty > 0 && moletomQty < 1200) {
+      if (moletomQty < 1400) {
         return {
           type: 'info',
-          message: 'Pico de Inverno: Moletons com demanda 2.2x. Produza 1.200+ unidades para lucrar mais.'
+          message: 'Pico de Inverno: Procura por Moletom dispara para 1.500 - 2.200 un. Aumente a produção!'
         };
       }
     } else if (currentRound === 3) {
       const moletomQty = pendingDecision.productionQty['moletom'] || 0;
       const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      if (moletomQty > 700) {
+      if (moletomQty > 600) {
         return {
           type: 'warning',
-          message: 'Alerta Verão: Moletons em queda no calor. Reduza o lote para evitar sobras.'
+          message: 'Alerta Verão: Moletons em queda no calor (< 400 un.). Reduza o lote para evitar sobras.'
         };
       }
-      if (vestidoQty > 0 && vestidoQty < 1200) {
+      if (vestidoQty < 1400) {
         return {
           type: 'info',
-          message: 'Pico de Verão: Vestido Linho com demanda 2.4x. Produza 1.200+ unidades e aproveite!'
+          message: 'Pico de Verão: Procura por Vestido Linho dispara para 1.500 - 2.200 un. Aumente a produção!'
         };
       }
     }
@@ -178,7 +184,7 @@ export const GameDashboard: React.FC = () => {
     }
 
     const totalQty = products.reduce((acc, p) => acc + (pendingDecision.productionQty[p.id] || 0), 0);
-    if (totalQty > 3000 && pendingDecision.investments.logistics < 25000) {
+    if (totalQty > 6500 && pendingDecision.investments.logistics < 35000) {
       return {
         type: 'warning',
         message: `Logística Apertada: Produção de ${totalQty} peças exige mais verba em Logística.`
@@ -274,7 +280,7 @@ export const GameDashboard: React.FC = () => {
         id="tutorial-cash"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '1rem',
           marginBottom: '1.5rem'
         }}
@@ -283,42 +289,62 @@ export const GameDashboard: React.FC = () => {
         <div className="glass-panel" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Caixa Atual
+              Caixa Disponível
             </span>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-display)' }}>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-display)' }}>
               R$ {currentCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Saldo atual da empresa</span>
           </div>
           <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--accent-gold-glow)', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <DollarSign size={20} />
           </div>
         </div>
 
-        {/* Expected Cash */}
+        {/* Total Investment & Remaining */}
         <div className="glass-panel" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Caixa Previsto (Após Gastos)
+              Investimento da Rodada
             </span>
             <div style={{ 
-              fontSize: '1.4rem', 
+              fontSize: '1.35rem', 
               fontWeight: 800, 
-              color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-success)', 
+              color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-gold)', 
               fontFamily: 'var(--font-display)' 
             }}>
-              R$ {remainingCashLive.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {totalInvestments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
+            <span style={{ fontSize: '0.68rem', color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-success)' }}>
+              Saldo livre: R$ {remainingCashLive.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </span>
           </div>
           <div style={{ 
             width: '38px', 
             height: '38px', 
             borderRadius: '50%', 
-            background: remainingCashLive < 0 ? 'var(--accent-danger-glow)' : 'var(--accent-success-glow)', 
-            color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-success)', 
+            background: remainingCashLive < 0 ? 'var(--accent-danger-glow)' : 'rgba(212,175,55,0.15)', 
+            color: remainingCashLive < 0 ? 'var(--accent-danger)' : 'var(--accent-gold)', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center' 
           }}>
+            <Settings size={20} />
+          </div>
+        </div>
+
+        {/* Previsão de Faturamento */}
+        <div className="glass-panel" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Previsão de Faturamento
+            </span>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-success)', fontFamily: 'var(--font-display)' }}>
+              ~R$ {estimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Potencial bruto dos lotes</span>
+          </div>
+          <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--accent-success-glow)', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <TrendingUp size={20} />
           </div>
         </div>
