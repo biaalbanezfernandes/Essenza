@@ -568,6 +568,29 @@ export const FinalReport: React.FC = () => {
               )}
             </form>
           </div>
+
+          {/* Evaluation QR Code */}
+          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <Award style={{ color: 'var(--accent-gold)' }} /> Avalie o Essenza!
+            </h3>
+            <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+              Sua opinião é importante! Escaneie o QR Code e preencha a avaliação para retirar <strong>1 dos 3 tokens exclusivos</strong> de brinde.
+            </p>
+            <div style={{ 
+              background: 'white', 
+              padding: '0.5rem', 
+              borderRadius: '8px', 
+              display: 'inline-block',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+            }}>
+              <img 
+                src="/qrcode.png" 
+                alt="QR Code de Avaliação" 
+                style={{ width: '140px', height: '140px', display: 'block' }} 
+              />
+            </div>
+          </div>
         </div>
       </div>
 
