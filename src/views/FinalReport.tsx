@@ -6,7 +6,8 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { 
   TrendingUp, RefreshCw, Send, CheckCircle, 
-  Mail, Download, Trophy, AlertCircle, ExternalLink, Award, Loader2, Sparkles, ArrowDown, Compass
+  Mail, Download, Trophy, AlertCircle, ExternalLink, Award, Loader2, Sparkles, ArrowDown, Compass,
+  QrCode, Star
 } from 'lucide-react';
 
 // ─── EmailJS CONFIG ──────────────────────────────────────────────────────────
@@ -451,7 +452,7 @@ export const FinalReport: React.FC = () => {
           @media (min-width: 768px) { .desktop-report-grid { grid-template-columns: 1fr 1fr !important; } }
         `}</style>
 
-        {/* Business Metrics */}
+        {/* Business Metrics & QR Code */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div className="glass-panel" style={{ padding: '2rem' }}>
             <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -469,6 +470,81 @@ export const FinalReport: React.FC = () => {
                   <strong style={{ color: row.color }}>{row.val}</strong>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* QR Code de Avaliação do Simulador */}
+          <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Star style={{ color: 'var(--accent-gold)' }} /> Avaliação do Simulador
+              </h3>
+              <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                Sua opinião é fundamental! Conte-nos como foi sua experiência no Simulador Essenza.
+              </p>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1.25rem',
+              background: 'rgba(255, 255, 255, 0.025)',
+              border: '1px solid rgba(212, 175, 55, 0.25)',
+              borderRadius: '12px',
+              padding: '1.2rem',
+              flexWrap: 'wrap'
+            }}>
+              {/* Imagem do QR Code de Avaliação */}
+              <div style={{
+                background: '#ffffff',
+                padding: '0.5rem',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(212, 175, 55, 0.25)',
+                width: '125px',
+                height: '125px',
+                flexShrink: 0
+              }}>
+                <img
+                  src="/qrcode.png"
+                  alt="QR Code para Avaliação do Simulador"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                />
+              </div>
+
+              {/* Informações e pedido de avaliação ao lado do QR Code */}
+              <div style={{ flex: 1, minWidth: '160px', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Sparkles size={14} style={{ color: 'var(--accent-gold)' }} />
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Sua Opinião Importa
+                  </span>
+                </div>
+                
+                <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#fff', fontWeight: 700 }}>
+                  Avalie o Simulador Essenza
+                </h4>
+                
+                <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                  Aponte a câmera do celular para responder nossa rápida pesquisa de avaliação. Leva menos de 1 minuto!
+                </p>
+
+                <div style={{
+                  fontSize: '0.7rem',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  marginTop: '0.2rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingTop: '0.35rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}>
+                  <QrCode size={12} style={{ color: 'var(--accent-gold)' }} />
+                  <span>Feira Científica FECART 2026 • Colégio FECAP</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -567,29 +643,6 @@ export const FinalReport: React.FC = () => {
                 </div>
               )}
             </form>
-          </div>
-
-          {/* Evaluation QR Code */}
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Award style={{ color: 'var(--accent-gold)' }} /> Avalie o Essenza!
-            </h3>
-            <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-              Sua opinião é importante! Escaneie o QR Code e preencha a avaliação para retirar <strong>1 dos 3 tokens exclusivos</strong> de brinde.
-            </p>
-            <div style={{ 
-              background: 'white', 
-              padding: '0.5rem', 
-              borderRadius: '8px', 
-              display: 'inline-block',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-            }}>
-              <img 
-                src="/qrcode.png" 
-                alt="QR Code de Avaliação" 
-                style={{ width: '140px', height: '140px', display: 'block' }} 
-              />
-            </div>
           </div>
         </div>
       </div>
