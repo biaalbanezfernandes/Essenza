@@ -122,40 +122,40 @@ export const GameDashboard: React.FC = () => {
 
     if (currentRound === 1) {
       const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      if (vestidoQty > 300) {
+      if (vestidoQty > 1400) {
         return {
           type: 'warning',
-          message: 'Dica Outono: Procura por Vestido Linho está baixa. Reduza a quantidade.'
+          message: 'Dica Outono: Procura por Vestido Linho é moderada. Mantenha os lotes calibrados.'
         };
       }
     } else if (currentRound === 2) {
       const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
       const moletomQty = pendingDecision.productionQty['moletom'] || 0;
-      if (vestidoQty > 200) {
+      if (vestidoQty > 800) {
         return {
           type: 'warning',
-          message: 'Alerta Inverno: Vestidos têm baixa procura. Priorize Moletons!'
+          message: 'Alerta Inverno: Vestidos têm menor procura no frio. Priorize Moletons!'
         };
       }
-      if (moletomQty > 0 && moletomQty < 500) {
+      if (moletomQty > 0 && moletomQty < 1200) {
         return {
           type: 'info',
-          message: 'Pico de Inverno: Moletons com demanda 2.2x. Aumente o lote para lucrar mais.'
+          message: 'Pico de Inverno: Moletons com demanda 2.2x. Produza 1.200+ unidades para lucrar mais.'
         };
       }
     } else if (currentRound === 3) {
       const moletomQty = pendingDecision.productionQty['moletom'] || 0;
       const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      if (moletomQty > 200) {
+      if (moletomQty > 700) {
         return {
           type: 'warning',
-          message: 'Alerta Verão: Moletons em queda. Reduza para não sobrar estoque.'
+          message: 'Alerta Verão: Moletons em queda no calor. Reduza o lote para evitar sobras.'
         };
       }
-      if (vestidoQty > 0 && vestidoQty < 600) {
+      if (vestidoQty > 0 && vestidoQty < 1200) {
         return {
           type: 'info',
-          message: 'Pico de Verão: Vestido Linho com demanda 2.4x. Aproveite o momento!'
+          message: 'Pico de Verão: Vestido Linho com demanda 2.4x. Produza 1.200+ unidades e aproveite!'
         };
       }
     }

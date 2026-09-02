@@ -16,10 +16,10 @@ interface GameContextType {
 
 const defaultDecision: PlayerDecision = {
   investments: {
-    materials: 50000,
-    production: 50000,
-    marketing: 40000,
-    logistics: 30000,
+    materials: 70000,
+    production: 70000,
+    marketing: 50000,
+    logistics: 35000,
   },
   prices: {
     camiseta_basica: 29.90,
@@ -31,11 +31,11 @@ const defaultDecision: PlayerDecision = {
   },
   productionQty: {
     camiseta_basica: 1000,
-    polo_essenza: 500,
-    moletom: 200,
-    calca_jeans: 400,
-    vestido_linho: 300,
-    kit_meia_cueca: 800,
+    polo_essenza: 1000,
+    moletom: 1000,
+    calca_jeans: 1000,
+    vestido_linho: 1000,
+    kit_meia_cueca: 1000,
   }
 };
 
@@ -102,7 +102,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       pendingDecision: {
         ...defaultDecision,
         prices: products.reduce((acc, p) => ({ ...acc, [p.id]: p.defaultPrice }), {}),
-        productionQty: products.reduce((acc, p) => ({ ...acc, [p.id]: p.id === 'moletom' ? 300 : p.id === 'vestido_linho' ? 400 : 500 }), {})
+        productionQty: products.reduce((acc, p) => ({ ...acc, [p.id]: 1000 }), {})
       }
     };
     saveState(newState);
