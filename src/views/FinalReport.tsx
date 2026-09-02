@@ -499,97 +499,102 @@ export const FinalReport: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Email Certificate block */}
-          <div className="glass-panel" style={{ padding: '2rem' }}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Mail style={{ color: 'var(--accent-gold)' }} /> Enviar Certificado por E-mail
-            </h3>
-            <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-              Receba o certificado oficial de gestão direto na sua caixa de entrada.
-            </p>
+      {/* Seção Inferior: Email e QR Code Lado a Lado */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2.5rem', marginBottom: '3rem', alignItems: 'stretch' }} className="no-print desktop-report-grid">
+        {/* Email Certificate block */}
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Mail style={{ color: 'var(--accent-gold)' }} /> Enviar Certificado por E-mail
+          </h3>
+          <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+            Receba o certificado oficial de gestão direto na sua caixa de entrada.
+          </p>
 
-            <form onSubmit={handleSendEmail} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
-                  E-mail do Destinatário:
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="nome@exemplo.com"
-                  className="input-control"
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              {sendingState === 'idle' || sendingState === 'error' ? (
-                <button 
-                  type="submit"
-                  className="btn-primary" 
-                  style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}
-                >
-                  <Send size={16} /> Enviar Certificado Agora
-                </button>
-              ) : sendingState === 'sending' ? (
-                <div style={{ textAlign: 'center', padding: '0.85rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                  <Loader2 size={20} className="spinner" style={{ margin: '0 auto 0.5rem', color: 'var(--accent-gold)' }} />
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Enviando para o servidor...</span>
-                </div>
-              ) : (
-                <div className="animate-fade-in" style={{
-                  textAlign: 'center', padding: '1rem',
-                  border: '1px solid var(--accent-success)',
-                  borderRadius: '8px', background: 'var(--accent-success-glow)'
-                }}>
-                  <CheckCircle size={24} style={{ color: 'var(--accent-success)', marginBottom: '0.4rem', margin: '0 auto' }} />
-                  <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.1rem' }}>E-mail Enviado!</h4>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-primary)', margin: 0 }}>
-                    Verifique sua caixa de entrada em breve.
-                  </p>
-                </div>
-              )}
-
-              {sendingState === 'error' && (
-                <div style={{
-                  padding: '0.75rem', border: '1px dashed var(--accent-danger)',
-                  borderRadius: '8px', background: 'var(--accent-danger-glow)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <AlertCircle size={16} style={{ color: 'var(--accent-danger)', flexShrink: 0 }} />
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-primary)', margin: 0 }}>{errorMsg}</p>
-                  </div>
-                  <button type="button" onClick={handleOpenMailClient} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.8rem' }}>
-                    <ExternalLink size={14} /> Tentar via App de E-mail
-                  </button>
-                </div>
-              )}
-            </form>
-          </div>
-
-          {/* Evaluation QR Code */}
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Award style={{ color: 'var(--accent-gold)' }} /> Avalie o Essenza!
-            </h3>
-            <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-              Sua opinião é importante! Escaneie o QR Code e preencha a avaliação para retirar <strong>1 dos 3 tokens exclusivos</strong> de brinde.
-            </p>
-            <div style={{ 
-              background: 'white', 
-              padding: '0.5rem', 
-              borderRadius: '8px', 
-              display: 'inline-block',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-            }}>
-              <img 
-                src="/qrcode.png" 
-                alt="QR Code de Avaliação" 
-                style={{ width: '140px', height: '140px', display: 'block' }} 
+          <form onSubmit={handleSendEmail} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', flexGrow: 1, justifyContent: 'center' }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem', display: 'block' }}>
+                E-mail do Destinatário:
+              </label>
+              <input
+                type="email"
+                required
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="nome@exemplo.com"
+                className="input-control"
+                style={{ width: '100%' }}
               />
             </div>
+
+            {sendingState === 'idle' || sendingState === 'error' ? (
+              <button 
+                type="submit"
+                className="btn-primary" 
+                style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}
+              >
+                <Send size={16} /> Enviar Certificado Agora
+              </button>
+            ) : sendingState === 'sending' ? (
+              <div style={{ textAlign: 'center', padding: '0.85rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <Loader2 size={20} className="spinner" style={{ margin: '0 auto 0.5rem', color: 'var(--accent-gold)' }} />
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Enviando para o servidor...</span>
+              </div>
+            ) : (
+              <div className="animate-fade-in" style={{
+                textAlign: 'center', padding: '1rem',
+                border: '1px solid var(--accent-success)',
+                borderRadius: '8px', background: 'var(--accent-success-glow)'
+              }}>
+                <CheckCircle size={24} style={{ color: 'var(--accent-success)', marginBottom: '0.4rem', margin: '0 auto' }} />
+                <h4 style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.1rem' }}>E-mail Enviado!</h4>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-primary)', margin: 0 }}>
+                  Verifique sua caixa de entrada em breve.
+                </p>
+              </div>
+            )}
+
+            {sendingState === 'error' && (
+              <div style={{
+                padding: '0.75rem', border: '1px dashed var(--accent-danger)',
+                borderRadius: '8px', background: 'var(--accent-danger-glow)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <AlertCircle size={16} style={{ color: 'var(--accent-danger)', flexShrink: 0 }} />
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-primary)', margin: 0 }}>{errorMsg}</p>
+                </div>
+                <button type="button" onClick={handleOpenMailClient} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.8rem' }}>
+                  <ExternalLink size={14} /> Tentar via App de E-mail
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Evaluation QR Code */}
+        <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <Award style={{ color: 'var(--accent-gold)' }} /> Avalie o Essenza!
+          </h3>
+          <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+            Sua opinião é importante! Escaneie o QR Code e preencha a avaliação para nos ajudar.
+          </p>
+          <div style={{ 
+            background: 'white', 
+            padding: '0.5rem', 
+            borderRadius: '8px', 
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+          }}>
+            <img 
+              src="/qrcode.png" 
+              alt="QR Code de Avaliação" 
+              style={{ width: '140px', height: '140px', display: 'block' }} 
+            />
           </div>
         </div>
       </div>
