@@ -1,4 +1,4 @@
-import type { RoundResult, PlayerDecision, GameEvent } from '../data/types';
+import type { RoundResult, PlayerDecision, GameEvent, SsisInsight } from '../data/types';
 import { products } from '../data/products';
 
 export interface PedagogicalGrades {
@@ -32,6 +32,83 @@ export interface ManagementProfile {
   executiveAdvice: string;
   activeProfileId: 'visionario' | 'inovador' | 'gestor' | 'lider' | 'social' | 'pratico';
   allProfiles: EntrepreneurProfileDef[];
+}
+
+export function getLiveSsisAdvice(round: number, decision: PlayerDecision, cash: number): SsisInsight | null {
+  const totalInvestments = decision.investments.materials + decision.investments.production + decision.investments.marketing + decision.investments.logistics;
+  
+  if (totalInvestments > cash * 0.90) {
+    return {
+      type: 'critical',
+      recommendation: 'Reduza os investimentos fixos.',
+      justification: 'Você está comprometendo quase todo o caixa. Há risco extremo de insolvência operacional.',
+      riskLevel: 'Alto',
+      confidence: 98,
+      suggestedAction: { field: 'investments.production', value: decision.investments.production * 0.75 }
+    };
+  }
+  
+  let underpricedProduct = '';
+  let underpricedCost = 0;
+  for (const prod of products) {
+    const price = decision.prices[prod.id] || prod.defaultPrice;
+    if (price < prod.productionCost) {
+      underpricedProduct = prod.name;
+      underpricedCost = prod.productionCost;
+      break;
+    }
+  }
+
+  if (underpricedProduct) {
+    return {
+      type: 'warning',
+      recommendation: `Aumente o preço de venda de ${underpricedProduct}.`,
+      justification: `O preço atual não cobre o custo de produção (R$ ${underpricedCost.toFixed(2)}). Cada venda gerará prejuízo.`,
+      riskLevel: 'Alto',
+      confidence: 99,
+    };
+  }
+
+  if (decision.investments.marketing < 25000) {
+    return {
+      type: 'warning',
+      recommendation: 'Aumente o orçamento de Marketing.',
+      justification: 'Baixa visibilidade da marca na Smart City pode derrubar o volume de vendas.',
+      riskLevel: 'Médio',
+      confidence: 85,
+      suggestedAction: { field: 'investments.marketing', value: 45000 }
+    };
+  }
+  
+  if (round === 2) {
+    const moletomProd = decision.productionQty['moletom'] || 0;
+    if (moletomProd < 800) {
+      return {
+        type: 'opportunity',
+        recommendation: 'Aumente agressivamente a produção de Moletom.',
+        justification: 'Sensores climáticos preveem frente fria atípica. A demanda será massiva.',
+        riskLevel: 'Baixo',
+        confidence: 92,
+        suggestedAction: { field: 'productionQty.moletom', value: 1500 }
+      };
+    }
+  }
+
+  if (round === 3) {
+    const vestidoProd = decision.productionQty['vestido_linho'] || 0;
+    if (vestidoProd < 800) {
+      return {
+        type: 'opportunity',
+        recommendation: 'Maximize a produção de Vestido de Linho.',
+        justification: 'Alerte de calor intenso na metrópole. Roupas leves terão pico de demanda.',
+        riskLevel: 'Baixo',
+        confidence: 90,
+        suggestedAction: { field: 'productionQty.vestido_linho', value: 1500 }
+      };
+    }
+  }
+
+  return null;
 }
 
 export function generateSsisFeedback(
@@ -413,6 +490,20 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
         maxStockRemaining = pr.stockRemaining;
       }
     });
+
+    if (h.ssisInteraction) {
+      if (h.ssisInteraction.userFollowedRecommendation) {
+        avgFinance += 0.5;
+        avgPlanning += 0.5;
+      } else if (h.ssisInteraction.userFollowedRecommendation === false) {
+        if (h.playerMetrics.profit > 0) {
+          avgInnovation += 0.8;
+          avgReputation += 5;
+        } else {
+          avgPlanning -= 1.0;
+        }
+      }
+    }
   });
 
   const roundsCount = history.length || 1;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { products } from '../data/products';
 import type { PlayerDecision } from '../data/types';
+import { getLiveSsisAdvice } from '../engine/ssisEngine';
 import { MicroTooltip, tutorialSteps } from '../components/TutorialTourModal';
 import { RoundTimer } from '../components/RoundTimer';
 import { NpcPopup } from '../components/NpcPopup';
@@ -12,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export const GameDashboard: React.FC = () => {
-  const { state, updatePendingDecision, submitRoundDecision } = useGame();
+  const { state, updatePendingDecision, submitRoundDecision, setSsisInteraction } = useGame();
   const { currentRound, currentCash, reputation, quality, innovation, satisfaction, efficiency, marketShare, activeEvent, pendingDecision } = state;
 
   // Local state for tutorial tour
@@ -93,118 +94,9 @@ export const GameDashboard: React.FC = () => {
     }));
   };
 
-  // Generate dynamic, context-aware pre-round advice from Scorpio AI S.S.I.S (Ultra-Condensed 1-line)
-  const getLiveSsisAdvice = () => {
-    if (totalInvestments > currentCash) {
-      return {
-        type: 'danger',
-        message: 'Aviso Crítico: Investimentos excedem seu caixa. Reduza os aportes.'
-      };
-    }
-
-    for (const p of products) {
-      const price = pendingDecision.prices[p.id] || p.defaultPrice;
-      const qty = pendingDecision.productionQty[p.id] || 0;
-      if (qty > 0 && price < p.productionCost) {
-        return {
-          type: 'danger',
-          message: `Preço Inválido: ${p.name} (R$ ${price.toFixed(2)}) abaixo do custo (R$ ${p.productionCost.toFixed(2)}).`
-        };
-      }
-    }
-
-    if (pendingDecision.investments.materials < rawMaterialRequired && rawMaterialRequired > 0) {
-      return {
-        type: 'warning',
-        message: `Gargalo Têxtil: Matéria-Prima (R$ ${pendingDecision.investments.materials.toLocaleString('pt-BR')}) insuficiente para o lote (necessário R$ ${rawMaterialRequired.toLocaleString('pt-BR')}).`
-      };
-    }
-    if (pendingDecision.investments.production < laborRequired && laborRequired > 0) {
-      return {
-        type: 'warning',
-        message: `Gargalo Fabril: Mão de Obra (R$ ${pendingDecision.investments.production.toLocaleString('pt-BR')}) insuficiente (necessário R$ ${laborRequired.toLocaleString('pt-BR')}).`
-      };
-    }
-
-    if (currentRound === 1) {
-      const totalQty = products.reduce((acc, p) => acc + (pendingDecision.productionQty[p.id] || 0), 0);
-      if (totalQty < 3000) {
-        return {
-          type: 'info',
-          message: 'Dica Outono: Demanda equilibrada em todas as peças. Mantenha os lotes em torno de 1.000 un.'
-        };
-      }
-    } else if (currentRound === 2) {
-      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      const moletomQty = pendingDecision.productionQty['moletom'] || 0;
-      if (vestidoQty > 600) {
-        return {
-          type: 'warning',
-          message: 'Alerta Inverno: Vestidos têm menor procura no frio (< 500 un.). Reduza o lote para evitar sobras.'
-        };
-      }
-      if (moletomQty < 1400) {
-        return {
-          type: 'info',
-          message: 'Pico de Inverno: Procura por Moletom dispara para 1.500 - 2.200 un. Aumente a produção!'
-        };
-      }
-    } else if (currentRound === 3) {
-      const moletomQty = pendingDecision.productionQty['moletom'] || 0;
-      const vestidoQty = pendingDecision.productionQty['vestido_linho'] || 0;
-      if (moletomQty > 600) {
-        return {
-          type: 'warning',
-          message: 'Alerta Verão: Moletons em queda no calor (< 400 un.). Reduza o lote para evitar sobras.'
-        };
-      }
-      if (vestidoQty < 1400) {
-        return {
-          type: 'info',
-          message: 'Pico de Verão: Procura por Vestido Linho dispara para 1.500 - 2.200 un. Aumente a produção!'
-        };
-      }
-    }
-
-    let pricingHighProduct = '';
-    let pricingHighVal = 0;
-    products.forEach(p => {
-      const price = pendingDecision.prices[p.id] || p.defaultPrice;
-      if (price > p.defaultPrice * 1.35) {
-        pricingHighProduct = p.name;
-        pricingHighVal = price;
-      }
-    });
-
-    if (pricingHighProduct && reputation < 55) {
-      return {
-        type: 'warning',
-        message: `Risco de Rejeição: R$ ${pricingHighVal.toFixed(2)} em ${pricingHighProduct} alto para sua reputação. Ajuste.`
-      };
-    }
-
-    const totalQty = products.reduce((acc, p) => acc + (pendingDecision.productionQty[p.id] || 0), 0);
-    if (totalQty > 6500 && pendingDecision.investments.logistics < 35000) {
-      return {
-        type: 'warning',
-        message: `Logística Apertada: Produção de ${totalQty} peças exige mais verba em Logística.`
-      };
-    }
-
-    if (pendingDecision.investments.marketing < 35000) {
-      return {
-        type: 'info',
-        message: 'Dica de Marketing: Investimento modesto. Fortaleça a divulgação da marca.'
-      };
-    }
-
-    return {
-      type: 'success',
-      message: 'Planejamento consistente: A IA Scorpio prevê boa rentabilidade para esta configuração.'
-    };
-  };
-
-  const ssisAdvice = getLiveSsisAdvice();
+  // Generate dynamic, context-aware pre-round advice from Scorpio AI S.S.I.S
+  const liveAdvice = getLiveSsisAdvice(currentRound, pendingDecision, currentCash);
+  const currentInsightIgnored = state.insightAccepted === false && state.activeSsisInsight?.recommendation === liveAdvice?.recommendation;
 
   const handleNextStep = () => {
     if (tutorialStepIndex < tutorialSteps.length - 1) {
@@ -386,27 +278,27 @@ export const GameDashboard: React.FC = () => {
         marginBottom: '1.75rem'
       }}>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>REPUTAÇÃO</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>🌐 CONECTIVIDADE</span>
           <strong style={{ fontSize: '1.1rem', color: 'var(--accent-blue)' }}><Award size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> {Math.round(reputation)}</strong>
         </div>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>QUALIDADE</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>🌱 SUSTENTABILIDADE</span>
           <strong style={{ fontSize: '1.1rem', color: 'var(--accent-gold)' }}><Zap size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> {Math.round(quality)}</strong>
         </div>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>INOVAÇÃO</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>⚡ ENERGIA</span>
           <strong style={{ fontSize: '1.1rem', color: '#3b82f6' }}>{Math.round(innovation)}</strong>
         </div>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>SATISFAÇÃO</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>👥 PESSOAS</span>
           <strong style={{ fontSize: '1.1rem', color: 'var(--accent-success)' }}><Heart size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> {Math.round(satisfaction)}</strong>
         </div>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>EFICIÊNCIA</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>🚇 MOBILIDADE</span>
           <strong style={{ fontSize: '1.1rem', color: '#fff' }}><Settings size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> {Math.round(efficiency)}</strong>
         </div>
         <div className="glass-panel" style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>MARKET SHARE</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'block' }}>📊 DOMÍNIO</span>
           <strong style={{ fontSize: '1.1rem', color: 'var(--accent-gold)' }}><TrendingUp size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> {Math.round(marketShare * 100)}%</strong>
         </div>
       </div>
@@ -549,23 +441,63 @@ export const GameDashboard: React.FC = () => {
           <div id="tutorial-ssis" className="glass-panel" style={{
             padding: '1.25rem',
             borderLeft: `4px solid ${
-              ssisAdvice.type === 'danger' ? 'var(--accent-danger)' : 
-              ssisAdvice.type === 'warning' ? 'var(--accent-danger)' :
-              ssisAdvice.type === 'success' ? 'var(--accent-success)' : 'var(--accent-blue)'
+              liveAdvice && !currentInsightIgnored ? (liveAdvice.type === 'critical' ? 'var(--accent-danger)' : liveAdvice.type === 'opportunity' ? 'var(--accent-success)' : 'var(--accent-gold)') : 'var(--accent-blue)'
             }`
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-              <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>IA SCORPIO</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'white' }}>Análise em Tempo Real</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span className={`badge-pill ${liveAdvice && !currentInsightIgnored ? 'pulsate-glow' : ''}`} style={{ fontSize: '0.65rem', background: liveAdvice && !currentInsightIgnored ? 'rgba(212,175,55,0.2)' : 'rgba(59,130,246,0.15)', color: liveAdvice && !currentInsightIgnored ? 'var(--accent-gold)' : 'var(--accent-blue)' }}>
+                ◉ S.S.I.S. — {liveAdvice && !currentInsightIgnored ? 'ANÁLISE DISPONÍVEL' : 'MONITORANDO'}
+              </span>
             </div>
 
             {isTutorialOpen && tutorialStepIndex === 3 && (
               <MicroTooltip stepIndex={3} step={tutorialSteps[3]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
             )}
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.35 }}>
-              {ssisAdvice.message}
-            </p>
+            {liveAdvice && !currentInsightIgnored ? (
+              <div className="animate-fade-in">
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
+                  {liveAdvice.recommendation}
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0', lineHeight: 1.4 }}>
+                  {liveAdvice.justification}
+                </p>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {liveAdvice.suggestedAction && (
+                    <button
+                      onClick={() => {
+                        const { field, value } = liveAdvice.suggestedAction!;
+                        const [category, key] = field.split('.');
+                        if (category === 'investments') {
+                          handleInvestmentChange(key as any, value);
+                        } else if (category === 'productionQty') {
+                          handleProductionQtyChange(key, value);
+                        }
+                        setSsisInteraction(liveAdvice, true);
+                      }}
+                      className="btn-primary"
+                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
+                    >
+                      SEGUIR RECOMENDAÇÃO
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSsisInteraction(liveAdvice, false);
+                    }}
+                    className="btn-secondary"
+                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
+                  >
+                    MANTER MINHA DECISÃO
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+                {currentInsightIgnored ? 'Você escolheu manter sua decisão.' : 'Nenhum alerta crítico detectado no planejamento atual.'}
+              </p>
+            )}
           </div>
         </div>
 

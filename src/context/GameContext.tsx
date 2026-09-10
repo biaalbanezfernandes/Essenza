@@ -9,6 +9,7 @@ interface GameContextType {
   state: GameState;
   startGame: (name: string, email: string) => void;
   updatePendingDecision: (updater: (prev: PlayerDecision) => PlayerDecision) => void;
+  setSsisInteraction: (insight: any, accepted: boolean | null) => void;
   submitRoundDecision: () => void;
   nextRound: () => void;
   resetGame: () => void;
@@ -54,6 +55,8 @@ const defaultState: GameState = {
   gameState: 'start',
   activeEvent: null,
   pendingDecision: defaultDecision,
+  activeSsisInsight: null,
+  insightAccepted: null,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -103,7 +106,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...defaultDecision,
         prices: products.reduce((acc, p) => ({ ...acc, [p.id]: p.defaultPrice }), {}),
         productionQty: products.reduce((acc, p) => ({ ...acc, [p.id]: 1000 }), {})
-      }
+      },
+      activeSsisInsight: null,
+      insightAccepted: null
     };
     saveState(newState);
   };
@@ -115,6 +120,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pendingDecision: updater(prev.pendingDecision)
       };
       // Keep it in sync
+      if (updated.playerEmail) {
+        localStorage.setItem(gameStateKey(updated.playerEmail), JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const setSsisInteraction = (insight: any, accepted: boolean | null) => {
+    setState((prev) => {
+      const updated = {
+        ...prev,
+        activeSsisInsight: insight,
+        insightAccepted: accepted
+      };
       if (updated.playerEmail) {
         localStorage.setItem(gameStateKey(updated.playerEmail), JSON.stringify(updated));
       }
@@ -172,7 +191,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const roundResult: RoundResult = {
       ...baseResult,
       ssisFeedback,
-      councilFeedback
+      councilFeedback,
+      ssisInteraction: {
+        insightShown: !!state.activeSsisInsight,
+        insight: state.activeSsisInsight,
+        userFollowedRecommendation: state.insightAccepted
+      }
     };
 
     const newHistory = [...state.history, roundResult];
@@ -248,7 +272,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentRound: nextR,
         activeEvent: nextEvent,
         pendingDecision: nextDecision,
-        gameState: 'playing'
+        gameState: 'playing',
+        activeSsisInsight: null,
+        insightAccepted: null
       };
       saveState(newState);
     }
@@ -262,7 +288,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <GameContext.Provider value={{ state, startGame, updatePendingDecision, submitRoundDecision, nextRound, resetGame }}>
+    <GameContext.Provider value={{ state, startGame, updatePendingDecision, setSsisInteraction, submitRoundDecision, nextRound, resetGame }}>
       {children}
     </GameContext.Provider>
   );

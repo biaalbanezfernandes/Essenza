@@ -59,6 +59,18 @@ export interface MarketShareInfo {
   rivalB: number;
 }
 
+export interface SsisInsight {
+  type: 'warning' | 'opportunity' | 'critical';
+  recommendation: string;
+  justification: string;
+  riskLevel: 'Baixo' | 'Médio' | 'Alto';
+  confidence: number;
+  suggestedAction?: {
+    field: string;
+    value: number;
+  };
+}
+
 export interface ProductResult {
   productId: string;
   produced: number;
@@ -74,6 +86,11 @@ export interface RoundResult {
   round: number;
   event: GameEvent | null;
   playerDecision: PlayerDecision;
+  ssisInteraction?: {
+    insightShown: boolean;
+    insight: SsisInsight | null;
+    userFollowedRecommendation: boolean | null;
+  };
   playerMetrics: {
     cash: number;
     revenue: number;
@@ -124,4 +141,6 @@ export interface GameState {
   gameState: 'start' | 'playing' | 'results' | 'final_report';
   activeEvent: GameEvent | null;
   pendingDecision: PlayerDecision;
+  activeSsisInsight: SsisInsight | null;
+  insightAccepted: boolean | null;
 }

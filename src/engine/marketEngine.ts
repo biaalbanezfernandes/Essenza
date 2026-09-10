@@ -389,25 +389,36 @@ export function executeRound(
     }
   }
 
-  const playerCosts = Math.round(playerFixedInv + extraEventCosts);
+  const playerCosts = Math.round(playerFixedInv + playerTotalProdCost + extraEventCosts);
   const playerProfit = playerTotalRevenue - playerCosts;
   const playerNewCash = playerCash + playerProfit;
 
   // Competitors
+  let rAExtra = 0;
+  let rBExtra = 0;
+  if (event && event.category === 'materials') {
+    rAExtra = rivalADecision.investments.materials * (effectiveEventMult - 1);
+    rBExtra = rivalBDecision.investments.materials * (effectiveEventMult - 1);
+  }
+
   const rACosts = Math.round(
-    (rivalADecision.investments.materials +
-      rivalADecision.investments.production +
-      rivalADecision.investments.marketing +
-      rivalADecision.investments.logistics) * (event?.category === 'materials' ? effectiveEventMult : 1.0)
+    rivalADecision.investments.materials +
+    rivalADecision.investments.production +
+    rivalADecision.investments.marketing +
+    rivalADecision.investments.logistics +
+    rAExtra +
+    rivalATotalProdCost
   );
   const rAProfit = rivalATotalRevenue - rACosts;
   const rANewCash = rivalACash + rAProfit;
 
   const rBCosts = Math.round(
-    (rivalBDecision.investments.materials +
-      rivalBDecision.investments.production +
-      rivalBDecision.investments.marketing +
-      rivalBDecision.investments.logistics) * (event?.category === 'materials' ? effectiveEventMult : 1.0)
+    rivalBDecision.investments.materials +
+    rivalBDecision.investments.production +
+    rivalBDecision.investments.marketing +
+    rivalBDecision.investments.logistics +
+    rBExtra +
+    rivalBTotalProdCost
   );
   const rBProfit = rivalBTotalRevenue - rBCosts;
   const rBNewCash = rivalBCash + rBProfit;

@@ -305,7 +305,7 @@ export const RoundResults: React.FC = () => {
           {/* Virtual Council Feedback */}
           <div className="glass-panel" style={{ padding: '2rem' }}>
             <h3 style={{ marginBottom: '1.25rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MessageSquare style={{ color: 'var(--accent-gold)' }} /> Parecer do Conselho de Administração
+              <MessageSquare style={{ color: 'var(--accent-gold)' }} /> Parecer do Comitê Estratégico
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', fontSize: '0.85rem' }}>
@@ -315,7 +315,7 @@ export const RoundResults: React.FC = () => {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--accent-gold)' }}>
                     <strong>SR</strong>
                   </div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>FINANCEIRO</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>RISCO & REDE</span>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '0.85rem', color: 'white', marginBottom: '0.15rem' }}>Sr. Rocha <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>(Conservador)</span></h4>
@@ -329,7 +329,7 @@ export const RoundResults: React.FC = () => {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#ff69b4' }}>
                     <strong>DL</strong>
                   </div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>MARKETING</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>METAVERSO</span>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '0.85rem', color: 'white', marginBottom: '0.15rem' }}>Dra. Luna <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>(Agressiva)</span></h4>
@@ -343,7 +343,7 @@ export const RoundResults: React.FC = () => {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--accent-blue)' }}>
                     <strong>EV</strong>
                   </div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>OPERAÇÕES</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>AUTOMAÇÃO</span>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '0.85rem', color: 'white', marginBottom: '0.15rem' }}>Eng. Vane <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>(Pragmática)</span></h4>
@@ -374,7 +374,7 @@ export const RoundResults: React.FC = () => {
                 fontWeight: 'bold', 
                 letterSpacing: '0.1em',
                 color: 'var(--text-secondary)'
-              }}>DIÁRIO COMERCIAL DA FECART</span>
+              }}>GAZETA DE INOVAÇÃO DA SMART CITY</span>
             </div>
             <p style={{ 
               fontFamily: 'Georgia, serif', 

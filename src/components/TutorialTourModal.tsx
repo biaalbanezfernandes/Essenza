@@ -12,21 +12,21 @@ export interface TutorialStep {
 }
 
 export const tutorialSteps: TutorialStep[] = [
-  { targetId: 'tutorial-cash',        message: '💵 1. CAIXA: Mantenha o saldo previsto sempre no azul!' },
-  { targetId: 'tutorial-investments', message: '🎯 2. VERBA: Arraste os sliders para distribuir o capital nas 4 áreas.' },
+  { targetId: 'tutorial-cash',        message: '💵 1. CAIXA DA SMART CITY: Mantenha o saldo previsto sempre positivo e acompanhe os eventos.' },
+  { targetId: 'tutorial-investments', message: '🎯 2. VERBA: Arraste os sliders para distribuir o capital e escalar a produção automatizada.' },
   { targetId: 'tutorial-products',    message: '👗 3. PRODUTOS: Ajuste preço de venda e lotes a produzir de cada peça.' },
-  { targetId: 'tutorial-ssis',        message: '🤖 4. IA SCORPIO: Avisos em tempo real. Se ficar vermelho, corrija antes de enviar!' },
+  { targetId: 'tutorial-ssis',        message: '🤖 4. IA SCORPIO (S.S.I.S.): Acompanhe os alertas e clique em "SEGUIR RECOMENDAÇÃO" quando julgar necessário!' },
   { targetId: 'tutorial-timer-info',  message: '⏱️ 5. DINÂMICA: Rodadas 2 e 3 têm timer de 1m30s e sirene aos 15s finais!' },
   { 
     targetId: 'tutorial-chaos-npc',   
-    message: '👥 6. FUNCIONÁRIOS DO CAOS: Durante a simulação, funcionários vão invadir a tela. Basta clicar no X para fechar!',
+    message: '👥 6. FUNCIONÁRIOS DO CAOS: Durante a simulação, avatares da equipe vão invadir a tela com imprevistos.',
     isGiantNpc: true,
     npcImage: '/characters/npc_manuel_cafe_essenza.png',
     npcName: 'Manuel do Café',
-    npcRole: 'Barista & Copista',
-    npcSpeech: 'Chefe! Nós vamos invadir a tela com dúvidas e imprevistos. Basta clicar no ❌ ou na gente para nos dispensar!'
+    npcRole: 'Técnico de Bio-Bebidas',
+    npcSpeech: 'Chefe! Nós vamos invadir a tela com falhas no sistema e dúvidas urgentes. Basta clicar no ❌ ou na gente para nos dispensar!'
   },
-  { targetId: 'tutorial-submit',      message: '🎓 7. TUDO PRONTO! Ajuste seus dados e processe a rodada quando quiser.' },
+  { targetId: 'tutorial-submit',      message: '🎓 7. TUDO PRONTO! Configure os parâmetros e processe a simulação quando quiser.' },
 ];
 
 interface MicroTooltipProps {
@@ -190,7 +190,7 @@ export const MicroTooltip: React.FC<MicroTooltipProps> = ({
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em'
                 }}>
-                  {step.npcRole || 'Barista & Copista'}
+                  {step.npcRole || 'Técnico de Bio-Bebidas'}
                 </span>
               </div>
 
@@ -202,7 +202,7 @@ export const MicroTooltip: React.FC<MicroTooltipProps> = ({
                 lineHeight: 1.4,
                 fontWeight: 600
               }}>
-                "Chefe! Nós vamos invadir a tela com dúvidas da fábrica.<br />
+                "Chefe! Nós vamos invadir a tela com falhas no sistema e dúvidas urgentes.<br />
                 <span style={{ color: '#fcd34d' }}>Basta clicar no ❌ ou na gente para nos dispensar!</span>"
               </p>
 

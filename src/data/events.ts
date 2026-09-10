@@ -4,8 +4,8 @@ export const events: GameEvent[] = [
   // Eventos Positivos (1-10)
   {
     id: 'influencer_viral',
-    title: 'Influenciador Viraliza Marca',
-    description: 'Celebridade posou com a polo Essenza e o engajamento disparou.',
+    title: 'Holograma Viral na Metrópole',
+    description: 'Um influenciador digital projetou nossa grife em um arranha-céu e o engajamento disparou.',
     type: 'positive',
     category: 'marketing',
     multiplier: 1.40,
@@ -14,8 +14,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'verao_antecipado',
-    title: 'Verão Precoce e Intenso',
-    description: 'Onda de calor precoce acelerou a busca por roupas leves.',
+    title: 'Anomalia Climática Detectada',
+    description: 'Sensores da Smart City indicam onda de calor precoce. A busca por roupas leves acelerou.',
     type: 'positive',
     category: 'general',
     multiplier: 1.30,
@@ -24,8 +24,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'safra_algodao',
-    title: 'Super Safra de Algodão',
-    description: 'Safra recorde reduziu o custo de aquisição da matéria-prima nacional.',
+    title: 'Super Safra de Bio-Algodão',
+    description: 'A fazenda vertical automatizada teve safra recorde, reduzindo o custo de matéria-prima.',
     type: 'positive',
     category: 'materials',
     multiplier: 0.75, // Reduz custos de matéria-prima (multiplica custo)
@@ -34,8 +34,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'logistica_eficiente',
-    title: 'Transporte Expresso Otimizado',
-    description: 'Parceria com nova transportadora reduziu prazos e custos de frete.',
+    title: 'Otimização de Drones de Entrega',
+    description: 'O novo algoritmo da rede autônoma reduziu prazos e custos de frete.',
     type: 'positive',
     category: 'logistics',
     multiplier: 1.25,
@@ -44,8 +44,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'incentivo_fiscal',
-    title: 'Incentivo Fiscal Têxtil',
-    description: 'Governo concedeu redução de impostos para a indústria de confecção.',
+    title: 'Incentivo da Smart City',
+    description: 'O conselho da cidade concedeu redução de impostos para indústrias sustentáveis.',
     type: 'positive',
     category: 'general',
     multiplier: 1.15,
@@ -54,8 +54,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'treinamento_equipe',
-    title: 'Capacitação Fabril em Alta',
-    description: 'Workshop de costura moderna elevou a produtividade da equipe.',
+    title: 'Capacitação Neural da Equipe',
+    description: 'Workshop em realidade virtual elevou drasticamente a produtividade dos operadores.',
     type: 'positive',
     category: 'production',
     multiplier: 1.20,
@@ -64,8 +64,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'tendencia_casual',
-    title: 'Alta da Moda Casual "Comfy"',
-    description: 'Tendência de conforto impulsionou as vendas da linha casual da Essenza.',
+    title: 'Alta da Moda Tecno-Casual',
+    description: 'A tendência de roupas com sensores de conforto impulsionou a linha casual.',
     type: 'positive',
     category: 'general',
     multiplier: 1.25,
@@ -74,8 +74,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'selo_sustentabilidade',
-    title: 'Selo EcoTêxtil Concedido',
-    description: 'Certificação de sustentabilidade atraiu clientes e valorizou a marca.',
+    title: 'Selo Carbono-Zero Aprovado',
+    description: 'A certificação de emissão zero atraiu clientes da nova geração e valorizou a marca.',
     type: 'positive',
     category: 'marketing',
     multiplier: 1.30,
@@ -84,8 +84,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'parceria_varejo',
-    title: 'Destaque em Grande Marketplace',
-    description: 'Vitrines em grandes portais aumentaram as visitas e pedidos da grife.',
+    title: 'Destaque no Metaverso',
+    description: 'Vitrines holográficas nos maiores portais do metaverso aumentaram os pedidos.',
     type: 'positive',
     category: 'marketing',
     multiplier: 1.20,
@@ -95,7 +95,7 @@ export const events: GameEvent[] = [
   {
     id: 'inovacao_tecido',
     title: 'Fibras Inteligentes Antiamasso',
-    description: 'Tecido tecnológico reduziu retrabalho e agradou os consumidores.',
+    description: 'Tecido com nanotecnologia reduziu retrabalho fabril e agradou os consumidores.',
     type: 'positive',
     category: 'logistics', // Inovação
     multiplier: 1.20,
@@ -106,8 +106,8 @@ export const events: GameEvent[] = [
   // Eventos Negativos (11-20)
   {
     id: 'greve_costureiros',
-    title: 'Paralisação no Polo Têxtil',
-    description: 'Greve setorial reduziu temporariamente o ritmo das linhas de produção.',
+    title: 'Paralisação de Operadores',
+    description: 'Falha na IA de gestão de ponto gerou insatisfação e paralisou as linhas de produção.',
     type: 'negative',
     category: 'production',
     multiplier: 0.70, // Reduz eficiência de produção
@@ -116,8 +116,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'crise_algodao',
-    title: 'Escassez Global de Algodão',
-    description: 'Quebra de safra internacional encareceu a matéria-prima em 30%.',
+    title: 'Escassez de Insumos Orgânicos',
+    description: 'Falha climática nas fazendas verticais encareceu a matéria-prima em 30%.',
     type: 'negative',
     category: 'materials',
     multiplier: 1.30, // Eleva os custos de matéria-prima
@@ -126,8 +126,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'greve_transportes',
-    title: 'Bloqueios nas Rodovias',
-    description: 'Atrasos no transporte prejudicaram entregas e distribuição.',
+    title: 'Falha na Rede Autônoma',
+    description: 'Queda no servidor de drones de carga prejudicou todas as entregas na cidade.',
     type: 'negative',
     category: 'logistics',
     multiplier: 0.70, // Prejudica a logística
@@ -136,8 +136,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'crise_energia',
-    title: 'Tarifa de Energia Industrial',
-    description: 'Bandeira tarifária alta aumentou a conta de luz da planta fabril.',
+    title: 'Pico de Consumo na Smart Grid',
+    description: 'Sobrecarga na matriz energética elevou a tarifa de energia da planta fabril.',
     type: 'negative',
     category: 'production',
     multiplier: 1.20, // Eleva custo de produção
@@ -146,8 +146,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'boato_redes',
-    title: 'Boatos de Qualidade na Web',
-    description: 'Fake news sobre costuras afetou temporariamente a confiança dos clientes.',
+    title: 'Deepfake sobre a Marca',
+    description: 'Um vídeo gerado por IA com informações falsas afetou temporariamente a confiança dos clientes.',
     type: 'negative',
     category: 'marketing',
     multiplier: 0.75, // Reduz a reputação e a demanda
@@ -156,8 +156,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'inflacao_alta',
-    title: 'Pressão Inflacionária',
-    description: 'Aperto no orçamento fez consumidores adiarem compras de vestuário.',
+    title: 'Ajuste de Crédito Digital',
+    description: 'Novas taxas nas moedas digitais fizeram consumidores adiarem compras de vestuário.',
     type: 'negative',
     category: 'general',
     multiplier: 0.75, // Reduz a demanda global
@@ -166,8 +166,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'dumping_concorrente',
-    title: 'Liquidação da Concorrência',
-    description: 'Queima de estoque com descontos agressivos desviou parte da clientela.',
+    title: 'Liquidação Algorítmica',
+    description: 'A IA da concorrência aplicou descontos agressivos, desviando parte da clientela.',
     type: 'negative',
     category: 'general',
     multiplier: 0.80,
@@ -176,8 +176,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'defeito_lote',
-    title: 'Falha Técnica no Tingimento',
-    description: 'Defeito em tinturaria gerou descarte de peças e despesas adicionais.',
+    title: 'Bug no Tingimento Automatizado',
+    description: 'Glitch no braço robótico gerou descarte de peças e despesas adicionais.',
     type: 'negative',
     category: 'production',
     multiplier: 0.80,
@@ -186,8 +186,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'frio_atípico_verao',
-    title: 'Frente Fria Fora de Época',
-    description: 'Frio repentino esfriou as vendas imediatas de peças de verão.',
+    title: 'Anomalia Fria Fora de Época',
+    description: 'Sensores falharam em prever a frente fria, esfriando as vendas de peças de verão.',
     type: 'negative',
     category: 'general',
     multiplier: 0.85,
@@ -196,8 +196,8 @@ export const events: GameEvent[] = [
   },
   {
     id: 'vazamento_dados_fake',
-    title: 'Alarme Falso de Phishing',
-    description: 'Boato sobre segurança online gerou hesitação momentânea nas compras.',
+    title: 'Alarme de Phishing na Rede',
+    description: 'Alerta falso de segurança no e-commerce gerou hesitação nas compras.',
     type: 'negative',
     category: 'marketing',
     multiplier: 0.80,

@@ -10,111 +10,111 @@ export const characters: NpcCharacter[] = [
   {
     id: 'manuel_cafe',
     name: 'Manuel do Café',
-    role: 'Barista & Mestre Copista',
+    role: 'Técnico de Bio-Bebidas',
     image: '/characters/npc_manuel_cafe_essenza.png',
     dialogues: [
-      '☕ Chefe! O café gourmet acabou, posso comprar aquele de R$ 5,00?',
-      '☕ Quem pegou a minha garrafa térmica personalizada?!',
-      '☕ Café fresquinho passando! Vai querer com ou sem açúcar?'
+      '☕ Chefe! O sintetizador de café enguiçou, posso comprar grão orgânico de R$ 50,00?',
+      '☕ Quem pegou o meu copo térmico de grafeno?!',
+      '☕ Café energizado passando! Vai querer com ou sem estimulante neural?'
     ]
   },
   {
     id: 'vini_estagiario',
     name: 'Vini Estagiário',
-    role: 'Suporte de Operações',
+    role: 'Suporte de IA Operacional',
     image: '/characters/npc_vini_estagiario.png',
     dialogues: [
-      '📑 Chefe, mandei a planilha confidencial no grupo da família sem querer!',
-      '📑 Como faz pra dar Ctrl+Z na vida real?!',
-      '📑 Onde fica o almoxarifado mesmo? Me perdi no 2º andar...'
+      '📑 Chefe, mandei a planilha confidencial no canal público do metaverso sem querer!',
+      '📑 Como faz pra dar Ctrl+Z no algoritmo de roteamento?!',
+      '📑 Onde fica o almoxarifado de drones mesmo? Me perdi no 2º andar...'
     ]
   },
   {
     id: 'fiscal_auditoria',
     name: 'Fiscal de Auditoria',
-    role: 'Compliance & Tributos',
+    role: 'Compliance & Cripto-Tributos',
     image: '/characters/npc_fiscal_auditoria.png',
     dialogues: [
-      '🔍 Cadê a nota fiscal número 4920 de 2024? Preciso pra ontem!',
-      '🔍 Achei uma discrepância de R$ 0,12 no balancete da fábrica!',
-      '🔍 Vim auditar se os impostos do algodão foram devidamente recolhidos.'
+      '🔍 Cadê a chave da blockchain 4920 de 2026? Preciso pra ontem!',
+      '🔍 Achei uma discrepância de 0.0012 tokens no balanço da fábrica!',
+      '🔍 Vim auditar se as taxas de emissão de carbono foram pagas na Smart Grid.'
     ]
   },
   {
     id: 'zeze_copa',
     name: 'Dona Zezé',
-    role: 'Governanta da Copa',
+    role: 'Governanta de Bio-Conforto',
     image: '/characters/npc_zeze_copa.png',
     dialogues: [
-      '🍰 Quem deixou a xícara suja dentro da pia de novo?!',
-      '🍰 Acabou de sair bolo de cenoura com cobertura de chocolate na copa!',
-      '🍰 Não pisa aí não que acabei de passar pano com desinfetante!'
+      '🍰 Quem deixou o prato inteligente sujo dentro da higienizadora?!',
+      '🍰 Acabou de sair barra de proteína sabor bolo de cenoura na copa!',
+      '🍰 Não pisa aí não que o robô aspirador acabou de encerar!'
     ]
   },
   {
     id: 'tico_suporte',
     name: 'Tico do Suporte',
-    role: 'Helpdesk de TI',
+    role: 'Helpdesk de Ciber-Infra',
     image: '/characters/npc_tico_suporte.png',
     dialogues: [
-      '💻 Já tentou desligar o computador e ligar de novo?',
-      '💻 O servidor caiu porque ligaram uma cafeteira na mesma tomada.',
-      '💻 Atualização do Windows obrigatória em 3, 2, 1...'
+      '💻 Já tentou desconectar o implante neural e ligar de novo?',
+      '💻 O servidor caiu porque ligaram a máquina de café no mesmo barramento quântico.',
+      '💻 Atualização do firewall da cidade obrigatória em 3, 2, 1...'
     ]
   },
   {
     id: 'sofia_juridico',
     name: 'Dra. Sofia',
-    role: 'Jurídico & Contratos',
+    role: 'Jurídico & Smart Contracts',
     image: '/characters/npc_sofia_juridico_essenza.png',
     dialogues: [
-      '⚖️ Chefe, precisa rubricar essas 48 páginas de contrato agora!',
-      '⚖️ O jurídico NÃO autorizou aquela postagem polêmica no marketing!',
-      '⚖️ Cuidado com a cláusula de exclusividade com o fornecedor têxtil.'
+      '⚖️ Chefe, precisa assinar digitalmente esses 48 contratos inteligentes agora!',
+      '⚖️ A IA do jurídico NÃO autorizou aquela postagem polêmica na rede neural!',
+      '⚖️ Cuidado com a cláusula de exclusividade com o fornecedor de bio-tecidos.'
     ]
   },
   {
     id: 'rocha_seguranca',
     name: 'Inspetor Rocha',
-    role: 'Segurança Patrimonial',
+    role: 'Ciber-Segurança Patrimonial',
     image: '/characters/npc_rocha_seguranca_essenza.png',
     dialogues: [
-      '🚨 Tem um carro prata com o farol aceso no estacionamento!',
-      '🚨 Identificamos uma pessoa sem crachá perto do galpão de tecidos.',
-      '🚨 Quem esqueceu a porta dos fundos destrancada ontem?'
+      '🚨 Tem um carro voador parado no estacionamento sem autorização!',
+      '🚨 Identificamos uma assinatura digital suspeita perto do galpão de servidores.',
+      '🚨 Quem esqueceu o bloqueador de sinal da porta dos fundos desativado?'
     ]
   },
   {
     id: 'pedro_estoque',
     name: 'Pedro do Estoque',
-    role: 'Encarregado de Almoxarifado',
+    role: 'Encarregado de Drones',
     image: '/characters/npc_pedro_estoque_essenza.png',
     dialogues: [
-      '📦 Chefe, chegou uma carreta lotada de caixas sem etiqueta!',
-      '📦 Acabou a fita adesiva para lacrar os fardos de moletons!',
-      '📦 O empilhadeirista sumiu no meio do carregamento!'
+      '📦 Chefe, chegou um drone de carga gigante sem código de barras!',
+      '📦 Acabou o polímero selante para lacrar os fardos de tecidos térmicos!',
+      '📦 O robô empilhador entrou em modo de suspensão no meio do galpão!'
     ]
   },
   {
     id: 'duda_design',
     name: 'Duda do Design',
-    role: 'Diretora de Criação',
+    role: 'Diretora de Criação 3D',
     image: '/characters/npc_duda_design.png',
     dialogues: [
-      '🎨 Qual tom de bege você prefere: Areia Suave ou Deserto Lunar?',
-      '🎨 Mudei a logo da Essenza de novo, dá uma olhadinha!',
-      '🎨 Essa fonte do catálogo precisa de pelo menos 2px a mais de kerning.'
+      '🎨 Qual tom de holograma você prefere: Neon Suave ou Prisma Lunar?',
+      '🎨 Atualizei as texturas 3D da coleção, dá uma olhadinha no óculos VR!',
+      '🎨 Essa renderização do catálogo precisa de mais ray-tracing.'
     ]
   },
   {
     id: 'guto_vendas',
     name: 'Guto Vendas',
-    role: 'Executivo Comercial',
+    role: 'Executivo Comercial Virtual',
     image: '/characters/npc_guto_vendas_essenza.png',
     dialogues: [
-      '📈 Fechei uma encomenda de 500 polos, mas prometi 40% de desconto!',
-      '📈 O cliente quer saber se entregamos até amanhã às 8h da manhã.',
-      '📈 Bati a meta do mês! Cadê o meu bônus executivo?'
+      '📈 Fechei uma assinatura de roupas pra 500 avatares!',
+      '📈 O cliente quer saber se o drone entrega no andar 150 até às 8h.',
+      '📈 Bati a meta do mês em cripto! Cadê o meu bônus executivo?'
     ]
   },
   {
@@ -123,108 +123,108 @@ export const characters: NpcCharacter[] = [
     role: 'Relações Públicas',
     image: '/characters/npc_carol_principe_essenza.png',
     dialogues: [
-      '✨ O influencer mais famoso do Brasil quer 10 roupas de graça!',
-      '✨ Temos uma coletiva de imprensa em 10 minutos sobre a nova coleção.',
-      '✨ A revista Vogue quer uma entrevista exclusiva com você hoje.'
+      '✨ O holo-influencer mais famoso quer 10 roupas de graça pro avatar dele!',
+      '✨ Temos uma coletiva na sala virtual em 10 minutos sobre a nova coleção inteligente.',
+      '✨ O canal principal da Smart City quer transmitir uma entrevista com você.'
     ]
   },
   {
     id: 'flora_verde',
     name: 'Flora Verde',
-    role: 'Sustentabilidade & ESG',
+    role: 'Eco-Sustentabilidade',
     image: '/characters/npc_flora_verde_essenza.png',
     dialogues: [
-      '🌿 Precisamos trocar todas as embalagens por papel 100% semente!',
-      '🌿 O descarte dos retalhos de linho foi aprovado com selo verde!',
-      '🌿 Plantei 3 mudinhas de ipê na calçada da fábrica.'
+      '🌿 Precisamos trocar todas as embalagens por celulose regenerativa!',
+      '🌿 O descarte das sobras foi convertido em energia limpa para a cidade!',
+      '🌿 Plantei 3 árvores holográficas purificadoras de ar na calçada da fábrica.'
     ]
   },
   {
     id: 'gabi_social',
     name: 'Gabi Social Media',
-    role: 'Gestora de Redes',
+    role: 'Gestora de Redes Holográficas',
     image: '/characters/npc_gabi_social.png',
     dialogues: [
-      '📱 Chefe! Um vídeo nosso bateu 1 milhão de views no TikTok!',
-      '📱 Tem 200 pessoas perguntando o preço do moletom nos comentários.',
-      '📱 Faz uma dancinha comigo pro reels da empresa rapidão?!'
+      '📱 Chefe! Nossa simulação bateu 1 milhão de acessos simultâneos!',
+      '📱 Tem 200 IA-bots perguntando o preço da jaqueta térmica.',
+      '📱 Captura um motion comigo pro feed da empresa rapidão?!'
     ]
   },
   {
     id: 'lana_luxo',
     name: 'Lana Luxo',
-    role: 'Consultora de Alta Costura',
+    role: 'Consultora de Tecno-Costura',
     image: '/characters/npc_lana_luxo.png',
     dialogues: [
-      '💎 Querido, esses botões precisam ser de madrepérola italiana!',
-      '💎 O acabamento dessa gola está muito comercial, precisamos de alta costura.',
-      '💎 Se não tiver glamour, a concorrência vai engolir a Essenza.'
+      '💎 Querido, esses sensores cardíacos precisam ser de titânio!',
+      '💎 O acabamento dessa gola não tem regulação térmica, está muito básico.',
+      '💎 Se não tiver integração com smartwatch, a concorrência vai engolir a Essenza.'
     ]
   },
   {
     id: 'laura_chinelo',
     name: 'Laura da Produção',
-    role: 'Líder de Costura',
+    role: 'Líder de Automação',
     image: '/characters/npc_laura_chinelo_essenza.png',
     dialogues: [
-      '🧵 A máquina de overloque 4 travou de novo!',
-      '🧵 As costureiras pediram mais 15 minutos de almoço hoje.',
-      '🧵 O lote de camisetas básicas já está 80% embalado!'
+      '🧵 A esteira magnética de montagem travou de novo!',
+      '🧵 Os técnicos pediram pra atualizar o software de costura antes do almoço.',
+      '🧵 O lote de camisetas base-layer já está 80% embalado pelos drones!'
     ]
   },
   {
     id: 'rafa_rosa',
     name: 'Rafa Rosa',
-    role: 'Visual Merchandising',
+    role: 'Visual Merchandising AR',
     image: '/characters/npc_rafa_rosa_essenza.png',
     dialogues: [
-      '🛍️ Mudei todos os manequins da vitrine para a cor rosa quartzo!',
-      '🛍️ A iluminação da loja precisa ser mais quente e acolhedora.',
-      '🛍️ O aroma de lavanda na entrada triplicou a permanência dos clientes.'
+      '🛍️ Mudei a projeção da vitrine para um cenário em Marte, ficou incrível!',
+      '🛍️ A luz dos provadores virtuais precisa ser ajustada, os avatares ficam opacos.',
+      '🛍️ O aroma artificial na entrada da loja física triplicou a dopamina dos clientes.'
     ]
   },
   {
     id: 'tom_frota',
     name: 'Tom da Frota',
-    role: 'Coordenador de Transportes',
+    role: 'Coordenador de Drones',
     image: '/characters/npc_tom_frota.png',
     dialogues: [
-      '🚚 A van de entregas furou o pneu na Marginal!',
-      '🚚 O preço do diesel subiu de novo nesta madrugada.',
-      '🚚 Rota do litoral finalizada com 2 horas de antecedência!'
+      '🚚 Um drone de carga perdeu o sinal de GPS perto do centro da cidade!',
+      '🚚 O preço da bateria de íon-lítio subiu de novo nesta madrugada.',
+      '🚚 Rota aérea comercial finalizada sem colisões, tudo no horário!'
     ]
   },
   {
     id: 'beto_eventos',
     name: 'Beto Eventos',
-    role: 'Organizador de Feiras',
+    role: 'Produtor de Holo-Feiras',
     image: '/characters/npc_beto_eventos_transp.png',
     dialogues: [
-      '🎪 O estande da FECART precisa de mais 5 holofotes de LED!',
-      '🎪 Contratei um buffet de salgadinhos pro lançamento da coleção.',
-      '🎪 O microfone da apresentação deu microfonia bem na hora do discurso!'
+      '🎪 O pavilhão da FECART virtual não suporta tantos visitantes simultâneos!',
+      '🎪 Contratei um buffet de impressões 3D alimentares pro evento.',
+      '🎪 O avatar do mestre de cerimônias bugou bem na hora do discurso!'
     ]
   },
   {
     id: 'ze_musica',
     name: 'Zé da Música',
-    role: 'Sound Designer de Loja',
+    role: 'Sound Designer Algorítmico',
     image: '/characters/npc_ze_musica_essenza.png',
     dialogues: [
-      '🎵 A playlist de Bossa Nova moderna aumentou o ticket médio em 12%!',
-      '🎵 Quem colocou heavy metal na caixa de som do refeitório?!',
-      '🎵 Criei um jingle exclusivo para o comercial de rádio da Essenza.'
+      '🎵 A trilha sonora gerada por IA aumentou as vendas da coleção em 12%!',
+      '🎵 Quem colocou chiado lofi na comunicação interna da fábrica?!',
+      '🎵 A música reativa ao batimento cardíaco dos clientes está pronta.'
     ]
   },
   {
     id: 'antenor_manutencao',
     name: 'Seu Antenor',
-    role: 'Chefe de Manutenção',
+    role: 'Chefe de Manutenção Quântica',
     image: '/characters/npc_antenor_manutencao.png',
     dialogues: [
-      '🔧 Vou ter que desligar o quadro de força por 2 minutinhos!',
-      '🔧 Troquei o rolamento do compressor de ar da fábrica.',
-      '🔧 Quem usou a chave de fenda 10 e não guardou na caixa de ferramentas?'
+      '🔧 Vou ter que reiniciar a malha elétrica do galpão por 2 nanosegundos!',
+      '🔧 Troquei o processador de estado sólido do robô de triagem.',
+      '🔧 Quem usou meu scanner de diagnóstico térmico e não guardou?'
     ]
   }
 ];
