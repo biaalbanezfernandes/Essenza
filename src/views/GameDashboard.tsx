@@ -11,6 +11,7 @@ import {
   DollarSign, AlertTriangle, ArrowRight,
   BookOpen
 } from 'lucide-react';
+import { EssenzaLogo } from '../components/EssenzaLogo';
 
 export const GameDashboard: React.FC = () => {
   const { state, updatePendingDecision, submitRoundDecision, setSsisInteraction } = useGame();
@@ -123,7 +124,7 @@ export const GameDashboard: React.FC = () => {
       {/* Pop-up do Personagem Intruso Gigante em PNG (Apenas após concluir o tutorial) */}
       <NpcPopup currentRound={currentRound} disabled={isTutorialOpen} />
 
-      {/* Top Header: Centered Big Timer and Round Badge */}
+      {/* Top Header: Logo + Round Badge + Timer */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -132,6 +133,10 @@ export const GameDashboard: React.FC = () => {
         gap: '0.75rem',
         marginBottom: '1.75rem'
       }}>
+        {/* Logo Essenza centralizada no topo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.25rem' }}>
+          <EssenzaLogo variant="icon" height={52} />
+        </div>
         {/* Round Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="badge-pill badge-gold" style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}>

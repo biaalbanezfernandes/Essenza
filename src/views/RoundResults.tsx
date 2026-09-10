@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { RadarChart } from '../components/RadarChart';
 import { products } from '../data/products';
 import { generateRoundNewspaper } from '../engine/ssisEngine';
+import { EssenzaLogo } from '../components/EssenzaLogo';
 import { 
   Award, TrendingUp, MessageSquare, Newspaper, Percent, ChevronRight
 } from 'lucide-react';
@@ -30,6 +31,9 @@ export const RoundResults: React.FC = () => {
       
       {/* Title Header */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <EssenzaLogo variant="icon" height={52} />
+        </div>
         <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>
           {currentRound === 1 ? 'Balanço da Fase Tutorial' : 'Balanço Operacional'}
         </span>

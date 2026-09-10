@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Mail, User, BookOpen, Cpu, ChevronRight, ChevronLeft, Play, Clock, DollarSign, Tag, Award } from 'lucide-react';
+import { EssenzaLogo } from '../components/EssenzaLogo';
 
 interface BriefingSlide {
   label: string;
@@ -146,6 +147,11 @@ export const StartScreen: React.FC = () => {
             boxShadow: '0 0 100px rgba(212,175,55,0.18)',
           }} className="animate-fade-in">
 
+            {/* Logo no topo do modal */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <EssenzaLogo variant="icon" height={48} />
+            </div>
+
             {/* Progress bar */}
             <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.75rem' }}>
               {briefingSlides.map((_, i) => (
@@ -284,8 +290,10 @@ export const StartScreen: React.FC = () => {
         
         {/* Title Header */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '3.5rem', letterSpacing: '-0.03em' }}>ESSENZA</h1>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+            <EssenzaLogo variant="full" height={160} />
+          </div>
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
             Simulador Empresarial Inteligente e Plataforma de Aprendizagem FECART
           </p>
         </div>

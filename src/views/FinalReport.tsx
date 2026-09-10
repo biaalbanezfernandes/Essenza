@@ -4,6 +4,7 @@ import { classifyManagementProfile } from '../engine/ssisEngine';
 import emailjs from '@emailjs/browser';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { EssenzaLogo } from '../components/EssenzaLogo';
 import { 
   TrendingUp, RefreshCw, Send, CheckCircle, 
   Mail, Download, Trophy, AlertCircle, ExternalLink, Award, Loader2, Sparkles, ArrowDown, Compass,
@@ -204,6 +205,9 @@ export const FinalReport: React.FC = () => {
 
       {/* Title Header */}
       <div className="no-print" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+          <EssenzaLogo variant="full" height={100} />
+        </div>
         <span className="badge-pill badge-gold" style={{ marginBottom: '0.5rem' }}>Simulação Finalizada — FECART 2026</span>
         <h1 style={{ fontSize: '3rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Relatório Executivo Geral</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Análise de liderança, indicadores de desempenho e certificação digital Essenza</p>
@@ -652,7 +656,10 @@ export const FinalReport: React.FC = () => {
         fontFamily: 'Georgia, serif', maxWidth: '700px', margin: '0 auto 3rem', background: '#060913', color: '#f3f4f6', padding: '3rem', border: '3px double #d4af37', borderRadius: '12px',
         boxShadow: '0 0 60px -10px var(--accent-gold-glow)', position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <EssenzaLogo variant="full" height={80} style={{ filter: 'brightness(0) invert(1)' }} />
+          </div>
           <span style={{ border: '1px solid #d4af37', padding: '0.4rem 1.2rem', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#d4af37' }}> Colégio FECAP — FECART 2026 </span>
         </div>
         <h1 style={{ textAlign: 'center', fontStyle: 'italic', fontWeight: 'normal', fontSize: '2rem', color: '#fff', marginBottom: '0.5rem' }}>Certificado de Desempenho</h1>
