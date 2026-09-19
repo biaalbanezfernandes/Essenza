@@ -10,7 +10,7 @@ interface RoundTimerProps {
 
 export const RoundTimer: React.FC<RoundTimerProps> = ({
   currentRound,
-  totalSeconds = 90, // 1 minute and 30 seconds (1m30s)
+  totalSeconds = 120, // 2 minutes (2m00s)
   onTimeUp,
   isPaused = false
 }) => {

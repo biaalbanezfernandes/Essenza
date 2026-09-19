@@ -12,12 +12,12 @@ export function calculateMetrics(
   const marketing = investments.marketing;
   const logistics = investments.logistics;
 
-  // Baseline formulas (scaling logarithmically or linearly with caps)
-  let quality = 40 + Math.min(60, (materials * 0.4 + logistics * 0.6) / 1200);
-  let innovation = 35 + Math.min(65, (logistics * 0.7 + marketing * 0.3) / 1000);
-  let satisfaction = 45 + Math.min(55, (production * 0.8) / 1000);
-  let efficiency = 40 + Math.min(60, (production * 0.4 + logistics * 0.6) / 1100);
-  let reputation = 35 + Math.min(65, (marketing * 0.7 + quality * 0.3) / 1100);
+  // Baseline formulas scaling smoothly across realistic budget allocations (R$ 30k – R$ 250k)
+  let quality = 35 + Math.min(60, (materials * 0.4 + logistics * 0.6) / 2800);
+  let innovation = 30 + Math.min(60, (logistics * 0.7 + marketing * 0.3) / 2500);
+  let satisfaction = 40 + Math.min(55, (production * 0.8) / 2400);
+  let efficiency = 35 + Math.min(60, (production * 0.4 + logistics * 0.6) / 2500);
+  let reputation = 30 + Math.min(65, (marketing * 0.7 + quality * 0.3) / 2600);
 
   // Apply event multipliers based on scope
   if (event) {
@@ -389,7 +389,12 @@ export function executeRound(
     }
   }
 
-  const playerCosts = Math.round(playerFixedInv + playerTotalProdCost + extraEventCosts);
+  const playerCosts = Math.round(
+    playerDecision.investments.marketing +
+    playerDecision.investments.logistics +
+    playerTotalProdCost +
+    extraEventCosts
+  );
   const playerProfit = playerTotalRevenue - playerCosts;
   const playerNewCash = playerCash + playerProfit;
 
@@ -402,8 +407,6 @@ export function executeRound(
   }
 
   const rACosts = Math.round(
-    rivalADecision.investments.materials +
-    rivalADecision.investments.production +
     rivalADecision.investments.marketing +
     rivalADecision.investments.logistics +
     rAExtra +
@@ -413,8 +416,6 @@ export function executeRound(
   const rANewCash = rivalACash + rAProfit;
 
   const rBCosts = Math.round(
-    rivalBDecision.investments.materials +
-    rivalBDecision.investments.production +
     rivalBDecision.investments.marketing +
     rivalBDecision.investments.logistics +
     rBExtra +

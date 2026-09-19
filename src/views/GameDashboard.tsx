@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { products } from '../data/products';
 import type { PlayerDecision } from '../data/types';
-import { getLiveSsisAdvice } from '../engine/ssisEngine';
+import { getLiveSsisAdvice, calculateStrategicBalance, getProductProfitGuidance } from '../engine/ssisEngine';
 import { MicroTooltip, tutorialSteps } from '../components/TutorialTourModal';
 import { RoundTimer } from '../components/RoundTimer';
 import { NpcPopup } from '../components/NpcPopup';
 import { 
   TrendingUp, Award, Zap, Heart, Settings, 
   DollarSign, AlertTriangle, ArrowRight,
-  BookOpen
+  BookOpen, Bot
 } from 'lucide-react';
 import { EssenzaLogo } from '../components/EssenzaLogo';
 
 export const GameDashboard: React.FC = () => {
-  const { state, updatePendingDecision, submitRoundDecision, setSsisInteraction } = useGame();
+  const { state, updatePendingDecision, submitRoundDecision } = useGame();
   const { currentRound, currentCash, reputation, quality, innovation, satisfaction, efficiency, marketShare, activeEvent, pendingDecision } = state;
 
   // Local state for tutorial tour
@@ -97,7 +97,8 @@ export const GameDashboard: React.FC = () => {
 
   // Generate dynamic, context-aware pre-round advice from Scorpio AI S.S.I.S
   const liveAdvice = getLiveSsisAdvice(currentRound, pendingDecision, currentCash);
-  const currentInsightIgnored = state.insightAccepted === false && state.activeSsisInsight?.recommendation === liveAdvice?.recommendation;
+  const strategicReport = calculateStrategicBalance(currentRound, pendingDecision, currentCash, activeEvent);
+  const profitGuidanceMap = getProductProfitGuidance(currentRound, currentCash, activeEvent);
 
   const handleNextStep = () => {
     if (tutorialStepIndex < tutorialSteps.length - 1) {
@@ -328,15 +329,17 @@ export const GameDashboard: React.FC = () => {
           
           {/* Investments Card */}
           <div id="tutorial-investments" className="glass-panel" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-display)' }}>
-              <DollarSign style={{ color: 'var(--accent-gold)' }} size={18} /> Orçamento & Investimentos
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                <DollarSign style={{ color: 'var(--accent-gold)' }} size={18} /> Orçamento & Investimentos
+              </h3>
+            </div>
 
             {isTutorialOpen && tutorialStepIndex === 1 && (
               <MicroTooltip stepIndex={1} step={tutorialSteps[1]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               {/* Materials */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
@@ -346,12 +349,16 @@ export const GameDashboard: React.FC = () => {
                 <input
                   type="range"
                   min="0"
-                  max="200000"
+                  max="300000"
                   step="5000"
                   value={pendingDecision.investments.materials}
                   onChange={(e) => handleInvestmentChange('materials', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.materials.label}</span>
+                </div>
               </div>
 
               {/* Production */}
@@ -363,12 +370,16 @@ export const GameDashboard: React.FC = () => {
                 <input
                   type="range"
                   min="0"
-                  max="200000"
+                  max="300000"
                   step="5000"
                   value={pendingDecision.investments.production}
                   onChange={(e) => handleInvestmentChange('production', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.production.label}</span>
+                </div>
               </div>
 
               {/* Marketing */}
@@ -380,12 +391,16 @@ export const GameDashboard: React.FC = () => {
                 <input
                   type="range"
                   min="0"
-                  max="200000"
+                  max="300000"
                   step="5000"
                   value={pendingDecision.investments.marketing}
                   onChange={(e) => handleInvestmentChange('marketing', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.marketing.label}</span>
+                </div>
               </div>
 
               {/* Logistics */}
@@ -397,12 +412,16 @@ export const GameDashboard: React.FC = () => {
                 <input
                   type="range"
                   min="0"
-                  max="200000"
+                  max="300000"
                   step="5000"
                   value={pendingDecision.investments.logistics}
                   onChange={(e) => handleInvestmentChange('logistics', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.logistics.label}</span>
+                </div>
               </div>
             </div>
 
@@ -442,75 +461,103 @@ export const GameDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Scorpio AI Quick Status */}
+          {/* Scorpio AI Quick Status & Strategic Balance Meter */}
           <div id="tutorial-ssis" className="glass-panel" style={{
             padding: '1.25rem',
             borderLeft: `4px solid ${
-              liveAdvice && !currentInsightIgnored ? (liveAdvice.type === 'critical' ? 'var(--accent-danger)' : liveAdvice.type === 'opportunity' ? 'var(--accent-success)' : 'var(--accent-gold)') : 'var(--accent-blue)'
-            }`
+              strategicReport.score < 45 ? 'var(--accent-danger)' : strategicReport.score < 70 ? 'var(--accent-gold)' : 'var(--accent-success)'
+            }`,
+            background: 'linear-gradient(135deg, rgba(6,9,19,0.95), rgba(15,23,42,0.95))'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <span className={`badge-pill ${liveAdvice && !currentInsightIgnored ? 'pulsate-glow' : ''}`} style={{ fontSize: '0.65rem', background: liveAdvice && !currentInsightIgnored ? 'rgba(212,175,55,0.2)' : 'rgba(59,130,246,0.15)', color: liveAdvice && !currentInsightIgnored ? 'var(--accent-gold)' : 'var(--accent-blue)' }}>
-                ◉ S.S.I.S. — {liveAdvice && !currentInsightIgnored ? 'ANÁLISE DISPONÍVEL' : 'MONITORANDO'}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-gold), #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
+                  <Bot size={18} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', display: 'block' }}>
+                    Scorpio AI S.S.I.S. (Consultora Estratégica)
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                    Diagnóstico em tempo real da rodada
+                  </span>
+                </div>
+              </div>
+
+              <span className="badge-pill" style={{
+                fontSize: '0.65rem',
+                background: strategicReport.score < 45 ? 'rgba(239,68,68,0.2)' : strategicReport.score < 70 ? 'rgba(212,175,55,0.2)' : 'rgba(16,185,129,0.2)',
+                color: strategicReport.score < 45 ? 'var(--accent-danger)' : strategicReport.score < 70 ? 'var(--accent-gold)' : 'var(--accent-success)'
+              }}>
+                EQUILÍBRIO: {strategicReport.score}% ({strategicReport.statusLabel.toUpperCase()})
               </span>
+            </div>
+
+            {/* Strategic Score Meter */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${strategicReport.score}%`,
+                  height: '100%',
+                  background: strategicReport.score < 45 ? 'var(--accent-danger)' : strategicReport.score < 70 ? 'var(--accent-gold)' : 'var(--accent-success)',
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
             </div>
 
             {isTutorialOpen && tutorialStepIndex === 3 && (
               <MicroTooltip stepIndex={3} step={tutorialSteps[3]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
             )}
 
-            {liveAdvice && !currentInsightIgnored ? (
-              <div className="animate-fade-in">
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', fontWeight: 600 }}>
-                  {liveAdvice.recommendation}
-                </p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0', lineHeight: 1.4 }}>
-                  {liveAdvice.justification}
-                </p>
-                
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {liveAdvice.suggestedAction && (
-                    <button
-                      onClick={() => {
-                        const { field, value } = liveAdvice.suggestedAction!;
-                        const [category, key] = field.split('.');
-                        if (category === 'investments') {
-                          handleInvestmentChange(key as any, value);
-                        } else if (category === 'productionQty') {
-                          handleProductionQtyChange(key, value);
-                        }
-                        setSsisInteraction(liveAdvice, true);
-                      }}
-                      className="btn-primary"
-                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
-                    >
-                      SEGUIR RECOMENDAÇÃO
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSsisInteraction(liveAdvice, false);
-                    }}
-                    className="btn-secondary"
-                    style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
-                  >
-                    MANTER MINHA DECISÃO
-                  </button>
+            {/* Active Event Reaction Banner */}
+            {strategicReport.eventImpact && (
+              <div style={{
+                background: 'rgba(59,130,246,0.1)',
+                border: '1px solid rgba(59,130,246,0.35)',
+                borderRadius: '6px',
+                padding: '0.65rem 0.8rem',
+                marginBottom: '0.75rem',
+                fontSize: '0.78rem',
+                color: '#93c5fd'
+              }}>
+                <div style={{ fontWeight: 700, color: '#60a5fa', marginBottom: '0.2rem' }}>
+                  {strategicReport.eventImpact}
                 </div>
+                {strategicReport.eventActionableAdvice && (
+                  <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.45rem 0.65rem', borderRadius: '4px', color: 'var(--accent-gold)', fontWeight: 600, fontSize: '0.75rem', marginTop: '0.35rem', borderLeft: '3px solid var(--accent-gold)', lineHeight: 1.35 }}>
+                    {strategicReport.eventActionableAdvice}
+                  </div>
+                )}
               </div>
-            ) : (
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                {currentInsightIgnored ? 'Você escolheu manter sua decisão.' : 'Nenhum alerta crítico detectado no planejamento atual.'}
-              </p>
             )}
+
+            {/* Diagnostic Bottlenecks or Advice */}
+            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {strategicReport.bottlenecks.length > 0 ? (
+                <div style={{ background: 'rgba(239,68,68,0.1)', padding: '0.6rem 0.75rem', borderRadius: '6px', borderLeft: '3px solid var(--accent-danger)' }}>
+                  <strong style={{ fontSize: '0.78rem', color: 'var(--accent-danger)', display: 'block', marginBottom: '0.15rem' }}>⚠️ Atenção:</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)' }}>{strategicReport.bottlenecks[0]}</span>
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-primary)', margin: 0, fontWeight: 600 }}>
+                  💡 {liveAdvice?.recommendation || 'Seu planejamento está bem estruturado!'}
+                </p>
+              )}
+
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0', lineHeight: 1.35 }}>
+                <strong>Dica Estratégica:</strong> {strategicReport.tips[0]}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Right Column: Products Table */}
         <div id="tutorial-products" className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Settings style={{ color: 'var(--accent-gold)' }} size={18} /> Mix de Produtos & Lotes
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.1rem', margin: 0, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Settings style={{ color: 'var(--accent-gold)' }} size={18} /> Mix de Produtos & Lotes
+            </h3>
+          </div>
 
           {isTutorialOpen && tutorialStepIndex === 2 && (
             <MicroTooltip stepIndex={2} step={tutorialSteps[2]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
@@ -530,21 +577,27 @@ export const GameDashboard: React.FC = () => {
               {products.map((product) => {
                 const price = pendingDecision.prices[product.id] || product.defaultPrice;
                 const qty = pendingDecision.productionQty[product.id] || 0;
+                const guidance = profitGuidanceMap[product.id];
                 
                 return (
-                  <tr key={product.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.85rem' }}>
-                    <td style={{ padding: '0.75rem 0.5rem' }}>
+                  <tr key={product.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: '0.85rem' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', verticalAlign: 'top' }}>
                       <strong style={{ color: 'white', display: 'block' }}>{product.name}</strong>
+                      {guidance && guidance.seasonalityStatus === 'alta' && (
+                        <span style={{ fontSize: '0.62rem', color: 'var(--accent-gold)', display: 'block', marginTop: '2px' }}>
+                          ⚡ Alta Estação
+                        </span>
+                      )}
                     </td>
-                    <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)', verticalAlign: 'top' }}>
                       R$ {product.productionCost.toFixed(2)}
                     </td>
-                    <td style={{ padding: '0.75rem 0.5rem' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', verticalAlign: 'top' }}>
                       <span className="badge-pill badge-gold" style={{ fontSize: '0.62rem', border: 'none', background: 'rgba(255,255,255,0.05)', color: 'white' }}>
                         {product.seasonality}
                       </span>
                     </td>
-                    <td style={{ padding: '0.75rem 0.5rem' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', verticalAlign: 'top' }}>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginRight: '0.2rem' }}>R$</span>
                         <input
@@ -553,35 +606,47 @@ export const GameDashboard: React.FC = () => {
                           step="1"
                           onChange={(e) => handlePriceChange(product.id, parseFloat(e.target.value))}
                           style={{
-                            width: '75px',
+                            width: '80px',
                             background: 'rgba(255,255,255,0.03)',
                             border: '1px solid var(--border-color)',
                             color: 'white',
                             padding: '0.25rem 0.4rem',
                             borderRadius: '4px',
                             textAlign: 'right',
-                            fontSize: '0.85rem'
+                            fontSize: '0.85rem',
+                            fontWeight: 600
                           }}
                         />
                       </div>
+                      {guidance && (
+                        <div style={{ fontSize: '0.64rem', color: 'var(--accent-gold)', marginTop: '2px', textAlign: 'right' }}>
+                          🎯 IA: R$ {guidance.recommendedPriceMin.toFixed(0)}–{guidance.recommendedPriceMax.toFixed(0)}
+                        </div>
+                      )}
                     </td>
-                    <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', verticalAlign: 'top' }}>
                       <input
                         type="number"
                         value={qty}
                         step="100"
                         onChange={(e) => handleProductionQtyChange(product.id, parseInt(e.target.value))}
                         style={{
-                          width: '85px',
+                          width: '90px',
                           background: 'rgba(255,255,255,0.03)',
                           border: '1px solid var(--border-color)',
                           color: 'white',
                           padding: '0.25rem 0.4rem',
                           borderRadius: '4px',
                           textAlign: 'right',
-                          fontSize: '0.85rem'
+                          fontSize: '0.85rem',
+                          fontWeight: 600
                         }}
                       />
+                      {guidance && (
+                        <div style={{ fontSize: '0.64rem', color: 'var(--accent-blue)', marginTop: '2px', textAlign: 'right' }}>
+                          📦 IA: {guidance.recommendedLotMin}–{guidance.recommendedLotMax} un.
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

@@ -55,7 +55,7 @@ export const RoundResults: React.FC = () => {
             <strong style={{ fontSize: '1.1rem', color: '#fff' }}>🎉 Parabéns! Tutorial Concluído!</strong>
           </div>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>
-            Você aprendeu os fundamentos. Na <strong>Rodada 2 (Inverno)</strong>, a demanda de moletons vai disparar — e você terá <strong>timer de 1m30s</strong>, <strong>alarme policial nos 15s finais</strong> e <strong>interrupções da equipe (NPCs)</strong>!
+            Você aprendeu os fundamentos. Na <strong>Rodada 2 (Inverno)</strong>, a demanda de moletons vai disparar — e você terá <strong>timer de 2m00s</strong>, <strong>alarme policial nos 15s finais</strong> e <strong>interrupções da equipe (NPCs)</strong>!
           </p>
         </div>
       )}
@@ -233,20 +233,55 @@ export const RoundResults: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              <div>
-                <strong style={{ color: 'white', display: 'block', marginBottom: '0.25rem' }}>DIAGNÓSTICO DA RODADA</strong>
-                <p>{ssisFeedback.diagnostic}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', fontSize: '0.85rem' }}>
+              {/* Diagnóstico */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <strong style={{ color: 'var(--accent-gold)', display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+                  DIAGNÓSTICO RÁPIDO DA RODADA
+                </strong>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {ssisFeedback.diagnostic.split('\n').map((line, idx) => (
+                    <div key={idx} style={{ color: 'var(--text-primary)', lineHeight: 1.45 }}>
+                      {line.includes('**') ? (
+                        <span dangerouslySetInnerHTML={{
+                          __html: line.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff">$1</strong>')
+                        }} />
+                      ) : line}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <strong style={{ color: 'white', display: 'block', marginBottom: '0.25rem' }}>RECOMENDAÇÕES DA IA</strong>
-                <p>{ssisFeedback.recommendation}</p>
+              {/* Recomendações */}
+              <div style={{ background: 'rgba(59,130,246,0.06)', padding: '1rem', borderRadius: '10px', borderLeft: '4px solid var(--accent-blue)' }}>
+                <strong style={{ color: '#60a5fa', display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+                  AÇÕES RECOMENDADAS PELA IA
+                </strong>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {ssisFeedback.recommendation.split('\n').map((line, idx) => (
+                    <div key={idx} style={{ color: '#e0f2fe', lineHeight: 1.4 }}>
+                      {line.includes('**') ? (
+                        <span dangerouslySetInnerHTML={{
+                          __html: line.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff">$1</strong>')
+                        }} />
+                      ) : line}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <strong style={{ color: 'white', display: 'block', marginBottom: '0.25rem' }}>PROJEÇÃO FUTURA (FORECAST)</strong>
-                <p>{ssisFeedback.forecast}</p>
+              {/* Projeção / Forecast */}
+              <div style={{ background: 'rgba(16,185,129,0.06)', padding: '0.85rem 1rem', borderRadius: '10px', borderLeft: '4px solid var(--accent-success)' }}>
+                <strong style={{ color: 'var(--accent-success)', display: 'block', marginBottom: '0.3rem', fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+                  PROJEÇÃO PARA A PRÓXIMA ESTAÇÃO
+                </strong>
+                <div style={{ color: '#ecfdf5', lineHeight: 1.4 }}>
+                  {ssisFeedback.forecast.includes('**') ? (
+                    <span dangerouslySetInnerHTML={{
+                      __html: ssisFeedback.forecast.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff">$1</strong>')
+                    }} />
+                  ) : ssisFeedback.forecast}
+                </div>
               </div>
             </div>
 

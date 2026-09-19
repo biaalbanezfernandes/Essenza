@@ -34,20 +34,166 @@ export interface ManagementProfile {
   allProfiles: EntrepreneurProfileDef[];
 }
 
-export function getLiveSsisAdvice(round: number, decision: PlayerDecision, cash: number): SsisInsight | null {
+export interface OptimalBudgetSuggestion {
+  materials: number;
+  production: number;
+  marketing: number;
+  logistics: number;
+  totalAllocated: number;
+  reserveCash: number;
+  explanation: string;
+}
+
+export function suggestOptimalBudgetDistribution(round: number, cash: number): OptimalBudgetSuggestion {
+  const targetAllocationRatio = 0.72;
+  const allocableCash = Math.floor(cash * targetAllocationRatio);
+
+  let matPct = 0.32;
+  let prodPct = 0.32;
+  let mktPct = 0.22;
+  let logPct = 0.14;
+
+  if (round === 2) {
+    matPct = 0.34;
+    prodPct = 0.34;
+    mktPct = 0.18;
+    logPct = 0.14;
+  } else if (round === 3) {
+    matPct = 0.31;
+    prodPct = 0.31;
+    mktPct = 0.23;
+    logPct = 0.15;
+  }
+
+  const materials = Math.round((allocableCash * matPct) / 1000) * 1000;
+  const production = Math.round((allocableCash * prodPct) / 1000) * 1000;
+  const marketing = Math.round((allocableCash * mktPct) / 1000) * 1000;
+  const logistics = Math.round((allocableCash * logPct) / 1000) * 1000;
+  const totalAllocated = materials + production + marketing + logistics;
+  const reserveCash = cash - totalAllocated;
+
+  const explanation = `IA distribuiu R$ ${totalAllocated.toLocaleString('pt-BR')} (72% do caixa) em Matéria-Prima (${Math.round(matPct*100)}%), Produção (${Math.round(prodPct*100)}%), Marketing (${Math.round(mktPct*100)}%) e Logística (${Math.round(logPct*100)}%), preservando R$ ${reserveCash.toLocaleString('pt-BR')} em reserva de emergência.`;
+
+  return {
+    materials,
+    production,
+    marketing,
+    logistics,
+    totalAllocated,
+    reserveCash,
+    explanation
+  };
+}
+
+export function suggestOptimalPricingAndProduction(round: number): {
+  prices: Record<string, number>;
+  productionQty: Record<string, number>;
+  explanation: string;
+} {
+  const prices: Record<string, number> = {
+    camiseta_basica: 39.90,
+    polo_essenza: 74.90,
+    moletom: 119.90,
+    calca_jeans: 129.90,
+    vestido_linho: 109.90,
+    kit_meia_cueca: 44.90,
+  };
+
+  let productionQty: Record<string, number> = {
+    camiseta_basica: 1000,
+    polo_essenza: 800,
+    moletom: 800,
+    calca_jeans: 800,
+    vestido_linho: 700,
+    kit_meia_cueca: 900,
+  };
+
+  let explanation = '';
+
+  if (round === 1) {
+    explanation = 'Rodada 1 (Outono): Preços ajustados para margem de ~45% e lotes equilibrados de entrada.';
+  } else if (round === 2) {
+    productionQty = {
+      camiseta_basica: 900,
+      polo_essenza: 600,
+      moletom: 1600,
+      calca_jeans: 900,
+      vestido_linho: 300,
+      kit_meia_cueca: 800,
+    };
+    explanation = 'Rodada 2 (Inverno): Foco na produção de Moletom (1.600 un.) e redução de Vestido de Linho para evitar encalhe.';
+  } else if (round === 3) {
+    productionQty = {
+      camiseta_basica: 1400,
+      polo_essenza: 900,
+      moletom: 250,
+      calca_jeans: 700,
+      vestido_linho: 1600,
+      kit_meia_cueca: 1000,
+    };
+    explanation = 'Rodada 3 (Verão): Maximização de Vestido de Linho (1.600 un.) e Camiseta Básica (1.400 un.) para capturar o pico do calor.';
+  }
+
+  return { prices, productionQty, explanation };
+}
+
+export function getLiveSsisAdvice(round: number, decision: PlayerDecision, cash: number): SsisInsight {
   const totalInvestments = decision.investments.materials + decision.investments.production + decision.investments.marketing + decision.investments.logistics;
-  
+
+  // Calculate live capacity requirements
+  const rawMaterialRequired = products.reduce((acc, p) => {
+    const qty = decision.productionQty[p.id] || 0;
+    return acc + (qty * p.productionCost * 0.5);
+  }, 0);
+
+  const laborRequired = products.reduce((acc, p) => {
+    const qty = decision.productionQty[p.id] || 0;
+    return acc + (qty * p.productionCost * 0.5);
+  }, 0);
+
   if (totalInvestments > cash * 0.90) {
     return {
       type: 'critical',
       recommendation: 'Reduza os investimentos fixos.',
-      justification: 'Você está comprometendo quase todo o caixa. Há risco extremo de insolvência operacional.',
+      justification: `Você alocou R$ ${totalInvestments.toLocaleString('pt-BR')} (${Math.round((totalInvestments/cash)*100)}% do caixa). Há risco extremo de insolvência se houver oscilações nas vendas.`,
       riskLevel: 'Alto',
       confidence: 98,
       suggestedAction: { field: 'investments.production', value: decision.investments.production * 0.75 }
     };
   }
-  
+
+  if (totalInvestments < cash * 0.15) {
+    return {
+      type: 'warning',
+      recommendation: 'Aumente o investimento operacional.',
+      justification: `Apenas R$ ${totalInvestments.toLocaleString('pt-BR')} (${Math.round((totalInvestments/cash)*100)}% do caixa) foi alocado. O orçamento está muito conservador e limitará as vendas.`,
+      riskLevel: 'Médio',
+      confidence: 88
+    };
+  }
+
+  if (rawMaterialRequired > decision.investments.materials) {
+    return {
+      type: 'warning',
+      recommendation: 'Aumente o investimento em Matéria-Prima.',
+      justification: `Os lotes programados exigem R$ ${rawMaterialRequired.toLocaleString('pt-BR')} em matérias-primas, mas você investiu apenas R$ ${decision.investments.materials.toLocaleString('pt-BR')}. Há risco de paralisação na produção.`,
+      riskLevel: 'Alto',
+      confidence: 94,
+      suggestedAction: { field: 'investments.materials', value: Math.ceil(rawMaterialRequired / 1000) * 1000 }
+    };
+  }
+
+  if (laborRequired > decision.investments.production) {
+    return {
+      type: 'warning',
+      recommendation: 'Reforce a verba de Produção & Salários.',
+      justification: `A mão de obra dos lotes atuais exige R$ ${laborRequired.toLocaleString('pt-BR')}, superando os R$ ${decision.investments.production.toLocaleString('pt-BR')} alocados.`,
+      riskLevel: 'Alto',
+      confidence: 92,
+      suggestedAction: { field: 'investments.production', value: Math.ceil(laborRequired / 1000) * 1000 }
+    };
+  }
+
   let underpricedProduct = '';
   let underpricedCost = 0;
   for (const prod of products) {
@@ -63,52 +209,58 @@ export function getLiveSsisAdvice(round: number, decision: PlayerDecision, cash:
     return {
       type: 'warning',
       recommendation: `Aumente o preço de venda de ${underpricedProduct}.`,
-      justification: `O preço atual não cobre o custo de produção (R$ ${underpricedCost.toFixed(2)}). Cada venda gerará prejuízo.`,
+      justification: `O preço atual não cobre o custo de produção (R$ ${underpricedCost.toFixed(2)}). Cada unidade vendida gerará prejuízo direto.`,
       riskLevel: 'Alto',
       confidence: 99,
     };
   }
 
-  if (decision.investments.marketing < 25000) {
+  if (decision.investments.marketing < 30000) {
     return {
       type: 'warning',
       recommendation: 'Aumente o orçamento de Marketing.',
-      justification: 'Baixa visibilidade da marca na Smart City pode derrubar o volume de vendas.',
+      justification: 'Com marketing abaixo de R$ 30.000,00, a visibilidade da marca na Smart City pode despencar frente aos rivais.',
       riskLevel: 'Médio',
       confidence: 85,
       suggestedAction: { field: 'investments.marketing', value: 45000 }
     };
   }
-  
+
   if (round === 2) {
     const moletomProd = decision.productionQty['moletom'] || 0;
-    if (moletomProd < 800) {
+    if (moletomProd < 1000) {
       return {
         type: 'opportunity',
-        recommendation: 'Aumente agressivamente a produção de Moletom.',
-        justification: 'Sensores climáticos preveem frente fria atípica. A demanda será massiva.',
+        recommendation: 'Aumente agressivamente a produção de Moletom para a Frente Fria.',
+        justification: `Você programou ${moletomProd} unidades. A previsão climática indica demanda de mais de 1.800 unidades no Inverno.`,
         riskLevel: 'Baixo',
-        confidence: 92,
-        suggestedAction: { field: 'productionQty.moletom', value: 1500 }
+        confidence: 93,
+        suggestedAction: { field: 'productionQty.moletom', value: 1600 }
       };
     }
   }
 
   if (round === 3) {
     const vestidoProd = decision.productionQty['vestido_linho'] || 0;
-    if (vestidoProd < 800) {
+    if (vestidoProd < 1000) {
       return {
         type: 'opportunity',
-        recommendation: 'Maximize a produção de Vestido de Linho.',
-        justification: 'Alerte de calor intenso na metrópole. Roupas leves terão pico de demanda.',
+        recommendation: 'Maximize a produção de Vestido de Linho para o Verão.',
+        justification: `Você programou ${vestidoProd} unidades. O calor extremo fará a procura por peças leves explodir.`,
         riskLevel: 'Baixo',
-        confidence: 90,
-        suggestedAction: { field: 'productionQty.vestido_linho', value: 1500 }
+        confidence: 91,
+        suggestedAction: { field: 'productionQty.vestido_linho', value: 1600 }
       };
     }
   }
 
-  return null;
+  return {
+    type: 'opportunity',
+    recommendation: 'Planejamento e alocação operacional equilibrados.',
+    justification: `Alocação total de R$ ${totalInvestments.toLocaleString('pt-BR')} com saldo livre de R$ ${(cash - totalInvestments).toLocaleString('pt-BR')}. Clique em "Distribuir Orçamento via IA" se desejar alocação otimizada automática.`,
+    riskLevel: 'Baixo',
+    confidence: 95
+  };
 }
 
 export function generateSsisFeedback(
@@ -130,7 +282,6 @@ export function generateSsisFeedback(
   let maxRevenue = -1;
 
   let worstStockProduct = '';
-  let worstStockProductId = '';
   let maxStockRemaining = 0;
 
   let worstLostSalesProduct = '';
@@ -149,7 +300,6 @@ export function generateSsisFeedback(
     if (pr.stockRemaining > maxStockRemaining) {
       maxStockRemaining = pr.stockRemaining;
       worstStockProduct = prodInfo ? prodInfo.name : pr.productId;
-      worstStockProductId = pr.productId;
     }
     const lost = pr.demanded - pr.sold;
     if (lost > maxLostSales) {
@@ -174,73 +324,65 @@ export function generateSsisFeedback(
   const maxCompetitorProfit = Math.max(rivalA.profit, rivalB.profit);
   const bestCompetitorName = rivalA.profit > rivalB.profit ? 'Rival A' : 'Rival B';
 
-  // 1. Diagnostic (Condensed & Direct)
-  let diagnostic = '';
-  if (profit > 100000) {
-    diagnostic = `Ótimo desempenho na Rodada ${round}: Lucro de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
-    if (topRevenueProduct) diagnostic += `Destaque: **${topRevenueProduct}** (R$ ${maxRevenue.toLocaleString('pt-BR')}). `;
-    diagnostic += profit > maxCompetitorProfit ? `Você liderou o mercado!` : `Líder do setor: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
-  } else if (profit > 0) {
-    diagnostic = `Rodada ${round} no azul: Lucro de R$ ${profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. `;
-    if (topRevenueProduct) diagnostic += `Carro-chefe: **${topRevenueProduct}**. `;
-    if (maxStockRemaining > 0 && worstStockProduct) diagnostic += `Atenção ao estoque de **${worstStockProduct}** (${maxStockRemaining} un. paradas). `;
-    if (maxCompetitorProfit > profit) diagnostic += `Líder: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
-  } else {
-    diagnostic = `Prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} na Rodada ${round}. `;
-    if (totalProduced === 0) diagnostic += `Fábrica sem produção programada. `;
-    else if (maxStockRemaining > totalProduced * 0.3 && worstStockProduct) diagnostic += `Sobras em **${worstStockProduct}** (${maxStockRemaining} un.). `;
-    else diagnostic += `Custos operacionais superaram a receita. `;
-    diagnostic += `Líder: **${bestCompetitorName}** (R$ ${maxCompetitorProfit.toLocaleString('pt-BR')}).`;
+  // Construct a rich, personalized executive diagnostic
+  // 1. Ultra-concise Diagnostic Bullet Points
+  const diagBullets: string[] = [];
+
+  if (topRevenueProduct) {
+    diagBullets.push(`🎯 Destaque: **${topRevenueProduct}** liderou seu faturamento (R$ ${maxRevenue.toLocaleString('pt-BR')}).`);
   }
 
-  if (maxStockRemaining > 200 && worstStockProductId) {
-    const playerPrice = decision.prices[worstStockProductId];
-    diagnostic += ` Preço de **${worstStockProduct}** (R$ ${playerPrice.toFixed(2)}) ficou acima dos rivais.`;
-  }
-
-  if (maxLostSales > 100 && worstLostSalesProduct) {
-    diagnostic += ` Ruptura: ~${Math.round(maxLostSales)} unidades de **${worstLostSalesProduct}** não atendidas.`;
+  if (maxStockRemaining > 150 && worstStockProduct) {
+    diagBullets.push(`⚠️ Alerta: **${worstStockProduct}** teve ${maxStockRemaining} un. paradas em estoque.`);
+  } else if (underpricedProduct) {
+    diagBullets.push(`⚠️ Alerta: **${underpricedProduct}** foi vendido com margem negativa.`);
+  } else if (maxLostSales > 100 && worstLostSalesProduct) {
+    diagBullets.push(`📦 Demanda: ~${Math.round(maxLostSales)} pedidos de **${worstLostSalesProduct}** não foram atendidos.`);
   }
 
   if (event) {
-    diagnostic += ` Impacto do evento "${event.title}" (${event.affectedArea}).`;
+    diagBullets.push(`⚡ Evento: "${event.title}" impactou o mercado.`);
   }
 
-  // 2. Recommendations (Condensed)
-  const recommendationsList: string[] = [];
+  if (profit > 0) {
+    diagBullets.push(`📊 Resultado: **Lucro de R$ ${profit.toLocaleString('pt-BR')}** (${profit > maxCompetitorProfit ? 'Você liderou!' : `Líder: ${bestCompetitorName}`}).`);
+  } else {
+    diagBullets.push(`📊 Resultado: **Prejuízo de R$ ${Math.abs(profit).toLocaleString('pt-BR')}** (Líder: ${bestCompetitorName}).`);
+  }
+
+  const diagnostic = diagBullets.join('\n');
+
+  // 2. Personalized Recommendations (Concise Bullet Points)
+  const recBullets: string[] = [];
 
   if (underpricedProduct) {
-    recommendationsList.push(`Suba o preço de **${underpricedProduct}** (está abaixo do custo).`);
+    recBullets.push(`• Suba o preço de **${underpricedProduct}** (está vendendo com prejuízo).`);
   } else if (thinMarginProduct) {
-    recommendationsList.push(`Margem baixa em **${thinMarginProduct}** (${thinMarginVal.toFixed(1)}%). Reajuste.`);
+    recBullets.push(`• Reajuste o preço de **${thinMarginProduct}** (margem de apenas ${thinMarginVal.toFixed(1)}%).`);
   }
 
-  if (maxLostSales > 150 && worstLostSalesProduct) {
-    recommendationsList.push(`Aumente a produção de **${worstLostSalesProduct}** (${Math.round(maxLostSales)} pedidos perdidos).`);
+  if (maxLostSales > 120 && worstLostSalesProduct) {
+    recBullets.push(`• Aumente o lote de **${worstLostSalesProduct}** (demanda reprimida).`);
   }
 
-  if (maxStockRemaining > 300 && worstStockProduct) {
-    recommendationsList.push(`Reduza o lote ou promova desconto para **${worstStockProduct}** (${maxStockRemaining} paradas).`);
+  if (maxStockRemaining > 250 && worstStockProduct) {
+    recBullets.push(`• Reduza a produção de **${worstStockProduct}** para zerar o estoque.`);
   }
 
-  if (decision.investments.marketing < 40000) {
-    recommendationsList.push(`Reforce o Marketing para sustentar a demanda da marca.`);
+  if (recBullets.length === 0) {
+    recBullets.push(`• Excelente alinhamento! Mantenha a atenção nas mudanças de estação.`);
   }
 
-  if (recommendationsList.length === 0) {
-    recommendationsList.push(`Planejamento equilibrado. Mantenha o alinhamento com a estação.`);
-  }
+  const recommendation = recBullets.join('\n');
 
-  const recommendation = recommendationsList.join(' ');
-
-  // 3. Forecast (Clara, Precisa e Acompanhando a Dinâmica do Jogo)
+  // 3. Forecast (Ultra-concise & Direct)
   let forecast = '';
   if (round === 1) {
-    forecast = 'Próxima Estação — RODADA 2 (INVERNO): A frente fria fará a procura por MOLETOM disparar para mais de 1.800 unidades, enquanto VESTIDO DE LINHO sofrerá queda expressiva (procura < 500 un.). Dica Estratégica: Amplie a produção de Moletom (1.400-2.000 un.) e reduza Vestido Linho (300-500 un.) para evitar sobras.';
+    forecast = '❄️ Rodada 2 (Inverno): Demanda por **MOLETOM** vai disparar (1.800+ un.). Reduza **VESTIDO DE LINHO** (< 500 un.).';
   } else if (round === 2) {
-    forecast = 'Próxima Estação — RODADA 3 (VERÃO): O calor extremo fará a procura por VESTIDO DE LINHO e CAMISETA BÁSICA disparar para mais de 1.800 unidades, enquanto MOLETOM despencará (procura < 400 un.). Dica Estratégica: Maximize Vestidos (1.400-2.000 un.) e Camisetas (1.400-1.800 un.), e reduza Moletons ao mínimo (200-400 un.).';
+    forecast = '☀️ Rodada 3 (Verão): Demanda por **VESTIDO DE LINHO** e **CAMISETA** dispara (1.800+ un.). Reduza **MOLETOM** (< 400 un.).';
   } else {
-    forecast = 'Simulação concluída com sucesso! Confira sua análise pedagógica, o Balanço Financeiro Consolidado e o Certificado Oficial no Relatório.';
+    forecast = '🏆 Simulação Concluída! Confira seu Balanço Consolidado e Certificado Oficial.';
   }
 
   // 4. Pedagogical Grades (0 to 10) - Real, dynamic calculations based on performance
@@ -268,14 +410,14 @@ export function generateSsisFeedback(
   let planningGrade = 4.0 + (sellThroughRate * 3.5) + (fillRate * 3.0) - stockOverloadPenalty + seasonalityBonus;
   planningGrade = Math.min(10, Math.max(2.0, Math.round(planningGrade * 10) / 10));
 
-  // B. Gestão Financeira & Caixa
+  // B. Gestão Financeira & Caixa (Rewarding realistic profitability)
   let financeBase = 7.0;
-  if (profit > 100000) financeBase = 9.5;
-  else if (profit > 50000) financeBase = 8.5;
-  else if (profit > 15000) financeBase = 7.8;
-  else if (profit >= 0) financeBase = 7.0;
+  if (profit > 100000) financeBase = 9.8;
+  else if (profit > 50000) financeBase = 9.0;
+  else if (profit > 15000) financeBase = 8.2;
+  else if (profit >= 0) financeBase = 7.5;
   else if (profit > -30000) financeBase = 5.5;
-  else financeBase = 3.5;
+  else financeBase = 4.0;
 
   if (metrics.cash >= 450000) financeBase += 0.5;
   if (metrics.cash < 150000) financeBase -= 1.5;
@@ -621,3 +763,362 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
     allProfiles: ALL_ENTREPRENEUR_PROFILES
   };
 }
+
+export interface StrategicBalanceReport {
+  score: number;
+  statusLabel: string;
+  bottlenecks: string[];
+  tips: string[];
+  eventImpact: string | null;
+  eventActionableAdvice: string | null;
+  targetRanges: {
+    materials: { min: number; max: number; label: string };
+    production: { min: number; max: number; label: string };
+    marketing: { min: number; max: number; label: string };
+    logistics: { min: number; max: number; label: string };
+  };
+}
+
+export function calculateStrategicBalance(
+  round: number,
+  decision: PlayerDecision,
+  currentCash: number,
+  activeEvent?: GameEvent | null
+): StrategicBalanceReport {
+  const totalInv = 
+    decision.investments.materials + 
+    decision.investments.production + 
+    decision.investments.marketing + 
+    decision.investments.logistics;
+
+  let matPct = [0.30, 0.40];
+  let prodPct = [0.25, 0.35];
+  let mktPct = [0.15, 0.25];
+  let logPct = [0.10, 0.15];
+
+  if (round === 2) {
+    matPct = [0.35, 0.45];
+    prodPct = [0.30, 0.40];
+    mktPct = [0.15, 0.20];
+    logPct = [0.10, 0.15];
+  } else if (round === 3) {
+    matPct = [0.25, 0.35];
+    prodPct = [0.25, 0.35];
+    mktPct = [0.20, 0.30];
+    logPct = [0.15, 0.20];
+  }
+
+  const targetRanges = {
+    materials: {
+      min: Math.round(currentCash * matPct[0]),
+      max: Math.round(currentCash * matPct[1]),
+      label: `R$ ${Math.round(currentCash * matPct[0] / 1000)}k – R$ ${Math.round(currentCash * matPct[1] / 1000)}k`
+    },
+    production: {
+      min: Math.round(currentCash * prodPct[0]),
+      max: Math.round(currentCash * prodPct[1]),
+      label: `R$ ${Math.round(currentCash * prodPct[0] / 1000)}k – R$ ${Math.round(currentCash * prodPct[1] / 1000)}k`
+    },
+    marketing: {
+      min: Math.round(currentCash * mktPct[0]),
+      max: Math.round(currentCash * mktPct[1]),
+      label: `R$ ${Math.round(currentCash * mktPct[0] / 1000)}k – R$ ${Math.round(currentCash * mktPct[1] / 1000)}k`
+    },
+    logistics: {
+      min: Math.round(currentCash * logPct[0]),
+      max: Math.round(currentCash * logPct[1]),
+      label: `R$ ${Math.round(currentCash * logPct[0] / 1000)}k – R$ ${Math.round(currentCash * logPct[1] / 1000)}k`
+    }
+  };
+
+  const bottlenecks: string[] = [];
+  const tips: string[] = [];
+  let score = 100;
+
+  // 1. Check Total Budget & Insolvency
+  if (totalInv > currentCash) {
+    score -= 40;
+    bottlenecks.push(`Orçamento de R$ ${totalInv.toLocaleString('pt-BR')} excede o caixa (R$ ${currentCash.toLocaleString('pt-BR')}).`);
+    tips.push('Reduza seus investimentos totais para evitar falência imediata.');
+  } else if (totalInv < currentCash * 0.35) {
+    score -= 20;
+    bottlenecks.push('Baixa utilização do caixa (Empresa operando com freio de mão puxado).');
+    tips.push('Aumente os investimentos estratégicos para acelerar as vendas.');
+  }
+
+  // 2. Check Zero Investments
+  if (decision.investments.materials === 0) {
+    score -= 25;
+    bottlenecks.push('Investimento em Matéria-Prima está ZERADO.');
+    tips.push('Aloque recursos em Matéria-Prima para que a fábrica consiga produzir.');
+  }
+  if (decision.investments.production === 0) {
+    score -= 25;
+    bottlenecks.push('Investimento em Produção & Salários está ZERADO.');
+    tips.push('Aloque verba em Produção para pagar os operários e máquinas.');
+  }
+  if (decision.investments.marketing === 0) {
+    score -= 15;
+    bottlenecks.push('Investimento em Marketing Comercial está ZERADO.');
+    tips.push('Aloque verba em Marketing para atrair clientes e gerar demanda.');
+  }
+  if (decision.investments.logistics === 0) {
+    score -= 10;
+    bottlenecks.push('Investimento em Logística está ZERADO.');
+    tips.push('Aloque recursos em Logística para garantir entregas no prazo.');
+  }
+
+  // 3. Category Deviations from Recommended Ranges
+  const categories = [
+    { key: 'materials', name: 'Matéria-Prima', val: decision.investments.materials, range: targetRanges.materials },
+    { key: 'production', name: 'Produção', val: decision.investments.production, range: targetRanges.production },
+    { key: 'marketing', name: 'Marketing', val: decision.investments.marketing, range: targetRanges.marketing },
+    { key: 'logistics', name: 'Logística', val: decision.investments.logistics, range: targetRanges.logistics },
+  ];
+
+  categories.forEach(cat => {
+    if (cat.val > 0) {
+      if (cat.val < cat.range.min) {
+        const diffRatio = (cat.range.min - cat.val) / cat.range.min;
+        const penalty = Math.round(diffRatio * 15);
+        score -= penalty;
+        if (penalty > 4 && bottlenecks.length < 4) {
+          bottlenecks.push(`Investimento em ${cat.name} (R$ ${(cat.val/1000).toFixed(0)}k) está abaixo da faixa recomendada.`);
+        }
+      } else if (cat.val > cat.range.max) {
+        const diffRatio = (cat.val - cat.range.max) / cat.range.max;
+        const penalty = Math.round(diffRatio * 12);
+        score -= penalty;
+        if (penalty > 4 && bottlenecks.length < 4) {
+          bottlenecks.push(`Investimento em ${cat.name} (R$ ${(cat.val/1000).toFixed(0)}k) está acima da faixa sugerida.`);
+        }
+      }
+    }
+  });
+
+  // 4. Production Quantities vs Material & Labor Insumos
+  let totalRawMatNeeded = 0;
+  let totalLaborNeeded = 0;
+  let totalUnitsToProduce = 0;
+
+  products.forEach(p => {
+    const qty = decision.productionQty[p.id] || 0;
+    totalUnitsToProduce += qty;
+    totalRawMatNeeded += qty * (p.productionCost * 0.45);
+    totalLaborNeeded += qty * (p.productionCost * 0.45);
+  });
+
+  if (totalUnitsToProduce > 0) {
+    if (totalRawMatNeeded > decision.investments.materials) {
+      score -= 20;
+      bottlenecks.push(`Matéria-Prima necessária (R$ ${Math.round(totalRawMatNeeded/1000)}k) supera a verba alocada.`);
+      tips.push('Aumente a Matéria-Prima no slider ou diminua os lotes de produção.');
+    }
+    if (totalLaborNeeded > decision.investments.production) {
+      score -= 20;
+      bottlenecks.push(`Mão de Obra necessária (R$ ${Math.round(totalLaborNeeded/1000)}k) supera a verba de Produção.`);
+      tips.push('Aumente o slider de Produção/Salários ou reduza os lotes.');
+    }
+  } else {
+    score -= 30;
+    bottlenecks.push('Nenhum lote de produto foi configurado para produção.');
+    tips.push('Defina a quantidade de produção de pelo menos um produto.');
+  }
+
+  // 5. Pricing checks
+  products.forEach(p => {
+    const qty = decision.productionQty[p.id] || 0;
+    const price = decision.prices[p.id] || p.defaultPrice;
+    if (qty > 0) {
+      if (price < p.productionCost) {
+        score -= 15;
+        bottlenecks.push(`Preço do produto ${p.name} (R$ ${price}) está abaixo do custo de produção (R$ ${p.productionCost})!`);
+        tips.push(`Aumente o preço de ${p.name} para garantir margem de lucro.`);
+      } else if (price > p.productionCost * 3.5) {
+        score -= 8;
+        bottlenecks.push(`Preço de ${p.name} (R$ ${price}) é excessivo e reduzirá a demanda.`);
+      }
+    }
+  });
+
+  // 6. Active Event Impact Analysis
+  let eventImpact: string | null = null;
+  let eventActionableAdvice: string | null = null;
+
+  if (activeEvent) {
+    eventImpact = `📢 Evento "${activeEvent.title}": ${activeEvent.description}`;
+    eventActionableAdvice = getEventActionableGuidance(activeEvent);
+
+    if (activeEvent.type === 'negative') {
+      if (activeEvent.category === 'materials' && decision.investments.materials < targetRanges.materials.min) {
+        score -= 10;
+        bottlenecks.push(`Evento Adverso (${activeEvent.title}): Aumente Matéria-Prima para conter custos.`);
+      } else if (activeEvent.category === 'logistics' && decision.investments.logistics < targetRanges.logistics.min) {
+        score -= 10;
+        bottlenecks.push(`Evento Adverso (${activeEvent.title}): Reforce a Logística para conter atrasos.`);
+      }
+    } else if (activeEvent.type === 'positive') {
+      if (activeEvent.category === 'marketing' && decision.investments.marketing < targetRanges.marketing.min) {
+        tips.push(`Aproveite o evento "${activeEvent.title}" aumentando o investimento em Marketing.`);
+      }
+    }
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  let statusLabel = 'Excelente';
+  if (score < 45) statusLabel = 'Alto Risco';
+  else if (score < 70) statusLabel = 'Atenção';
+  else if (score < 88) statusLabel = 'Equilibrado';
+
+  if (tips.length === 0) {
+    tips.push('Excelente trabalho de gestão! Suas alocações e preços estão bem equilibrados.');
+  }
+
+  return {
+    score,
+    statusLabel,
+    bottlenecks,
+    tips,
+    eventImpact,
+    eventActionableAdvice,
+    targetRanges
+  };
+}
+
+export function getEventActionableGuidance(event: GameEvent): string {
+  switch (event.id) {
+    case 'influencer_viral':
+      return '💡 Orientação IA: A demanda disparou com a projeção viral! Eleve a verba de Marketing (R$ 120k+) e garanta estoque suficiente para não zerar nas vendas.';
+    case 'verao_antecipado':
+      return '💡 Orientação IA: Onda de calor em alta! Priorize lotes maiores para peças de verão (ex: Regata e Shorts) e reajuste seus preços para capturar valor.';
+    case 'safra_algodao':
+      return '💡 Orientação IA: Matéria-prima 25% mais barata! Aproveite para comprar mais insumos e expandir a margem de lucro de cada peça.';
+    case 'logistica_eficiente':
+      return '💡 Orientação IA: Frete 25% mais barato e rápido! É a hora de acelerar as entregas e expandir a penetração no mercado.';
+    case 'incentivo_fiscal':
+      return '💡 Orientação IA: Redução tributária aprovada! Reinvista a folga financeira em Logística & Inovação para consolidar eficiência.';
+    case 'treinamento_equipe':
+      return '💡 Orientação IA: Produtividade fabril subiu 20%! Aumente os lotes de produção para diluir custos fixos por unidade.';
+    case 'tendencia_casual':
+      return '💡 Orientação IA: Tendência casual em alta! Reajuste os preços e aumente a produção da Polo, Jeans e Camiseta BÁSICA.';
+    case 'selo_sustentabilidade':
+      return '💡 Orientação IA: Certificação Carbono-Zero atrai clientes! Recomenda-se elevar Marketing para R$ 120k+ e valorizar a marca.';
+    case 'parceria_varejo':
+      return '💡 Orientação IA: Vitrines no Metaverso atraíram forte público! Mantenha verba sólida em Marketing e evite ruptura de estoque.';
+    case 'inovacao_tecido':
+      return '💡 Orientação IA: Nanotecnologia reduziu defeitos fabris! Aporte em Logística & Inovação para acelerar entregas premium.';
+    case 'greve_costureiros':
+      return '💡 Orientação IA: Paralisação reduz produtividade em 30%! Eleve o orçamento de Produção & Salários para contornar gargalos ou reduza levemente os lotes.';
+    case 'crise_algodao':
+      return '💡 Orientação IA: Custo do algodão subiu 30%! Recomenda-se elevar Matéria-Prima para no mínimo R$ 200.000 ou reajustar os preços de venda.';
+    case 'greve_transportes':
+      return '💡 Orientação IA: Frete autônomo prejudicado! Aumente o investimento em Logística para no mínimo R$ 80.000 para conter insatisfação de clientes.';
+    case 'crise_energia':
+      return '💡 Orientação IA: Tarifa de energia fabril subiu 20%! Eleve o investimento em Produção & Salários para manter a capacidade operacional.';
+    case 'boato_redes':
+      return '💡 Orientação IA: Confiança do cliente abalada por fake news! Aumente a verba em Marketing Comercial (R$ 110k+) para proteger a reputação.';
+    case 'inflacao_alta':
+      return '💡 Orientação IA: Consumidores mais cautelosos! Evite preços abusivos e foque a produção nos produtos essenciais de maior giro.';
+    case 'dumping_concorrente':
+      return '💡 Orientação IA: Concorrência aplicando descontos agressivos! Reforce o Marketing Comercial para segurar a preferência dos clientes.';
+    case 'defeito_lote':
+      return '💡 Orientação IA: Glitch robótico gerou descarte! Recomenda-se verba reforçada em Produção para controle de qualidade e reposição.';
+    case 'frio_atípico_verao':
+      return '💡 Orientação IA: Frente fria esfriou produtos de verão! Reduza os lotes de regatas e direcione a produção para moletons e calças.';
+    case 'vazamento_dados_fake':
+      return '💡 Orientação IA: Hesitação dos clientes na loja virtual! Recomenda-se reforço conjunto em Marketing e Logística para recuperar a confiança.';
+    default:
+      if (event.type === 'negative') {
+        return `💡 Orientação IA: Evento adverso em ${event.affectedArea}. Recomenda-se ajustar os investimentos correspondentes ou adequar margens para mitigar o impacto.`;
+      }
+      return `💡 Orientação IA: Oportunidade em ${event.affectedArea}! Aumente o investimento correspondente para potencializar seus lucros.`;
+  }
+}
+
+export interface ProductProfitGuidance {
+  productId: string;
+  recommendedPriceMin: number;
+  recommendedPriceMax: number;
+  optimalPrice: number;
+  recommendedLotMin: number;
+  recommendedLotMax: number;
+  estMarginPct: number;
+  seasonalityStatus: 'alta' | 'normal' | 'baixa';
+  seasonalityNote: string;
+  profitTip: string;
+}
+
+export function getProductProfitGuidance(
+  round: number,
+  currentCash: number,
+  activeEvent?: GameEvent | null
+): { [productId: string]: ProductProfitGuidance } {
+  const currentSeason = round === 1 ? 'Outono' : round === 2 ? 'Inverno' : 'Verão';
+  const result: { [productId: string]: ProductProfitGuidance } = {};
+
+  // Check if active event boosts product demand or price power
+  let eventPriceBoost = 1.0;
+  if (activeEvent) {
+    if (activeEvent.id === 'influencer_viral' || activeEvent.id === 'tendencia_casual' || activeEvent.id === 'verao_antecipado') {
+      eventPriceBoost = 1.20;
+    } else if (activeEvent.id === 'selo_sustentabilidade' || activeEvent.id === 'inovacao_tecido') {
+      eventPriceBoost = 1.15;
+    }
+  }
+
+  products.forEach(p => {
+    let seasonFactor = 1.0;
+    let seasonalityStatus: 'alta' | 'normal' | 'baixa' = 'normal';
+    let seasonalityNote = 'Demanda estável durante o ano';
+
+    if (p.seasonality === currentSeason) {
+      seasonFactor = 1.30;
+      seasonalityStatus = 'alta';
+      seasonalityNote = `⚡ Pico de demanda no ${currentSeason}! Aceita preços mais altos.`;
+    } else if (p.seasonality !== 'Ano todo' && p.seasonality !== currentSeason) {
+      seasonFactor = 0.80;
+      seasonalityStatus = 'baixa';
+      seasonalityNote = `❄️ Baixa procura no ${currentSeason}. Risco de estoque empacado.`;
+    }
+
+    // Dynamic High-Margin Retail Price Benchmarks (3.0x to 4.5x production cost)
+    const baseMarkupMin = 3.0 * eventPriceBoost;
+    const baseMarkupMax = 4.2 * seasonFactor * eventPriceBoost;
+
+    const minPrice = Math.round(p.productionCost * baseMarkupMin);
+    const maxPrice = Math.round(p.productionCost * baseMarkupMax);
+    const optimalPrice = Math.round((minPrice + maxPrice) / 2);
+    const estMarginPct = Math.round(((optimalPrice - p.productionCost) / optimalPrice) * 100);
+
+    // Calculate Recommended Lot Size
+    const baseScale = Math.max(0.5, currentCash / 200000);
+    let lotMin = Math.round(((p.productionCost < 20 ? 600 : 300) * baseScale * seasonFactor) / 50) * 50;
+    let lotMax = Math.round(((p.productionCost < 20 ? 1500 : 700) * baseScale * seasonFactor) / 50) * 50;
+
+    let profitTip = `Margem de ~${estMarginPct}%. Preço recomendado R$ ${minPrice} – R$ ${maxPrice}.`;
+    if (seasonalityStatus === 'alta') {
+      profitTip = `Alta demanda no ${currentSeason}! Pratique preço próximo de R$ ${maxPrice} para maximizar lucro.`;
+    } else if (seasonalityStatus === 'baixa') {
+      profitTip = `Estação fraca. Pratique preço competitivo (~R$ ${minPrice}) e lote reduzido (~${lotMin} un.).`;
+    }
+
+    result[p.id] = {
+      productId: p.id,
+      recommendedPriceMin: minPrice,
+      recommendedPriceMax: maxPrice,
+      optimalPrice,
+      recommendedLotMin: Math.max(100, lotMin),
+      recommendedLotMax: Math.max(250, lotMax),
+      estMarginPct,
+      seasonalityStatus,
+      seasonalityNote,
+      profitTip
+    };
+  });
+
+  return result;
+}
+
+
+

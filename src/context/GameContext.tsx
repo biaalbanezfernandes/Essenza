@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { GameState, PlayerDecision, RoundResult } from '../data/types';
-import { products } from '../data/products';
 import { events } from '../data/events';
 import { executeRound } from '../engine/marketEngine';
 import { generateSsisFeedback, generateCouncilFeedback, classifyManagementProfile } from '../engine/ssisEngine';
@@ -17,10 +16,10 @@ interface GameContextType {
 
 const defaultDecision: PlayerDecision = {
   investments: {
-    materials: 70000,
-    production: 70000,
-    marketing: 50000,
-    logistics: 35000,
+    materials: 100000,
+    production: 100000,
+    marketing: 100000,
+    logistics: 100000,
   },
   prices: {
     camiseta_basica: 29.90,
@@ -31,12 +30,12 @@ const defaultDecision: PlayerDecision = {
     kit_meia_cueca: 39.90,
   },
   productionQty: {
-    camiseta_basica: 1000,
-    polo_essenza: 1000,
-    moletom: 1000,
-    calca_jeans: 1000,
-    vestido_linho: 1000,
-    kit_meia_cueca: 1000,
+    camiseta_basica: 600,
+    polo_essenza: 500,
+    moletom: 400,
+    calca_jeans: 400,
+    vestido_linho: 400,
+    kit_meia_cueca: 600,
   }
 };
 
@@ -44,7 +43,7 @@ const defaultState: GameState = {
   playerName: '',
   playerEmail: '',
   currentRound: 1,
-  currentCash: 500000,
+  currentCash: 600000,
   reputation: 50,
   quality: 50,
   innovation: 50,
@@ -101,11 +100,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       playerEmail: email,
       gameState: 'playing',
       activeEvent: firstEvent,
-      currentCash: 500000,
+      currentCash: 600000,
       pendingDecision: {
-        ...defaultDecision,
-        prices: products.reduce((acc, p) => ({ ...acc, [p.id]: p.defaultPrice }), {}),
-        productionQty: products.reduce((acc, p) => ({ ...acc, [p.id]: 1000 }), {})
+        ...defaultDecision
       },
       activeSsisInsight: null,
       insightAccepted: null
