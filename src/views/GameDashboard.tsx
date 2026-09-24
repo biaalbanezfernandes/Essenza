@@ -139,8 +139,8 @@ export const GameDashboard: React.FC = () => {
           <EssenzaLogo variant="icon" height={52} />
         </div>
         {/* Round Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge-pill badge-gold" style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <span className="badge-pill badge-purple" style={{ fontSize: '0.78rem', padding: '0.3rem 0.85rem' }}>
             {currentRound === 1 ? 'RODADA 1 • OUTONO' : currentRound === 2 ? 'RODADA 2 • INVERNO' : 'RODADA 3 • VERÃO'}
           </span>
           {currentRound === 1 && (
@@ -149,20 +149,13 @@ export const GameDashboard: React.FC = () => {
                 setTutorialStepIndex(0);
                 setIsTutorialOpen(true);
               }}
+              className="btn-secondary"
               style={{
-                background: 'transparent',
-                border: '1px solid rgba(212,175,55,0.4)',
-                color: 'var(--accent-gold)',
-                borderRadius: '999px',
-                padding: '0.25rem 0.6rem',
-                fontSize: '0.72rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem'
+                padding: '0.3rem 0.75rem',
+                fontSize: '0.75rem'
               }}
             >
-              <BookOpen size={12} /> Guia Rápido
+              <BookOpen size={13} /> Guia Rápido
             </button>
           )}
         </div>
@@ -339,10 +332,10 @@ export const GameDashboard: React.FC = () => {
               <MicroTooltip stepIndex={1} step={tutorialSteps[1]} onNext={handleNextStep} onPrev={handlePrevStep} onClose={handleCloseTutorial} />
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Materials */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                   <span style={{ color: 'var(--text-primary)' }}>1. Matéria-Prima</span>
                   <strong style={{ color: 'var(--accent-gold)' }}>R$ {pendingDecision.investments.materials.toLocaleString('pt-BR')}</strong>
                 </div>
@@ -355,7 +348,7 @@ export const GameDashboard: React.FC = () => {
                   onChange={(e) => handleInvestmentChange('materials', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.2rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.materials.label}</span>
                 </div>
@@ -363,7 +356,7 @@ export const GameDashboard: React.FC = () => {
 
               {/* Production */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                   <span style={{ color: 'var(--text-primary)' }}>2. Produção & Salários</span>
                   <strong style={{ color: 'var(--accent-gold)' }}>R$ {pendingDecision.investments.production.toLocaleString('pt-BR')}</strong>
                 </div>
@@ -376,7 +369,7 @@ export const GameDashboard: React.FC = () => {
                   onChange={(e) => handleInvestmentChange('production', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.2rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.production.label}</span>
                 </div>
@@ -384,7 +377,7 @@ export const GameDashboard: React.FC = () => {
 
               {/* Marketing */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                   <span style={{ color: 'var(--text-primary)' }}>3. Marketing Comercial</span>
                   <strong style={{ color: 'var(--accent-gold)' }}>R$ {pendingDecision.investments.marketing.toLocaleString('pt-BR')}</strong>
                 </div>
@@ -397,7 +390,7 @@ export const GameDashboard: React.FC = () => {
                   onChange={(e) => handleInvestmentChange('marketing', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.2rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.marketing.label}</span>
                 </div>
@@ -405,7 +398,7 @@ export const GameDashboard: React.FC = () => {
 
               {/* Logistics */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                   <span style={{ color: 'var(--text-primary)' }}>4. Logística & Inovação</span>
                   <strong style={{ color: 'var(--accent-gold)' }}>R$ {pendingDecision.investments.logistics.toLocaleString('pt-BR')}</strong>
                 </div>
@@ -418,7 +411,7 @@ export const GameDashboard: React.FC = () => {
                   onChange={(e) => handleInvestmentChange('logistics', parseInt(e.target.value))}
                   style={{ accentColor: 'var(--accent-gold)', width: '100%', cursor: 'pointer' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', marginTop: '0.15rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.2rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Faixa Sugerida (IA):</span>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>{strategicReport.targetRanges.logistics.label}</span>
                 </div>

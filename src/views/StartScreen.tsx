@@ -1,469 +1,270 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { Mail, User, BookOpen, Cpu, ChevronRight, ChevronLeft, Play, Clock, DollarSign, Tag, Award } from 'lucide-react';
+import { Mail, User, Play, Sparkles, ShieldCheck, Zap, Award, DollarSign } from 'lucide-react';
 import { EssenzaLogo } from '../components/EssenzaLogo';
-
-interface BriefingSlide {
-  label: string;
-  icon: string;
-  title: string;
-  intro?: string;
-  items: { icon?: string; title: string; desc: string }[];
-}
-
-const briefingSlides: BriefingSlide[] = [
-  {
-    label: 'A MISSÃO',
-    icon: '🏭',
-    title: 'Bem-vindo à Essenza',
-    intro: 'Você assume como CEO com a missão de liderar o mercado de moda casual brasileira.',
-    items: [
-      { title: 'Capital Inicial', desc: 'R$ 500.000,00 disponíveis em caixa para gerenciar.' },
-      { title: 'Objetivo Executivo', desc: 'Maximizar o lucro, construir reputação de marca e vencer a concorrência.' }
-    ]
-  },
-  {
-    label: 'A CONCORRÊNCIA',
-    icon: '📊',
-    title: 'O Mercado em Disputa',
-    intro: 'Dois rivais com modelos de negócios distintos disputam os mesmos clientes:',
-    items: [
-      { icon: '⚔️', title: 'Rival A (Volume)', desc: 'Produção massiva com preços baixos e margens enxutas.' },
-      { icon: '💎', title: 'Rival B (Premium)', desc: 'Preços altos ancorados em campanhas agressivas de marketing.' }
-    ]
-  },
-  {
-    label: 'AS ESTAÇÕES',
-    icon: '🗓️',
-    title: '3 Rodadas Estratégicas',
-    intro: 'Cada rodada representa uma estação climática que muda os hábitos de consumo:',
-    items: [
-      { icon: '🍂', title: 'Rodada 1 (Outono)', desc: 'Fase de aprendizado e estabilização de caixa (tempo livre).' },
-      { icon: '❄️', title: 'Rodada 2 (Inverno)', desc: 'Forte aumento na demanda por agasalhos e moletons.' },
-      { icon: '☀️', title: 'Rodada 3 (Verão)', desc: 'Pico de vendas para vestidos de linho e peças leves.' }
-    ]
-  },
-  {
-    label: 'DECISÕES',
-    icon: '💡',
-    title: 'O Que Você Vai Definir',
-    intro: 'A cada rodada, equilibre seus investimentos e sua capacidade produtiva:',
-    items: [
-      { title: '4 Investimentos', desc: 'Matéria-Prima, Produção & Salários, Marketing e Logística.' },
-      { title: 'Mix de 6 Produtos', desc: 'Defina preço de venda e lotes a produzir para cada peça do catálogo.' }
-    ]
-  },
-  {
-    label: 'RITMO & ATENÇÃO',
-    icon: '⏱️',
-    title: 'Dinâmica de Jogo & Equipe',
-    intro: 'Nas Rodadas 2 e 3, a pressão de mercado aumenta:',
-    items: [
-      { icon: '⏳', title: 'Cronômetro (1m30s)', desc: '1 minuto e meio por rodada para planejar e processar suas decisões.' },
-      { icon: '🚨', title: 'Alarme aos 15s', desc: 'Alerta visual vermelho piscante avisando que o tempo está no fim.' },
-      { icon: '👤', title: 'Recados da Equipe', desc: 'Colaboradores podem surgir na tela com recados. Clique no [X] no canto para dispensá-los e continuar!' }
-    ]
-  },
-  {
-    label: 'A IA S.S.I.S.',
-    icon: '🤖',
-    title: 'IA Scorpio & Conselho',
-    intro: 'Suporte executivo contínuo durante toda a sua jornada:',
-    items: [
-      { icon: '⚡', title: 'Alertas em Tempo Real', desc: 'A IA avisa sobre margens e riscos de caixa antes de você enviar a rodada.' },
-      { icon: '📋', title: 'Avaliação & Certificado', desc: 'Pareceres dos diretores ao fim de cada fase e certificado pedagógico oficial.' }
-    ]
-  }
-];
 
 export const StartScreen: React.FC = () => {
   const { startGame } = useGame();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const [showBriefing, setShowBriefing] = useState(false);
-  const [briefingStep, setBriefingStep] = useState(0);
-  const [pendingName, setPendingName] = useState('');
-  const [pendingEmail, setPendingEmail] = useState('');
-
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [showBriefing, briefingStep]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Por favor, insira seu nome.');
+      setError('Por favor, digite seu nome completo.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
-      setError('Por favor, insira um e-mail válido.');
+      setError('Por favor, digite um e-mail válido.');
       return;
     }
     setError('');
-    setPendingName(name);
-    setPendingEmail(email);
-    setShowBriefing(true);
-    setBriefingStep(0);
+    startGame(name, email);
   };
-
-  const handleNext = () => {
-    if (briefingStep < briefingSlides.length - 1) {
-      setBriefingStep(prev => prev + 1);
-    } else {
-      startGame(pendingName, pendingEmail);
-    }
-  };
-
-  const handlePrev = () => {
-    if (briefingStep > 0) setBriefingStep(prev => prev - 1);
-  };
-
-  const slide = briefingSlides[briefingStep];
-  const isLast = briefingStep === briefingSlides.length - 1;
 
   return (
-    <>
-      {/* Briefing Modal Overlay */}
-      {showBriefing && (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: '3rem 1.5rem',
+      maxWidth: '960px',
+      margin: '0 auto',
+      width: '100%',
+      position: 'relative',
+      zIndex: 1,
+      textAlign: 'center'
+    }} className="animate-fade-in">
+
+      {/* Top Floating Badge */}
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.6rem',
+        background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.2), rgba(212, 175, 55, 0.15))',
+        border: '1px solid rgba(212, 175, 55, 0.35)',
+        padding: '0.45rem 1.25rem',
+        borderRadius: '30px',
+        marginBottom: '2rem',
+        color: '#fef08a',
+        fontSize: '0.8rem',
+        fontWeight: 700,
+        letterSpacing: '1px',
+        textTransform: 'uppercase',
+        boxShadow: '0 0 30px rgba(212, 175, 55, 0.15)',
+        margin: '0 auto 2rem'
+      }}>
+        <Sparkles size={16} style={{ color: 'var(--accent-gold)' }} />
+        DESAFIO EXECUTIVO • FECART 2026
+      </div>
+
+      {/* Central Logo Header */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.75rem', width: '100%' }}>
+        <EssenzaLogo variant="full" height={175} />
+      </div>
+
+      {/* Provocative High-Impact Headline */}
+      <h1 style={{
+        fontSize: 'clamp(2.1rem, 5vw, 3.4rem)',
+        fontFamily: 'var(--font-display)',
+        fontWeight: 800,
+        textAlign: 'center',
+        lineHeight: 1.1,
+        marginBottom: '1rem',
+        background: 'linear-gradient(180deg, #ffffff 0%, #e2e8f0 60%, #a855f7 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        letterSpacing: '-0.5px',
+        width: '100%'
+      }}>
+        ASSUMA O CONTROLE.<br />PROVE SEU VALOR.
+      </h1>
+
+      <p style={{
+        fontSize: '1.15rem',
+        color: 'var(--text-secondary)',
+        textAlign: 'center',
+        maxWidth: '620px',
+        margin: '0 auto 2.5rem',
+        lineHeight: 1.5,
+        fontWeight: 400
+      }}>
+        Sua capacidade de decisão testada no mais alto nível corporativo.
+      </p>
+
+      {/* Visual Quick Impact Badges (Centralizados) */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '0.85rem',
+        flexWrap: 'wrap',
+        marginBottom: '2.75rem',
+        width: '100%'
+      }}>
         <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.88)',
-          zIndex: 1000,
+          background: 'rgba(10, 5, 22, 0.85)',
+          border: '1px solid rgba(212, 175, 55, 0.3)',
+          borderRadius: '30px',
+          padding: '0.55rem 1.25rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '1.5rem',
-          backdropFilter: 'blur(10px)'
+          gap: '0.5rem',
+          color: 'var(--accent-gold)',
+          fontSize: '0.85rem',
+          fontWeight: 700
         }}>
-          <div style={{
-            background: 'var(--surface-glass)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '20px',
-            padding: '2.5rem',
-            maxWidth: '620px',
-            width: '100%',
-            boxShadow: '0 0 100px rgba(212,175,55,0.18)',
-          }} className="animate-fade-in">
-
-            {/* Logo no topo do modal */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-              <EssenzaLogo variant="icon" height={48} />
-            </div>
-
-            {/* Progress bar */}
-            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.75rem' }}>
-              {briefingSlides.map((_, i) => (
-                <div key={i} style={{
-                  flex: 1,
-                  height: '3px',
-                  borderRadius: '4px',
-                  background: i <= briefingStep ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)',
-                  transition: 'background 0.3s ease'
-                }} />
-              ))}
-            </div>
-
-            {/* Label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <span className="badge-pill badge-gold" style={{ fontSize: '0.65rem' }}>{slide.label}</span>
-              <span style={{ fontSize: '1.3rem' }}>{slide.icon}</span>
-            </div>
-
-            {/* Title */}
-            <h2 style={{
-              fontSize: '1.75rem',
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              marginBottom: '0.75rem',
-              color: 'white'
-            }}>
-              {slide.title}
-            </h2>
-
-            {/* Intro */}
-            {slide.intro && (
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-                {slide.intro}
-              </p>
-            )}
-
-            {/* Structured Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '170px' }}>
-              {slide.items.map((item, idx) => (
-                <div key={idx} style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '10px',
-                  padding: '0.75rem 1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  {item.icon && (
-                    <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{item.icon}</span>
-                  )}
-                  <div>
-                    <strong style={{ color: '#fff', fontSize: '0.88rem', display: 'block' }}>
-                      {item.title}
-                    </strong>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.35 }}>
-                      {item.desc}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' }}>
-              <button
-                onClick={handlePrev}
-                disabled={briefingStep === 0}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid var(--border-color)',
-                  color: briefingStep === 0 ? 'var(--text-muted)' : 'white',
-                  borderRadius: '8px',
-                  padding: '0.6rem 1.2rem',
-                  cursor: briefingStep === 0 ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  fontSize: '0.9rem',
-                  opacity: briefingStep === 0 ? 0.4 : 1,
-                  transition: 'opacity 0.2s'
-                }}
-              >
-                <ChevronLeft size={16} /> Anterior
-              </button>
-
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {briefingStep + 1} / {briefingSlides.length}
-              </span>
-
-              <button
-                onClick={handleNext}
-                className={isLast ? 'btn-primary' : ''}
-                style={!isLast ? {
-                  background: 'rgba(212,175,55,0.15)',
-                  border: '1px solid var(--accent-gold)',
-                  color: 'var(--accent-gold)',
-                  borderRadius: '8px',
-                  padding: '0.6rem 1.2rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  fontSize: '0.9rem'
-                } : {
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.75rem 1.75rem'
-                }}
-              >
-                {isLast ? (
-                  <><Play size={16} /> Entrar no Jogo</>
-                ) : (
-                  <>Próximo <ChevronRight size={16} /></>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Start Screen */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        padding: '2rem 1.5rem',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        width: '100%'
-      }} className="animate-fade-in">
-        
-        {/* Title Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <EssenzaLogo variant="full" height={160} />
-          </div>
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-            Simulador Empresarial Inteligente e Plataforma de Aprendizagem FECART
-          </p>
+          <DollarSign size={16} /> R$ 600.000 em Caixa
         </div>
 
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gap: '2.5rem',
-          width: '100%',
-        }} className="desktop-grid-2">
-          <style>{`
-            @media (min-width: 768px) {
-              .desktop-grid-2 {
-                grid-template-columns: 1.2fr 1fr !important;
-              }
-            }
-          `}</style>
-
-          {/* Tutorial Panel */}
-          <div className="glass-panel" style={{ padding: '2.5rem' }}>
-            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'var(--font-display)' }}>
-              <BookOpen style={{ color: 'var(--accent-gold)' }} /> Como Funciona a Simulação
-            </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{
-                  background: 'var(--accent-blue-glow)',
-                  color: 'var(--accent-blue)',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <DollarSign size={18} />
-                </div>
-                <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Gestão de Recursos (R$ 500k)</h4>
-                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
-                    Aloque o orçamento em Matéria-Prima, Produção, Marketing e Logística. Mantenha o caixa sempre positivo.
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{
-                  background: 'var(--accent-gold-glow)',
-                  color: 'var(--accent-gold)',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <Tag size={18} />
-                </div>
-                <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Mix de 6 Produtos & Preço</h4>
-                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
-                    Ajuste lotes e preços conforme a estação (Inverno = moletons; Verão = vestidos). Respeite os custos de produção.
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  color: '#ef4444',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <Clock size={18} />
-                </div>
-                <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Timer (1m30s) & Alarme Policial</h4>
-                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
-                    As Rodadas 2 e 3 contam com timer de 1m30s e alarme nos 15s finais. A Rodada 1 é livre para aprender.
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{
-                  background: 'var(--accent-success-glow)',
-                  color: 'var(--accent-success)',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <Award size={18} />
-                </div>
-                <div>
-                  <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Recados da Equipe & IA Scorpio</h4>
-                  <p style={{ fontSize: '0.88rem', margin: 0 }}>
-                    Funcionários surgem com recados (feche no [X]). A IA Scorpio dá diagnósticos e dicas ao vivo.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Form Panel */}
-          <div className="glass-panel" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <h3 style={{ marginBottom: '0.5rem', fontFamily: 'var(--font-display)' }}>Ficha Cadastral do Gestor</h3>
-            <p style={{ marginBottom: '2rem', fontSize: '0.9rem' }}>Insira seus dados para abrir sua sala de controle e receber o certificado oficial.</p>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <User size={16} /> Nome Completo
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Digite seu nome completo"
-                  className="input-control"
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Mail size={16} /> E-mail Profissional
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nome@exemplo.com"
-                  className="input-control"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div style={{ color: 'var(--accent-danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  {error}
-                </div>
-              )}
-
-              <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem', padding: '1rem' }}>
-                <Cpu size={20} /> Iniciar Simulador Essenza
-              </button>
-            </form>
-          </div>
+          background: 'rgba(10, 5, 22, 0.85)',
+          border: '1px solid rgba(168, 85, 247, 0.3)',
+          borderRadius: '30px',
+          padding: '0.55rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          color: '#c084fc',
+          fontSize: '0.85rem',
+          fontWeight: 700
+        }}>
+          <Zap size={16} /> Decisões em Tempo Real
         </div>
-        
-        <div style={{ marginTop: '4rem', display: 'flex', gap: '2rem', color: 'var(--text-muted)', fontSize: '0.8rem', justifyContent: 'center' }}>
-          <span>FECART 2026</span>
-          <span>•</span>
-          <span>Apoio Acadêmico FECAP</span>
-          <span>•</span>
-          <span>Ambiente Executivo</span>
+
+        <div style={{
+          background: 'rgba(10, 5, 22, 0.85)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          borderRadius: '30px',
+          padding: '0.55rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          color: '#60a5fa',
+          fontSize: '0.85rem',
+          fontWeight: 700
+        }}>
+          <Award size={16} /> Certificado Executivo
         </div>
       </div>
-    </>
+
+      {/* Main Glassmorphic Portal (Ficha Cadastral Centralizada de Alto Impacto) */}
+      <div style={{
+        background: 'rgba(10, 5, 22, 0.92)',
+        border: '1px solid rgba(168, 85, 247, 0.35)',
+        borderRadius: '24px',
+        padding: '2.5rem',
+        maxWidth: '480px',
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 50px rgba(126, 34, 206, 0.25)',
+        backdropFilter: 'blur(16px)',
+        margin: '0 auto',
+        textAlign: 'center'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+          <h3 style={{ margin: '0 0 0.3rem', fontSize: '1.35rem', fontFamily: 'var(--font-display)', color: 'white', textAlign: 'center' }}>
+            Ficha Cadastral do Gestor
+          </h3>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center' }}>
+            Identifique-se para acessar o painel de comando
+          </span>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', width: '100%', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 500, textAlign: 'center' }}>
+              <User size={15} style={{ color: 'var(--accent-purple)' }} /> Nome Completo
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Digite seu nome completo"
+              className="input-control"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+                padding: '0.85rem 1rem',
+                borderRadius: '10px',
+                fontSize: '0.95rem',
+                textAlign: 'center',
+                width: '100%'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', width: '100%', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 500, textAlign: 'center' }}>
+              <Mail size={15} style={{ color: 'var(--accent-purple)' }} /> E-mail Profissional
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nome@empresa.com"
+              className="input-control"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+                padding: '0.85rem 1rem',
+                borderRadius: '10px',
+                fontSize: '0.95rem',
+                textAlign: 'center',
+                width: '100%'
+              }}
+              required
+            />
+          </div>
+
+          {error && (
+            <div style={{ color: 'var(--accent-danger)', fontSize: '0.85rem', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{
+              width: '100%',
+              justify: 'center',
+              marginTop: '0.75rem',
+              padding: '1.1rem',
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              borderRadius: '12px',
+              gap: '0.6rem',
+              letterSpacing: '0.5px',
+              boxShadow: '0 0 30px rgba(126, 34, 206, 0.45)',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <Play size={20} fill="currentColor" /> INICIAR SIMULAÇÃO
+          </button>
+        </form>
+      </div>
+
+      {/* Footer Info */}
+      <div style={{ marginTop: '3.5rem', display: 'flex', gap: '1.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', width: '100%', textAlign: 'center' }}>
+        <span>FECART 2026</span>
+        <span>•</span>
+        <span>Apoio Acadêmico FECAP</span>
+        <span>•</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+          <ShieldCheck size={12} /> Ambiente Executivo Seguro
+        </span>
+      </div>
+    </div>
   );
 };

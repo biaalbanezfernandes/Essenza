@@ -657,33 +657,44 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
   avgPlanning = Math.round((avgPlanning / roundsCount) * 10) / 10;
 
   const totalInv = totalMaterials + totalProduction + totalMarketing + totalLogistics;
-  const prodPct = totalInv > 0 ? totalProduction / totalInv : 0;
-  const mktPct = totalInv > 0 ? totalMarketing / totalInv : 0;
-  const logPct = totalInv > 0 ? totalLogistics / totalInv : 0;
-  const matPct = totalInv > 0 ? totalMaterials / totalInv : 0;
+  const prodPct = totalInv > 0 ? totalProduction / totalInv : 0.25;
+  const mktPct = totalInv > 0 ? totalMarketing / totalInv : 0.25;
+  const logPct = totalInv > 0 ? totalLogistics / totalInv : 0.25;
+  const matPct = totalInv > 0 ? totalMaterials / totalInv : 0.25;
 
-  // Balanced, sensitive profile scoring (0 - 100+ scale based on signature strengths)
-  const invVariance = Math.max(prodPct, mktPct, matPct, logPct) - Math.min(prodPct, mktPct, matPct, logPct);
-  const isBalancedPortfolio = invVariance <= 0.16;
+  // Compute average percentage of cash left unallocated in emergency reserve across rounds
+  const unallocatedCashPct = history.reduce((acc, h) => {
+    const inv = h.playerDecision.investments.materials + h.playerDecision.investments.production + h.playerDecision.investments.marketing + h.playerDecision.investments.logistics;
+    const cashBeforeInv = h.playerMetrics.cash + inv;
+    const ratio = cashBeforeInv > 0 ? Math.max(0, (cashBeforeInv - inv) / cashBeforeInv) : 0.3;
+    return acc + ratio;
+  }, 0) / roundsCount;
 
+  // Check variance between 4 pillars to detect balanced / 360 portfolio
+  const maxPillarPct = Math.max(prodPct, mktPct, matPct, logPct);
+  const minPillarPct = Math.min(prodPct, mktPct, matPct, logPct);
+  const invVariance = maxPillarPct - minPillarPct;
+  const isBalancedPortfolio = invVariance <= 0.12;
+
+  // Balanced, competitive scoring scale (0 - 100+ normalized per signature strategy):
   const scores: Record<EntrepreneurProfileDef['id'], number> = {
-    // Visionário: Lidera em Marketing, faturamento bruto e expansão de mercado
-    visionario: (mktPct * 165) + ((totalRevenue / 500000) * 30) + ((avgReputation / 100) * 25),
+    // Visionário: Driven by Marketing allocation ratio, revenue expansion & brand reputation
+    visionario: (mktPct * 180) + (Math.min(1.0, totalRevenue / 750000) * 25) + ((avgReputation / 100) * 20),
 
-    // Inovador: Lidera em Matéria-Prima de alta qualidade, padrão de excelência e inovação
-    inovador: (matPct * 165) + ((avgQuality / 100) * 35) + ((avgInnovation / 10) * 30),
+    // Inovador: Driven by Materials allocation ratio, high product quality & innovation grade
+    inovador: (matPct * 180) + ((avgQuality / 100) * 30) + ((avgInnovation / 10) * 25),
 
-    // Gestor: Lidera em Preservação de Caixa, Eficiência Financeira e Controle de Estoque
-    gestor: (avgFinance * 6.5) + (avgPlanning * 3.5) + (finalCash >= 520000 ? 25 : finalCash >= 480000 ? 10 : 0) + (maxStockRemaining < 200 ? 15 : 0) + (mktPct < 0.25 ? 15 : 0),
+    // Gestor: Driven by liquidity preservation (% cash unspent), financial grade & stock control
+    gestor: (unallocatedCashPct * 110) + (avgFinance * 4.5) + (avgPlanning * 2.5) + (maxStockRemaining < 200 ? 10 : 0),
 
-    // Líder: Lidera em Gestão de Pessoas, Logística de entrega e Clima Organizacional
-    lider: (logPct * 155) + (avgPeople * 7.5) + ((avgReputation / 100) * 25),
+    // Líder: Driven by Logistics allocation ratio, people/employee grade & market reputation
+    lider: (logPct * 190) + (avgPeople * 3.5) + ((avgReputation / 100) * 20),
 
-    // Prático: Lidera em Produção Fabril, agilidade de vazão e vendas imediatas
-    pratico: (prodPct * 165) + ((totalRevenue / 500000) * 30) + (avgPlanning * 2.5),
+    // Prático: Driven by Production allocation ratio, manufacturing throughput & sales volume
+    pratico: (prodPct * 180) + (Math.min(1.0, totalRevenue / 750000) * 20) + (avgPlanning * 2.5),
 
-    // Social: Lidera em Equilíbrio 360°, consistência entre todas as áreas e alta reputação
-    social: (isBalancedPortfolio ? 55 : 5) + (avgPeople * 5.0) + ((avgReputation / 100) * 30) + (totalProfit > 0 ? 15 : 0),
+    // Social / Holístico: Driven by balanced 360° allocation across all 4 pillars & steady metrics
+    social: (isBalancedPortfolio ? 50 : 5) + (avgPeople * 2.5) + ((avgReputation / 100) * 25) + (totalProfit > 0 ? 10 : 0),
   };
 
   let bestId: EntrepreneurProfileDef['id'] = 'gestor' as EntrepreneurProfileDef['id'];
@@ -703,46 +714,52 @@ export function classifyManagementProfile(history: RoundResult[]): ManagementPro
   let strengths: string[] = [];
   let executiveAdvice = '';
 
+  const matPctFmt = Math.round(matPct * 100);
+  const prodPctFmt = Math.round(prodPct * 100);
+  const mktPctFmt = Math.round(mktPct * 100);
+  const logPctFmt = Math.round(logPct * 100);
+  const reservePctFmt = Math.round(unallocatedCashPct * 100);
+
   switch (bestId) {
     case 'visionario':
-      personalizedExplanation = `Sua gestão destacou-se por antecipar tendências e apostar forte na expansão da marca. Ao longo das ${roundsCount} rodadas, você alocou R$ ${totalMarketing.toLocaleString('pt-BR')} em estratégias de marketing e posicionamento, impulsionando o faturamento acumulado da Essenza para R$ ${totalRevenue.toLocaleString('pt-BR')} (Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}) com nota pedagógica de planejamento em ${avgPlanning}/10.`;
-      certificateSummary = `Demonstrou visão de futuro e gestão estratégica de expansão: alocou R$ ${totalMarketing.toLocaleString('pt-BR')} em marketing e impulsionou o faturamento para R$ ${totalRevenue.toLocaleString('pt-BR')}.`;
+      personalizedExplanation = `Sua gestão destacou-se por antecipar tendências e apostar forte na expansão da marca. Ao longo das ${roundsCount} rodadas, você destinou ${mktPctFmt}% do seu orçamento operacional (R$ ${totalMarketing.toLocaleString('pt-BR')}) para marketing e divulgação comercial. Essa aposta impulsionou o faturamento acumulado da Essenza para R$ ${totalRevenue.toLocaleString('pt-BR')} (Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}), consolidando ${avgReputation} pontos de reputação e nota pedagógica de planejamento em ${avgPlanning}/10.`;
+      certificateSummary = `Demonstrou visão de futuro e gestão estratégica de expansão: alocou R$ ${totalMarketing.toLocaleString('pt-BR')} (${mktPctFmt}% da verba) em marketing e impulsionou o faturamento para R$ ${totalRevenue.toLocaleString('pt-BR')}.`;
       strengths = ['Visão de expansão comercial', 'Forte presença de marca', 'Antecipação de oportunidades'];
       executiveAdvice = 'Consolide os custos operacionais do presente para dar base sólida aos projetos futuros.';
       break;
 
     case 'inovador':
-      personalizedExplanation = `Sua trajetória foi guiada pela busca de sofisticação e excelência de produto. Você destinou R$ ${totalMaterials.toLocaleString('pt-BR')} para matérias-primas nobres, alcançando ${avgQuality}% de padrão de qualidade, nota de inovação pedagógica ${avgInnovation}/10 e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em receita.`;
-      certificateSummary = `Demonstrou elevado padrão de sofisticação e inovação contínua: destinou R$ ${totalMaterials.toLocaleString('pt-BR')} em matérias-primas e atingiu ${avgQuality}% de qualidade.`;
+      personalizedExplanation = `Sua trajetória foi guiada pela busca de sofisticação, inovação e excelência de produto. Você concentrou ${matPctFmt}% dos seus investimentos (R$ ${totalMaterials.toLocaleString('pt-BR')}) na aquisição de matérias-primas nobres e insumos premium, atingindo ${avgQuality}% de padrão de qualidade fabril, nota de inovação pedagógica ${avgInnovation}/10 e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em receita acumulada.`;
+      certificateSummary = `Demonstrou elevado padrão de sofisticação e inovação contínua: destinou R$ ${totalMaterials.toLocaleString('pt-BR')} (${matPctFmt}% da verba) em matérias-primas e atingiu ${avgQuality}% de qualidade.`;
       strengths = ['Sofisticação de produto', 'Padrão elevado de qualidade', 'Identidade única de mercado'];
       executiveAdvice = 'Assegure que as inovações se traduzam em execução prática e margens de lucro sustentáveis.';
       break;
 
     case 'gestor':
-      personalizedExplanation = `Sua liderança destacou-se pela disciplina analítica, controle de números e foco em liquidez. Você encerrou a simulação preservando R$ ${finalCash.toLocaleString('pt-BR')} em caixa disponível, com baixo nível de desperdício em estoque e nota pedagógica de gestão financeira em ${avgFinance}/10.`;
+      personalizedExplanation = `Sua liderança destacou-se pela disciplina analítica, preservação de caixa e rigoroso controle financeiro. Ao longo da jornada, você manteve em média ${reservePctFmt}% do caixa em reserva estratégica de emergência, encerrando a simulação com R$ ${finalCash.toLocaleString('pt-BR')} em liquidez disponível, baixo nível de desperdício em estoque e nota de gestão financeira em ${avgFinance}/10.`;
       certificateSummary = `Demonstrou controle rigoroso de caixa e excelência na gestão financeira: preservou R$ ${finalCash.toLocaleString('pt-BR')} em liquidez e obteve nota ${avgFinance}/10 em finanças.`;
       strengths = ['Excelente controle de liquidez', 'Decisões embasadas em dados', 'Rigor e aversão a desperdícios'];
       executiveAdvice = 'Reinvista fatias calculadas do caixa para acelerar o crescimento do negócio.';
       break;
 
     case 'lider':
-      personalizedExplanation = `Sua condução priorizou a motivação da equipe, o clima organizacional e a consolidação de parcerias comerciais. Alcançou nota pedagógica de pessoas em ${avgPeople}/10 e manteve equilíbrio operacional ao investir R$ ${totalLogistics.toLocaleString('pt-BR')} em logística de entregas.`;
-      certificateSummary = `Demonstrou habilidade exemplar em gestão de pessoas e alianças de mercado: alcançou nota de liderança ${avgPeople}/10 e fortaleceu a cadeia logística.`;
+      personalizedExplanation = `Sua condução priorizou a motivação da equipe, a agilidade na cadeia de entregas e o excelente clima organizacional. Você destinou ${logPctFmt}% dos seus recursos (R$ ${totalLogistics.toLocaleString('pt-BR')}) para logística e inteligência operacional, alcançando nota pedagógica de pessoas em ${avgPeople}/10 e mantendo ${avgReputation} pontos de reputação corporativa.`;
+      certificateSummary = `Demonstrou habilidade exemplar em gestão de pessoas e alianças de mercado: alcançou nota de liderança ${avgPeople}/10 e fortaleceu a cadeia logística com R$ ${totalLogistics.toLocaleString('pt-BR')}.`;
       strengths = ['Gestão e motivação de equipe', 'Parcerias na cadeia de suprimentos', 'Alta reputação institucional'];
       executiveAdvice = 'Mantenha a firmeza em decisões difíceis de caixa sem receio de impopularidade.';
       break;
 
     case 'social':
-      personalizedExplanation = `Você demonstrou equilíbrio holístico consistente em todas as frentes do negócio, unindo forte desempenho financeiro (Faturamento de R$ ${totalRevenue.toLocaleString('pt-BR')}, Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}) com alta reputação institucional (${avgReputation} pts) e compromisso humano.`;
-      certificateSummary = `Demonstrou visão 360° e equilíbrio consistente em todas as áreas do negócio: conciliou suprimentos, produção, divulgação e entrega com flexibilidade frente ao mercado.`;
+      personalizedExplanation = `Sua gestão destacou-se pela visão 360° e equilíbrio consistente em todas as frentes empresariais. Você distribuiu os investimentos com alta harmonia entre suprimentos (${matPctFmt}%), produção (${prodPctFmt}%), marketing (${mktPctFmt}%) e logística (${logPctFmt}%), conciliando forte resultado financeiro (Receita de R$ ${totalRevenue.toLocaleString('pt-BR')}, Lucro de R$ ${totalProfit.toLocaleString('pt-BR')}) com ${avgReputation} pts de reputação.`;
+      certificateSummary = `Demonstrou visão 360° e equilíbrio consistente em todas as áreas do negócio: conciliou suprimentos (${matPctFmt}%), produção (${prodPctFmt}%), divulgação (${mktPctFmt}%) e logística (${logPctFmt}%).`;
       strengths = ['Visão integrada 360° do negócio', 'Equilíbrio entre vendas e pessoas', 'Boa capacidade de adaptação'];
       executiveAdvice = 'Identifique o produto de maior rentabilidade e concentre nele seus investimentos prioritários.';
       break;
 
     case 'pratico':
     default:
-      personalizedExplanation = `Sua marca principal foi a agilidade e capacidade de execução fabril imediata. Diante dos desafios de cada estação, você alocou R$ ${totalProduction.toLocaleString('pt-BR')} no ritmo produtivo da fábrica, garantindo vazão aos pedidos e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em faturamento.`;
-      certificateSummary = `Demonstrou alta agilidade operacional e capacidade de execução fabril: investiu R$ ${totalProduction.toLocaleString('pt-BR')} em produção e assegurou vazão comercial imediata.`;
+      personalizedExplanation = `Sua marca principal foi a alta vazão operacional e a agilidade na execução fabril imediata. Diante dos desafios de cada estação, você concentrou ${prodPctFmt}% dos seus investimentos (R$ ${totalProduction.toLocaleString('pt-BR')}) na capacidade produtiva e salários fabris, garantindo escala rápida para atender a demanda e gerando R$ ${totalRevenue.toLocaleString('pt-BR')} em faturamento.`;
+      certificateSummary = `Demonstrou alta agilidade operacional e capacidade de execução fabril: investiu R$ ${totalProduction.toLocaleString('pt-BR')} (${prodPctFmt}% da verba) em produção e assegurou vazão comercial imediata.`;
       strengths = ['Agilidade na solução de problemas', 'Execução fabril rápida', 'Foco em vazão e vendas imediatas'];
       executiveAdvice = 'Reserve momentos entre as rodadas para planejar cenários preventivos de longo prazo.';
       break;
