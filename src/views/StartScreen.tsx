@@ -237,7 +237,7 @@ export const StartScreen: React.FC = () => {
             className="btn-primary"
             style={{
               width: '100%',
-              justify: 'center',
+              justifyContent: 'center',
               marginTop: '0.75rem',
               padding: '1.1rem',
               fontSize: '1.05rem',
